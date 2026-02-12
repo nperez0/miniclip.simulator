@@ -3,7 +3,7 @@ using Miniclip.Simulator.Domain.Aggregates.Groups.Entities;
 
 namespace Miniclip.Simulator.Domain.Aggregates.Groups.Services.Simulator;
 
-public class GroupSimulator(IMatchSimulator matchSimulator)
+public class GroupSimulator(IMatchSimulator matchSimulator) : IGroupSimulator
 {
     public Result SimulateAllMatches(Group group)
     {

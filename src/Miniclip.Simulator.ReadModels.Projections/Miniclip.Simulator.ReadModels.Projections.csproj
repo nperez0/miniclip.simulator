@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Miniclip.Core\Miniclip.Core.csproj" />
+    <ProjectReference Include="..\Miniclip.Core.Domain\Miniclip.Core.Domain.csproj" />
+    <ProjectReference Include="..\Miniclip.Simulator.Domain\Miniclip.Simulator.Domain.csproj" />
+    <ProjectReference Include="..\Miniclip.Simulator.ReadModels\Miniclip.Simulator.ReadModels.csproj" />
+  </ItemGroup>
+
+</Project>

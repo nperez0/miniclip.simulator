@@ -6,8 +6,6 @@ public abstract class AggregateRoot
 {
     public Guid Id { get; protected set; }
 
-    public long Version { get; protected set; }
-
     [JsonIgnore]
     private readonly Queue<object> uncommittedEvents = new();
 
@@ -23,6 +21,5 @@ public abstract class AggregateRoot
     protected void Enqueue(object @event)
     {
         uncommittedEvents.Enqueue(@event);
-        Version++;
     }
 }

@@ -17,7 +17,8 @@ public class WithAllMatchesAlreadyPlayed : WhenSimulatingGroup
         GivenGroupWithTeamsAndGeneratedFixtures();
 
         // Simulate all matches manually
-        GivenSimulatedResults();
+        foreach (var match in Group!.Matches)
+            match.SimulateResult(2, 1);
     }
 
     [Test]

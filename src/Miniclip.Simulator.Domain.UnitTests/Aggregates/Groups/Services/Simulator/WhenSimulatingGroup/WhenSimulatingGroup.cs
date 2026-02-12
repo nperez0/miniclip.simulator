@@ -12,7 +12,7 @@ public class WhenSimulatingGroup : TestBase<GroupSimulator>
 {
     protected IMatchSimulator? MatchSimulator { get; private set; }
 
-    protected List<Team> Teams { get; set; }
+    protected List<Team>? Teams { get; set; }
 
     protected Group? Group { get; set; }
 
@@ -33,7 +33,7 @@ public class WhenSimulatingGroup : TestBase<GroupSimulator>
     {
         MatchSimulator = Fixture.Freeze<IMatchSimulator>();
 
-        Group = Group.Create(Guid.NewGuid(), "Group A", Teams.Count).Value!;
+        Group = Group.Create(Guid.NewGuid(), "Group A", Teams!.Count).Value!;
 
         foreach (var team in Teams)
             Group.AddTeam(team);
@@ -42,11 +42,5 @@ public class WhenSimulatingGroup : TestBase<GroupSimulator>
     protected void GivenGeneratedFixtures()
     {
         new FixtureSchedulerService().GenerateFixtures(Group!);
-    }
-
-    protected void GivenSimulatedResults()
-    {
-        foreach (var match in Group!.Matches)
-            match.SimulateResult(2, 1);
     }
 }
