@@ -1,11 +1,7 @@
-﻿namespace Miniclip.Simulator.Domain.Exceptions;
+﻿namespace Miniclip.Simulator.Domain.Aggregates.Teams.Exceptions;
 
-public class TeamCreationException : Exception
+public class TeamCreationException(string message) : Exception(message)
 {
-    private TeamCreationException(string message) : base(message)
-    {
-    }
-
     public static TeamCreationException EmptyName(string? name)
         => new($"Team name '{name}' cannot be empty.");
 

@@ -6,9 +6,4 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Miniclip.Core.Domain\Miniclip.Core.Domain.csproj" />
-    <ProjectReference Include="..\Miniclip.Core\Miniclip.Core.csproj" />
-  </ItemGroup>
-
 </Project>

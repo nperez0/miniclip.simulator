@@ -1,20 +1,21 @@
 ﻿using FluentAssertions;
 using NUnit.Framework;
 
-namespace Miniclip.Simulator.Domain.UnitTests.Entities.WhenCreateTeam;
+namespace Miniclip.Simulator.Domain.UnitTests.Aggregates.Teams.Entities.WhenCreatingTeam;
 
-public class AndParametersAreValid : WhenCreateTeam
+public class AndParametersAreValid : WhenCreatingTeam
 {
     protected override void Given()
     {
-        Id = 1;
+        Id = Guid.NewGuid();
         Name = "Team A";
         Strength = 50;
     }
 
     [Test]
-    public void ShouldCreateAnActivityCorrectly()
+    public void ShouldCreateATeamCorrectly()
     {
+        Result.Should().NotBeNull();
         Result.IsSuccess.Should().BeTrue();
         Result.Value.Should().NotBeNull();
         Result.Value.Id.Should().Be(Id);
