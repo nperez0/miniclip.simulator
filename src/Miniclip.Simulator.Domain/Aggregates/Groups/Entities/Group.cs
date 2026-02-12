@@ -2,7 +2,6 @@
 using Miniclip.Core.Domain;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Exceptions;
 using Miniclip.Simulator.Domain.Aggregates.Teams.Entities;
-using System.Text.RegularExpressions;
 
 namespace Miniclip.Simulator.Domain.Aggregates.Groups.Entities;
 
@@ -14,8 +13,8 @@ public class Group : AggregateRoot
     public string Name { get; }
     public int Capacity { get; }
 
-    public IReadOnlyCollection<Team> Teams => teams.AsReadOnly();
-    public IReadOnlyCollection<Match> Matches => matches.AsReadOnly();
+    public virtual IReadOnlyCollection<Team> Teams => teams.AsReadOnly();
+    public virtual IReadOnlyCollection<Match> Matches => matches.AsReadOnly();
 
     private Group(Guid id, string name, int capacity)
     {
@@ -50,11 +49,15 @@ public class Group : AggregateRoot
         return Result.Success();
     }
 
-    public void AddMatch(Guid id, Team homeTeam, Team awayTeam, int round)
+    public Result AddMatch(Guid id, Team homeTeam, Team awayTeam, int round)
     {
         var matchResult = Match.Create(id, homeTeam, awayTeam, round);
 
-        if (matchResult.IsSuccess)
-            matches.Add(matchResult.Value!);
+        if (matchResult.IsFailure)
+            return matchResult;
+            
+        matches.Add(matchResult.Value!);
+
+        return Result.Success();
     }
 }

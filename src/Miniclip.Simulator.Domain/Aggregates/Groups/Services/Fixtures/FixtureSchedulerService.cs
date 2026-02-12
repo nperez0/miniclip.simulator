@@ -12,7 +12,12 @@ public class FixtureSchedulerService : IFixtureSchedulerService
             return Result.Failure(GroupGenerateFixturesException.InvalidTeamCount(group.Capacity, group.Teams.Count));
 
         foreach (var match in RoundRobinScheduler.GenerateSchedule(group.Teams, group.Capacity))
-            group.AddMatch(Guid.NewGuid(), match.HomeTeam, match.AwayTeam, match.Round);
+        {
+            var matchResult = group.AddMatch(Guid.NewGuid(), match.HomeTeam, match.AwayTeam, match.Round);
+
+            if (matchResult.IsFailure)
+                return matchResult;
+        }
 
         return Result.Success();
     }

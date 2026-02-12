@@ -14,10 +14,10 @@ public class WithAllMatchesAlreadyPlayed : WhenSimulatingGroup
             Team.Create(Guid.NewGuid(), "Team B", 60).Value!
         ];
 
-        AssumeExistingGroupWithTeamsAndGeneratedFixtures();
+        GivenGroupWithTeamsAndGeneratedFixtures();
 
         // Simulate all matches manually
-        AssumeSimulateResult();
+        GivenSimulatedResults();
     }
 
     [Test]

@@ -23,13 +23,13 @@ public class WhenSimulatingGroup : TestBase<GroupSimulator>
         Result = Sut!.SimulateAllMatches(Group!);
     }
 
-    protected void AssumeExistingGroupWithTeamsAndGeneratedFixtures()
+    protected void GivenGroupWithTeamsAndGeneratedFixtures()
     {
-        AssumeExistingGroupWithTeams();
-        AssumeGenerateFixtures();
+        GivenGroupWithTeams();
+        GivenGeneratedFixtures();
     }
 
-    protected void AssumeExistingGroupWithTeams()
+    protected void GivenGroupWithTeams()
     {
         MatchSimulator = Fixture.Freeze<IMatchSimulator>();
 
@@ -39,12 +39,12 @@ public class WhenSimulatingGroup : TestBase<GroupSimulator>
             Group.AddTeam(team);
     }
 
-    protected void AssumeGenerateFixtures()
+    protected void GivenGeneratedFixtures()
     {
         new FixtureSchedulerService().GenerateFixtures(Group!);
     }
 
-    protected void AssumeSimulateResult()
+    protected void GivenSimulatedResults()
     {
         foreach (var match in Group!.Matches)
             match.SimulateResult(2, 1);

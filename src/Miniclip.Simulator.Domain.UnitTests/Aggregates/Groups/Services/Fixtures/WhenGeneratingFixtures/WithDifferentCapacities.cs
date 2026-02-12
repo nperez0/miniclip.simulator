@@ -1,4 +1,5 @@
 ﻿using FluentAssertions;
+using Miniclip.Simulator.Domain.Aggregates.Groups.Entities;
 using Miniclip.Simulator.Domain.Aggregates.Teams.Entities;
 using NUnit.Framework;
 
@@ -14,6 +15,11 @@ public class WithDifferentCapacities(int capacity) : WhenGeneratingFixtures
     protected override void Given()
     {
         Capacity = capacity;
+
+        Group = Group.Create(Guid.NewGuid(), "Group A", Capacity).Value;
+
+        Enumerable.Range(1, Capacity)
+            .Each(x => Group!.AddTeam(Team.Create(Guid.NewGuid(), $"Team {x}", x).Value!));
     }
 
     [Test]

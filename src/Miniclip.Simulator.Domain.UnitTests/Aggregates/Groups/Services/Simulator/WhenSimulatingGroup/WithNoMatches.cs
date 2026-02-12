@@ -14,7 +14,7 @@ public class WithNoMatches : WhenSimulatingGroup
             Team.Create(Guid.NewGuid(), "Team B", 60).Value!
         ];
 
-        AssumeExistingGroupWithTeams();
+        GivenGroupWithTeams();
 
         // No fixtures generated - group has no matches
     }

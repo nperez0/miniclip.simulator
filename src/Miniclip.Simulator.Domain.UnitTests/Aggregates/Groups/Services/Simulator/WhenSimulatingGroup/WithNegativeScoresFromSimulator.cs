@@ -14,7 +14,7 @@ public class WithNegativeScoresFromSimulator : WhenSimulatingGroup
             Team.Create(Guid.NewGuid(), "Team B", 60).Value!
         ];
 
-        AssumeExistingGroupWithTeamsAndGeneratedFixtures();
+        GivenGroupWithTeamsAndGeneratedFixtures();
 
         // Mock the match simulator to return invalid negative scores
         MatchSimulator!.SimulateMatch(Arg.Any<int>(), Arg.Any<int>())

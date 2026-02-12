@@ -2,6 +2,6 @@
 
 public class GroupGenerateFixturesException(string message) : Exception(message)
 {
-    public static GroupAddTeamException InvalidTeamCount(int capacity, int count)
+    public static GroupGenerateFixturesException InvalidTeamCount(int capacity, int count)
         => new($"Group must have exactly {capacity} teams to generate fixtures. Current count: {count}.");
 }

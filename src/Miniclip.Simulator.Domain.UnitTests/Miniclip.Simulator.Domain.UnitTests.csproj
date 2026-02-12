@@ -18,4 +18,8 @@
 		<ProjectReference Include="..\Miniclip.Simulator.Domain\Miniclip.Simulator.Domain.csproj" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <Folder Include="Aggregates\Groups\Entities\WhenSimulatingMatchResult\" />
+	</ItemGroup>
+
 </Project>

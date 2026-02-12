@@ -16,7 +16,7 @@ public class WithValidGroup : WhenSimulatingGroup
             Team.Create(Guid.NewGuid(), "Average Team", 50).Value!
         ];
 
-        AssumeExistingGroupWithTeamsAndGeneratedFixtures();
+        GivenGroupWithTeamsAndGeneratedFixtures();
 
         // Mock the match simulator to return predictable scores
         MatchSimulator!.SimulateMatch(Arg.Any<int>(), Arg.Any<int>())

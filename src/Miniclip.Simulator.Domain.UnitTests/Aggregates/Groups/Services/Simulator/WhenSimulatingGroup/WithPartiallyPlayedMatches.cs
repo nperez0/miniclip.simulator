@@ -19,7 +19,7 @@ public class WithPartiallyPlayedMatches : WhenSimulatingGroup
             Team.Create(Guid.NewGuid(), "Average Team", 50).Value!
         ];
 
-        AssumeExistingGroupWithTeamsAndGeneratedFixtures();
+        GivenGroupWithTeamsAndGeneratedFixtures();
 
         // Simulate some matches manually
         var firstMatch = Group!.Matches.First();

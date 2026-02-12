@@ -11,4 +11,8 @@
     <ProjectReference Include="..\Miniclip.Core\Miniclip.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Repositories\" />
+  </ItemGroup>
+
 </Project>

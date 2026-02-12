@@ -16,7 +16,7 @@ public class WithDifferentTeamStrengths : WhenSimulatingGroup
             Team.Create(Guid.NewGuid(), "Average Team", 50).Value!
         ];
 
-        AssumeExistingGroupWithTeamsAndGeneratedFixtures();
+        GivenGroupWithTeamsAndGeneratedFixtures();
     }
 
     [Test]
