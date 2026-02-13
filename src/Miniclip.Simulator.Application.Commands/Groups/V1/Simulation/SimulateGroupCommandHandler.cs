@@ -13,7 +13,7 @@ public class SimulateGroupCommandHandler(
 {
     public async Task<Result> Handle(SimulateGroupCommand command, CancellationToken cancellationToken)
     {
-        var group = await repository.FindAsync(command.GroupId);
+        var group = await repository.FindAsync(command.GroupId, cancellationToken);
         
         if (group == null)
             return Result.Failure(new Exception($"Group with id {command.GroupId} not found"));
