@@ -19,17 +19,32 @@ internal static class RoundRobinScheduler
         var numberOfRounds = isOdd ? capacity : capacity - 1;
         var teamsCount = rotatedTeams.Count;
         var fixturesPerRound = teamsCount / 2;
-        var currentFixtureIndex = 0;
         var currentRound = 1;
+        var currentFixtureIndex = 0;
+        var homeCounter = teams.ToDictionary(t => t, _ => 0);
+        var awayCounter = teams.ToDictionary(t => t, _ => 0);
 
         do
         {
-            var homeTeam = rotatedTeams[currentFixtureIndex];
-            var awayTeam = rotatedTeams[teamsCount - 1 - currentFixtureIndex];
+            var firstTeam = rotatedTeams[currentFixtureIndex];
+            var secondTeam = rotatedTeams[teamsCount - 1 - currentFixtureIndex];
 
             // Skip matches involving the dummy team
-            if (homeTeam != Team.Dummy && awayTeam != Team.Dummy)
+            if (firstTeam != Team.Dummy && secondTeam != Team.Dummy)
+            {
+                // This ensures teams get a mix of home and away games
+                var shouldSwap = homeCounter[firstTeam] > homeCounter[secondTeam] 
+                    || awayCounter[secondTeam] > awayCounter[firstTeam];
+
+                var (homeTeam, awayTeam) = shouldSwap
+                    ? (secondTeam, firstTeam)
+                    : (firstTeam, secondTeam);
+
+                homeCounter[homeTeam]++;
+                awayCounter[awayTeam]++;
+
                 yield return (homeTeam, awayTeam, currentRound);
+            }
 
             currentFixtureIndex++;
 

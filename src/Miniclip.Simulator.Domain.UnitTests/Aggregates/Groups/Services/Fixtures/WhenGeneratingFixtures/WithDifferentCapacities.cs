@@ -103,4 +103,40 @@ public class WithDifferentCapacities(int capacity) : WhenGeneratingFixtures
     {
         Group!.Matches.Should().OnlyContain(m => m.HomeScore == 0 && m.AwayScore == 0);
     }
+
+    [Test]
+    public void ShouldHaveBalancedHomeAwayGamesForEachTeam()
+    {
+        var homeGamesPerTeam = new Dictionary<Guid, int>();
+        var awayGamesPerTeam = new Dictionary<Guid, int>();
+
+        foreach (var match in Group!.Matches)
+        {
+            if (!homeGamesPerTeam.ContainsKey(match.HomeTeam.Id))
+                homeGamesPerTeam[match.HomeTeam.Id] = 0;
+            
+            if (!awayGamesPerTeam.ContainsKey(match.AwayTeam.Id))
+                awayGamesPerTeam[match.AwayTeam.Id] = 0;
+
+            homeGamesPerTeam[match.HomeTeam.Id]++;
+            awayGamesPerTeam[match.AwayTeam.Id]++;
+        }
+
+        // Each team plays (capacity - 1) games total
+        var totalGamesPerTeam = capacity - 1;
+
+        foreach (var team in Group.Teams)
+        {
+            var homeGames = homeGamesPerTeam.GetValueOrDefault(team.Id, 0);
+            var awayGames = awayGamesPerTeam.GetValueOrDefault(team.Id, 0);
+
+            // Total games should match
+            (homeGames + awayGames).Should().Be(totalGamesPerTeam, 
+                $"Team {team.Name} should play {totalGamesPerTeam} total games");
+
+            // Difference between home/away should be at most 1
+            Math.Abs(homeGames - awayGames).Should().BeLessThanOrEqualTo(1,
+                $"Team {team.Name} should have balanced home ({homeGames}) and away ({awayGames}) games");
+        }
+    }
 }
