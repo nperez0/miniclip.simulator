@@ -7,6 +7,6 @@ public class GroupCreationException(string message) : Exception(message)
     public static GroupCreationException EmptyName(string? name)
         => new($"Team name '{name}' cannot be empty.");
 
-    public static GroupCreationException MinimumCapacity()
-        => new($"Group capacity must be at least 2.");
+    public static GroupCreationException InvalidCapacity(int capacity, int min, int max)
+        => new($"Group capacity must be between {min} and {max}, but was {capacity}.");
 }

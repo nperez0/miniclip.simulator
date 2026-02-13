@@ -4,11 +4,11 @@ using NUnit.Framework;
 
 namespace Miniclip.Simulator.Domain.UnitTests.Aggregates.Groups.Entities.WhenCreatingGroup;
 
-[TestFixture(0)]
-[TestFixture(1)]
-[TestFixture(-1)]
-[TestFixture(-10)]
-public class AndCapacityIsInvalid(int capacity) : WhenCreatingGroup
+[TestFixture(7)]
+[TestFixture(8)]
+[TestFixture(10)]
+[TestFixture(100)]
+public class AndCapacityExceedsMaximum(int capacity) : WhenCreatingGroup
 {
     protected override void Given()
     {
@@ -18,12 +18,15 @@ public class AndCapacityIsInvalid(int capacity) : WhenCreatingGroup
     }
 
     [Test]
-    public void ShouldReturnAnException()
+    public void ShouldFail()
     {
-        Result.Should().NotBeNull();
         Result!.IsFailure.Should().BeTrue();
-        Result.Value.Should().BeNull();
-        Result.Exception.Should().BeOfType<GroupCreationException>();
-        Result.Exception.Message.Should().Contain("between 2 and 6");
+    }
+
+    [Test]
+    public void ShouldReturnInvalidCapacityException()
+    {
+        Result!.Exception.Should().BeOfType<GroupCreationException>();
+        Result.Exception!.Message.Should().Contain("between 2 and 6");
     }
 }

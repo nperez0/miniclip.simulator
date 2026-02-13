@@ -10,6 +10,9 @@ public class Group : AggregateRoot
     private readonly List<Team> teams;
     private readonly List<Match> matches;
 
+    public const int MinCapacity = 2;
+    public const int MaxCapacity = 6;
+
     public string Name { get; }
     public int Capacity { get; }
 
@@ -30,8 +33,8 @@ public class Group : AggregateRoot
         if (name.IsNullOrWhiteSpace())
             return Result.Failure<Group>(GroupCreationException.EmptyName(name));
 
-        if (capacity < 2)
-            return Result.Failure<Group>(GroupCreationException.MinimumCapacity());
+        if (capacity < MinCapacity || capacity > MaxCapacity)
+            return Result.Failure<Group>(GroupCreationException.InvalidCapacity(capacity, MinCapacity, MaxCapacity));
 
         return new Group(id, name, capacity);
     }
