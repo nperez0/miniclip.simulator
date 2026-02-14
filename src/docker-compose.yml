@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: miniclip-simulator-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: MiniclipSimulator_Write
+    ports:
+      - "4306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    command: --log_bin_trust_function_creators=1 --local_infile=1 --innodb_buffer_pool_size=512M --max_allowed_packet=128M --innodb_autoinc_lock_mode=1 --max_connections=500
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - miniclip-network
+
+  api:
+    build:
+      context: .
+      dockerfile: Miniclip.Simulator.Api/Dockerfile
+    container_name: miniclip-simulator-api
+    ports:
+      - "5000:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__SimulatorWrite=Server=mysql;Port=3306;Database=MiniclipSimulator_Write;User=root;Password=root;AllowPublicKeyRetrieval=true;
+      - ConnectionStrings__SimulatorRead=Server=mysql;Port=3306;Database=MiniclipSimulator_Read;User=root;Password=root;AllowPublicKeyRetrieval=true;
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - miniclip-network
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
+    driver: local
+
+networks:
+  miniclip-network:
+    driver: bridge

@@ -50,6 +50,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Miniclip.Simulator.Infrastr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Miniclip.Simulator.Infrastructure.Read", "Miniclip.Simulator.Infrastructure.Read\Miniclip.Simulator.Infrastructure.Read.csproj", "{029584A5-46E4-436D-B2EC-837E13D09E13}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Miniclip.Simulator.Api", "Miniclip.Simulator.Api\Miniclip.Simulator.Api.csproj", "{5DA0FF80-8371-4BDF-BD66-B7CB4A306CB6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -228,6 +230,18 @@ Global
 		{029584A5-46E4-436D-B2EC-837E13D09E13}.Release|x64.Build.0 = Release|Any CPU
 		{029584A5-46E4-436D-B2EC-837E13D09E13}.Release|x86.ActiveCfg = Release|Any CPU
 		{029584A5-46E4-436D-B2EC-837E13D09E13}.Release|x86.Build.0 = Release|Any CPU
+		{5DA0FF80-8371-4BDF-BD66-B7CB4A306CB6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5DA0FF80-8371-4BDF-BD66-B7CB4A306CB6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5DA0FF80-8371-4BDF-BD66-B7CB4A306CB6}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{5DA0FF80-8371-4BDF-BD66-B7CB4A306CB6}.Debug|x64.Build.0 = Debug|Any CPU
+		{5DA0FF80-8371-4BDF-BD66-B7CB4A306CB6}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{5DA0FF80-8371-4BDF-BD66-B7CB4A306CB6}.Debug|x86.Build.0 = Debug|Any CPU
+		{5DA0FF80-8371-4BDF-BD66-B7CB4A306CB6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5DA0FF80-8371-4BDF-BD66-B7CB4A306CB6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5DA0FF80-8371-4BDF-BD66-B7CB4A306CB6}.Release|x64.ActiveCfg = Release|Any CPU
+		{5DA0FF80-8371-4BDF-BD66-B7CB4A306CB6}.Release|x64.Build.0 = Release|Any CPU
+		{5DA0FF80-8371-4BDF-BD66-B7CB4A306CB6}.Release|x86.ActiveCfg = Release|Any CPU
+		{5DA0FF80-8371-4BDF-BD66-B7CB4A306CB6}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -247,6 +261,7 @@ Global
 		{499675D6-0D92-4654-A2D4-CE0C363B2FAA} = {019F5A8A-E7A1-4FC5-B48B-60F4B99BA6DD}
 		{72CC567E-E9FB-4361-BFD8-B19BC0E5C1AA} = {5BFE56AA-5A28-4F3A-8AED-5AAF851F4468}
 		{029584A5-46E4-436D-B2EC-837E13D09E13} = {5BFE56AA-5A28-4F3A-8AED-5AAF851F4468}
+		{5DA0FF80-8371-4BDF-BD66-B7CB4A306CB6} = {E658381E-E2B2-4E16-A9C6-ADC0BDB16834}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {AFFAE6E7-5465-4528-8B81-E3495A200B9D}

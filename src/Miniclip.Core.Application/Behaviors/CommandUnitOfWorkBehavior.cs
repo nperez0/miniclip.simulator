@@ -13,13 +13,13 @@ public class CommandUnitOfWorkBehavior<TRequest, TResponse>(IUnitOfWork unitOfWo
         CancellationToken cancellationToken)
     {
         if (!IsCommand(request))
-            return await next(cancellationToken);
+            return await next();
 
         await unitOfWork.BeginTransactionAsync(cancellationToken);
 
         try
         {
-            var response = await next(cancellationToken);
+            var response = await next();
 
             if (IsSuccessful(response))
                 await unitOfWork.CommitAsync(cancellationToken);

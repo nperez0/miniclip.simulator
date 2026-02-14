@@ -54,6 +54,14 @@ public class GroupConfiguration : IEntityTypeConfiguration<Group>
                 .HasColumnName("MatchId")
                 .ValueGeneratedNever();
 
+            matches.Property(m => m.HomeTeamId)
+                .IsRequired()
+                .HasColumnName("HomeTeamId");
+
+            matches.Property(m => m.AwayTeamId)
+                .IsRequired()
+                .HasColumnName("AwayTeamId");
+
             matches.Property(m => m.Round)
                 .IsRequired();
 
@@ -68,12 +76,12 @@ public class GroupConfiguration : IEntityTypeConfiguration<Group>
 
             matches.HasOne(m => m.HomeTeam)
                 .WithMany()
-                .HasForeignKey("HomeTeamId")
+                .HasForeignKey(m => m.HomeTeamId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             matches.HasOne(m => m.AwayTeam)
                 .WithMany()
-                .HasForeignKey("AwayTeamId")
+                .HasForeignKey(m => m.AwayTeamId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             matches.Navigation(m => m.HomeTeam).IsRequired();

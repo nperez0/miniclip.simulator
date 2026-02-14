@@ -46,7 +46,7 @@ public class GroupSimulatedProjection
     public async Task ProjectAsync(Guid groupId, CancellationToken cancellationToken = default)
     {
         // 1. Load the domain aggregate
-        var group = await _groupRepository.FindAsync(groupId);
+        var group = await _groupRepository.FindAsync(groupId, cancellationToken);
         
         if (group == null)
             throw new Exception($"Group with id {groupId} not found");
@@ -57,20 +57,8 @@ public class GroupSimulatedProjection
         var overview = _overviewBuilder.BuildOverview(group);
 
         // 3. Update all read model stores (replace old data with new)
-        //await _standingsRepository.RebuildStandingsAsync(groupId, standings, cancellationToken);
-        //await UpdateMatchResults(groupId, matchResults, cancellationToken);
-        //await _overviewRepository.UpsertAsync(overview, cancellationToken);
-    }
-
-    private async Task UpdateMatchResults(
-        Guid groupId, 
-        List<MatchResultReadModel> matchResults, 
-        CancellationToken cancellationToken)
-    {
-        // Delete old match results for this group
-        //await _matchResultRepository.DeleteManyAsync(m => m.GroupId == groupId, cancellationToken);
-        
-        // Insert new match results
-        //await _matchResultRepository.UpsertManyAsync(matchResults, cancellationToken);
+        await _standingsRepository.RebuildStandingsAsync(groupId, standings, cancellationToken);
+        await _matchResultRepository.RebuildMatchResultsAsync(groupId, matchResults, cancellationToken);
+        await _overviewRepository.UpsertAsync(overview, cancellationToken);
     }
 }

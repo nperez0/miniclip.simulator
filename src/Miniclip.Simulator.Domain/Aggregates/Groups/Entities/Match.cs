@@ -6,19 +6,27 @@ namespace Miniclip.Simulator.Domain.Aggregates.Groups.Entities;
 
 public class Match
 {
-    public Guid Id { get; }
-    public Team HomeTeam { get; }
-    public Team AwayTeam { get; }
+    public Guid Id { get; private set; }
+    public Guid HomeTeamId { get; private set; }
+    public Guid AwayTeamId { get; private set; }
+    public Team HomeTeam { get; private set; } = null!;
+    public Team AwayTeam { get; private set; } = null!;
     public int HomeScore { get; private set; }
     public int AwayScore { get; private set; }
-    public int Round { get; }
+    public int Round { get; private set; }
     public bool IsPlayed { get; private set; }
+
+    private Match()
+    {
+    }
 
     private Match(Guid id, Team homeTeam, Team awayTeam, int round)
     {
         Id = id;
         HomeTeam = homeTeam;
+        HomeTeamId = homeTeam.Id;
         AwayTeam = awayTeam;
+        AwayTeamId = awayTeam.Id;
         Round = round;
         IsPlayed = false;
         HomeScore = 0;

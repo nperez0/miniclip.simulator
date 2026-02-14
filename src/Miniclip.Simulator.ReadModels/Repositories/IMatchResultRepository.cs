@@ -17,4 +17,9 @@ public interface IMatchResultRepository : IReadOnlyRepository<MatchResultReadMod
     Task<IEnumerable<MatchResultReadModel>> GetMatchesByTeamIdAsync(
         Guid teamId, 
         CancellationToken cancellationToken);
+    
+    Task RebuildMatchResultsAsync(
+        Guid groupId, 
+        IEnumerable<MatchResultReadModel> matchResults, 
+        CancellationToken cancellationToken = default);
 }

@@ -11,4 +11,6 @@ public interface IGroupOverviewRepository : IReadOnlyRepository<GroupOverviewRea
     
     Task<IEnumerable<GroupOverviewReadModel>> GetAllOverviewsAsync(
         CancellationToken cancellationToken);
+    
+    Task UpsertAsync(GroupOverviewReadModel model, CancellationToken cancellationToken = default);
 }

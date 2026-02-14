@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using Miniclip.Simulator.Infrastructure.Read.Persistence;
 using Miniclip.Simulator.ReadModels.Models;
 using Miniclip.Simulator.ReadModels.Repositories;
 
@@ -69,5 +68,10 @@ public class MatchResultRepository : ReadModelRepository<MatchResultReadModel>, 
     public new async Task DeleteManyAsync(System.Linq.Expressions.Expression<Func<MatchResultReadModel, bool>> predicate, CancellationToken cancellationToken = default)
     {
         await base.DeleteManyAsync(predicate, cancellationToken);
+    }
+
+    public Task RebuildMatchResultsAsync(Guid groupId, IEnumerable<MatchResultReadModel> matchResults, CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException();
     }
 }
