@@ -16,13 +16,8 @@ public class SimulateGroupCommandHandler(
         var group = await repository.FindAsync(command.GroupId, cancellationToken);
         
         if (group == null)
-            return Result.Failure(new Exception($"Group with id {command.GroupId} not found"));
+            return Result.Failure(GroupNotFoundException.NotFound(command.GroupId));
 
-        groupSimulator.SimulateAllMatches(group);
-
-        // TODO: Publish domain event for read model projection
-        // This will trigger the GroupSimulatedProjection to update read models
-
-        return Result.Success();
+        return groupSimulator.SimulateAllMatches(group);
     }
 }

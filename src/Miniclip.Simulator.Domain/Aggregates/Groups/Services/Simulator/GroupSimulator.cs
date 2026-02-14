@@ -1,5 +1,6 @@
 ﻿using Miniclip.Core;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Entities;
+using Miniclip.Simulator.Domain.Aggregates.Groups.Exceptions;
 
 namespace Miniclip.Simulator.Domain.Aggregates.Groups.Services.Simulator;
 
@@ -7,7 +8,13 @@ public class GroupSimulator(IMatchSimulator matchSimulator) : IGroupSimulator
 {
     public Result SimulateAllMatches(Group group)
     {
-        var matchesNotPlayed = group.Matches.Where(m => !m.IsPlayed);
+        var matchesNotPlayed = group
+            .Matches
+            .Where(m => !m.IsPlayed)
+            .ToArray();
+
+        if (matchesNotPlayed.Length == 0)
+            return Result.Failure(GroupSimulationException.AllMatchesPlayed());
 
         foreach (var match in matchesNotPlayed)
         {

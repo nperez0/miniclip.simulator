@@ -1,10 +1,10 @@
 using Asp.Versioning;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Miniclip.Simulator.Api.Extensions;
 using Miniclip.Simulator.Application.Commands.Groups.V1.Generation;
 using Miniclip.Simulator.Application.Commands.Groups.V1.Simulation;
 using Miniclip.Simulator.Application.Queries.Groups.V1.MatchResults;
-using Miniclip.Simulator.Application.Queries.Groups.V1.Overview;
 using Miniclip.Simulator.Application.Queries.Groups.V1.Standings;
 
 namespace Miniclip.Simulator.Api.Controllers.V1;
@@ -14,42 +14,33 @@ namespace Miniclip.Simulator.Api.Controllers.V1;
 [Route("api/v{version:apiVersion}/[controller]")]
 public class GroupsController(IMediator mediator) : ControllerBase
 {
-    /// <summary>
-    /// Create a new group and generate fixtures
-    /// </summary>
     [HttpPost]
     [ProducesResponseType(typeof(Guid), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> CreateGroup(
-        [FromBody] GenerateGroupCommand command,
+        [FromBody] GenerateGroupRequest request,
         CancellationToken cancellationToken)
     {
-        var result = await mediator.Send(command, cancellationToken);
+        var result = await mediator.Send(request.ToCommand(), cancellationToken);
 
-        if (result.IsSuccess)
-            return CreatedAtAction("GetOverview", new { id = result.Value }, result.Value);
-
-        return BadRequest(result.Exception.Message);
+        return result.ToActionResult();
     }
 
     /// <summary>
     /// Simulate all matches in a group
     /// </summary>
-    [HttpPost("{id}/simulate")]
+    [HttpPost("{groupId}/simulate")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> SimulateGroup(
-        Guid id,
+        Guid groupId,
         CancellationToken cancellationToken)
     {
-        var command = new SimulateGroupCommand(id);
+        var command = new SimulateGroupCommand(groupId);
         var result = await mediator.Send(command, cancellationToken);
 
-        if (result.IsSuccess)
-            return NoContent();
-
-        return result.Exception.Message.Contains("not found") ? NotFound(result.Exception.Message) : BadRequest(result.Exception.Message);
+        return result.ToActionResult();
     }
 
     /// <summary>

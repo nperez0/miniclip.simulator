@@ -22,7 +22,10 @@ public class CommandUnitOfWorkBehavior<TRequest, TResponse>(IUnitOfWork unitOfWo
             var response = await next();
 
             if (IsSuccessful(response))
+            {
+                await unitOfWork.SaveChangesAsync(cancellationToken);
                 await unitOfWork.CommitAsync(cancellationToken);
+            }
             else
                 await unitOfWork.RollbackAsync(cancellationToken);
 

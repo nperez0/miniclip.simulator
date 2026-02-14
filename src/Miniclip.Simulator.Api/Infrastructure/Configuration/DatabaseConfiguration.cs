@@ -2,9 +2,11 @@
 using Miniclip.Core.Domain;
 using Miniclip.Core.EF;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Entities;
+using Miniclip.Simulator.Domain.Aggregates.Teams.Entities;
 using Miniclip.Simulator.Infrastructure.Read.Persistence;
 using Miniclip.Simulator.Infrastructure.Read.Persistence.Repositories;
 using Miniclip.Simulator.Infrastructure.Write.Persistence;
+using Miniclip.Simulator.Infrastructure.Write.Persistence.Repositories;
 using Miniclip.Simulator.ReadModels.Builders;
 using Miniclip.Simulator.ReadModels.Projections;
 using Miniclip.Simulator.ReadModels.Repositories;
@@ -25,8 +27,9 @@ public static class DatabaseConfiguration
             options.UseMySql(readConnectionString, ServerVersion.AutoDetect(readConnectionString)));
 
         // Domain repositories
-        services.AddScoped<IRepository<Group>>(sp =>
-            new Repository<Group>(sp.GetRequiredService<SimulatorWriteDbContext>()));
+        services.AddScoped<IRepository<Group>, GroupsRepository>();
+        services.AddScoped<IRepository<Team>>(sp =>
+            new Repository<Team>(sp.GetRequiredService<SimulatorWriteDbContext>()));
 
         // Unit of Work
         services.AddScoped<IUnitOfWork>(sp =>
