@@ -2,13 +2,20 @@
 
 namespace Miniclip.Simulator.Domain.Aggregates.Groups.Services.Fixtures;
 
-internal static class RoundRobinScheduler
+public class RoundRobinScheduler : IFixtureScheduler
 {
-    public static IEnumerable<(Team HomeTeam, Team AwayTeam, int Round)> GenerateSchedule(IReadOnlyCollection<Team> teams, int capacity)
-    {
-        var isOdd = capacity % 2 == 1;
+    private readonly bool isOdd;
+    private readonly List<Team> rotatedTeams;
+    private readonly int numberOfRounds;
+    private readonly int teamsCount;
+    private readonly int fixturesPerRound;
+    private readonly Dictionary<Team, int> homeCounter;
+    private readonly Dictionary<Team, int> awayCounter;
 
-        var rotatedTeams = teams.ToList();
+    public RoundRobinScheduler(IReadOnlyCollection<Team> teams, int capacity)
+    {
+        isOdd = capacity % 2 == 1;
+        rotatedTeams = [.. teams];
 
         // For odd number of teams, add a dummy (null) to make pairs work
         if (isOdd)
@@ -16,35 +23,33 @@ internal static class RoundRobinScheduler
 
         // For odd teams, we need as many rounds as teams (each team gets one bye)
         // For even teams, we need capacity - 1 rounds
-        var numberOfRounds = isOdd ? capacity : capacity - 1;
-        var teamsCount = rotatedTeams.Count;
-        var fixturesPerRound = teamsCount / 2;
+        numberOfRounds = isOdd ? capacity : capacity - 1;
+        teamsCount = rotatedTeams.Count;
+        fixturesPerRound = teamsCount / 2;
+        homeCounter = teams.ToDictionary(t => t, _ => 0);
+        awayCounter = teams.ToDictionary(t => t, _ => 0);
+    }
+
+    public IEnumerable<(Team HomeTeam, Team AwayTeam, int Round)> GenerateSchedule()
+    {
+        if (teamsCount <= 1 || fixturesPerRound == 0)
+            yield break;
+
         var currentRound = 1;
         var currentFixtureIndex = 0;
-        var homeCounter = teams.ToDictionary(t => t, _ => 0);
-        var awayCounter = teams.ToDictionary(t => t, _ => 0);
 
         do
         {
             var firstTeam = rotatedTeams[currentFixtureIndex];
             var secondTeam = rotatedTeams[teamsCount - 1 - currentFixtureIndex];
-
+            
             // Skip matches involving the dummy team
             if (firstTeam != Team.Dummy && secondTeam != Team.Dummy)
             {
-                // This ensures teams get a mix of home and away games
-                var shouldSwap = homeCounter[firstTeam] > homeCounter[secondTeam] 
-                    || awayCounter[secondTeam] > awayCounter[firstTeam];
-
-                var (homeTeam, awayTeam) = shouldSwap
-                    ? (secondTeam, firstTeam)
-                    : (firstTeam, secondTeam);
-
-                homeCounter[homeTeam]++;
-                awayCounter[awayTeam]++;
+                var (homeTeam, awayTeam) = GetMatchup(firstTeam, secondTeam);
 
                 yield return (homeTeam, awayTeam, currentRound);
-            }
+            }   
 
             currentFixtureIndex++;
 
@@ -57,15 +62,36 @@ internal static class RoundRobinScheduler
                 if (hasReachedMaxRounds)
                     break;
 
-                currentFixtureIndex = 0;
                 currentRound++;
-
-                // Rotate teams (keep first team fixed)
-                var lastTeam = rotatedTeams.Last();
-                rotatedTeams.Remove(lastTeam);
-                rotatedTeams.Insert(1, lastTeam);
+                currentFixtureIndex = 0;
+                
+                RoteateTeams();
             }
 
         } while (true);
+    }
+
+    private (Team HomeTeam, Team AwayTeam) GetMatchup(Team firstTeam, Team secondTeam)
+    {
+        // This ensures teams get a mix of home and away games
+        var shouldSwap = homeCounter[firstTeam] > homeCounter[secondTeam]
+            || awayCounter[secondTeam] > awayCounter[firstTeam];
+
+        var (homeTeam, awayTeam) = shouldSwap
+            ? (secondTeam, firstTeam)
+            : (firstTeam, secondTeam);
+
+        homeCounter[homeTeam]++;
+        awayCounter[awayTeam]++;
+
+        return (homeTeam, awayTeam);
+    }
+
+    private void RoteateTeams()
+    {
+        // Rotate teams (keep first team fixed)
+        var lastTeam = rotatedTeams.Last();
+        rotatedTeams.Remove(lastTeam);
+        rotatedTeams.Insert(1, lastTeam);
     }
 }

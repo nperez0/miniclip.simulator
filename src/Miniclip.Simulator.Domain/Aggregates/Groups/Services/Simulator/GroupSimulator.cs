@@ -4,10 +4,18 @@ using Miniclip.Simulator.Domain.Aggregates.Groups.Exceptions;
 
 namespace Miniclip.Simulator.Domain.Aggregates.Groups.Services.Simulator;
 
-public class GroupSimulator(IMatchSimulator matchSimulator) : IGroupSimulator
+public class GroupSimulator : IGroupSimulator
 {
+    private readonly IMatchSimulatorFactory IMatchSimulatorFactory;
+
+    public GroupSimulator(IMatchSimulatorFactory IMatchSimulatorFactory)
+    {
+        this.IMatchSimulatorFactory = IMatchSimulatorFactory;
+    }
+
     public Result SimulateAllMatches(Group group)
     {
+        var matchSimulator = IMatchSimulatorFactory.Create(group);
         var matchesNotPlayed = group
             .Matches
             .Where(m => !m.IsPlayed)
@@ -18,7 +26,7 @@ public class GroupSimulator(IMatchSimulator matchSimulator) : IGroupSimulator
 
         foreach (var match in matchesNotPlayed)
         {
-            var result = SimulateMatch(match);
+            var result = SimulateMatch(match, matchSimulator);
 
             if (result.IsFailure)
                 return result;
@@ -27,7 +35,7 @@ public class GroupSimulator(IMatchSimulator matchSimulator) : IGroupSimulator
         return Result.Success();
     }
 
-    private Result SimulateMatch(Match match)
+    private Result SimulateMatch(Match match, IMatchSimulator matchSimulator)
     {
         var (homeScore, awayScore) = matchSimulator.SimulateMatch(match.HomeTeam.Strength, match.AwayTeam.Strength);
 

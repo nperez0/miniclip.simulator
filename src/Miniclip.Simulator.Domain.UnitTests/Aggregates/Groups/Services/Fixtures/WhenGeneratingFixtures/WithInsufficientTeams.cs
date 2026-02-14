@@ -1,8 +1,8 @@
 using FluentAssertions;
-using Miniclip.Core;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Entities;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Exceptions;
 using Miniclip.Simulator.Domain.Aggregates.Teams.Entities;
+using NSubstitute;
 using NUnit.Framework;
 
 namespace Miniclip.Simulator.Domain.UnitTests.Aggregates.Groups.Services.Fixtures.WhenGeneratingFixtures;
@@ -11,11 +11,11 @@ public class WithInsufficientTeams : WhenGeneratingFixtures
 {
     protected override void Given()
     {
+        base.Given();
+
         Capacity = 4;
 
-        Group = Group.Create(Guid.NewGuid(), "Group A", Capacity).Value;
-        Group!.AddTeam(Team.Create(Guid.NewGuid(), "Team 1", 50).Value!);
-        Group!.AddTeam(Team.Create(Guid.NewGuid(), "Team 2", 60).Value!);
+        GivenGroupWithTeams(2);
     }
 
     [Test]
@@ -26,10 +26,23 @@ public class WithInsufficientTeams : WhenGeneratingFixtures
     }
 
     [Test]
-    public void ShouldReturnInvalidTeamCountException()
+    public void ShouldNotCallFixtureSchedulerFactory()
+    {
+        FixtureSchedulerFactory!.DidNotReceive().Create(Arg.Any<Group>());
+    }
+
+    [Test]
+    public void ShouldNotCallSchedulerGenerateSchedule()
+    {
+        FixtureScheduler!.DidNotReceive().GenerateSchedule();
+    }
+
+    [Test]
+    public void ShouldIndicateExpectedAndActualTeamCount()
     {
         Result!.Exception.Should().BeOfType<GroupGenerateFixturesException>();
-        Result!.Exception.Message.Should().Contain("must have exactly");
+        Result!.Exception.Message.Should().Contain("4");
+        Result!.Exception.Message.Should().Contain("2");
     }
 
     [Test]

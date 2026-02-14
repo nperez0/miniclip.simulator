@@ -7,8 +7,9 @@ public static class DomainConfiguration
 {
     public static IServiceCollection AddDomainDependencies(this IServiceCollection services)
     {
-        services.AddScoped<IMatchSimulator, MatchSimulator>();
+        services.AddScoped<IMatchSimulatorFactory, MatchSimulatorFactory>();
         services.AddScoped<IGroupSimulator, GroupSimulator>();
+        services.AddScoped<IFixtureSchedulerFactory, FixtureSchedulerFactory>();
         services.AddScoped<IFixtureSchedulerService, FixtureSchedulerService>();
 
         return services;
