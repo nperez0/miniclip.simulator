@@ -3,10 +3,6 @@ using Miniclip.Simulator.ReadModels.Repositories;
 
 namespace Miniclip.Simulator.Application.Queries.Groups.V1.Standings;
 
-/// <summary>
-/// Handles queries for group standings.
-/// Reads from pre-calculated read models - blazing fast!
-/// </summary>
 public class GroupStandingsQueryHandler(IGroupStandingsRepository repository) 
     : IRequestHandler<GroupStandingsQuery, GroupStandingsDto>
 {

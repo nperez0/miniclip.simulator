@@ -3,23 +3,18 @@ using Miniclip.Simulator.ReadModels.Models;
 
 namespace Miniclip.Simulator.ReadModels.Repositories;
 
-public interface IGroupStandingsRepository : IReadOnlyRepository<GroupStandingsReadModel>
+public interface IGroupStandingsRepository : IReadOnlyRepository<GroupStandingsModel>
 {
-    Task<IEnumerable<GroupStandingsReadModel>> GetStandingsByGroupIdAsync(
+    Task<IEnumerable<GroupStandingsModel>> GetStandingsByGroupIdAsync(
         Guid groupId, 
         CancellationToken cancellationToken);
     
-    Task<GroupStandingsReadModel?> GetTeamStandingAsync(
+    Task<GroupStandingsModel?> GetTeamStandingAsync(
         Guid groupId, 
         Guid teamId, 
         CancellationToken cancellationToken);
     
-    Task<IEnumerable<GroupStandingsReadModel>> GetQualifiedTeamsAsync(
+    Task<IEnumerable<GroupStandingsModel>> GetQualifiedTeamsAsync(
         Guid groupId, 
-        CancellationToken cancellationToken);
-    
-    Task RebuildStandingsAsync(
-        Guid groupId, 
-        IEnumerable<GroupStandingsReadModel> standings, 
         CancellationToken cancellationToken);
 }

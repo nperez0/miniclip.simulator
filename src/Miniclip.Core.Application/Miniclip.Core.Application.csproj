@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Miniclip.Core.Domain\Miniclip.Core.Domain.csproj" />
+    <ProjectReference Include="..\Miniclip.Core.ReadModels\Miniclip.Core.ReadModels.csproj" />
     <ProjectReference Include="..\Miniclip.Core\Miniclip.Core.csproj" />
   </ItemGroup>
 

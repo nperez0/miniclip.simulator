@@ -10,9 +10,12 @@ public static class MediatRConfiguration
          {
              cfg.RegisterServicesFromAssemblies(
                  typeof(Application.Commands.AssemblyReference).Assembly, // Commands
-                 typeof(Application.Queries.AssemblyReference).Assembly); // Queries
+                 typeof(Application.Queries.AssemblyReference).Assembly, // Queries
+                 typeof(ReadModels.Projections.AssemblyReference).Assembly); // Projections
 
              cfg.AddOpenBehavior(typeof(CommandUnitOfWorkBehavior<,>));
+             cfg.AddOpenBehavior(typeof(ReadModelUnitOfWorkBehavior<,>));
+             cfg.AddOpenBehavior(typeof(DomainEventPublisherBehavior<,>));
          });
 
         return services;

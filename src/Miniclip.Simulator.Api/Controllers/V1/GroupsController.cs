@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc;
 using Miniclip.Simulator.Api.Extensions;
 using Miniclip.Simulator.Application.Commands.Groups.V1.Generation;
 using Miniclip.Simulator.Application.Commands.Groups.V1.Simulation;
-using Miniclip.Simulator.Application.Queries.Groups.V1.MatchResults;
 using Miniclip.Simulator.Application.Queries.Groups.V1.Standings;
 
 namespace Miniclip.Simulator.Api.Controllers.V1;
@@ -58,36 +57,4 @@ public class GroupsController(IMediator mediator) : ControllerBase
 
         return Ok(result);
     }
-
-    /// <summary>
-    /// Get all match results in a group
-    /// </summary>
-    [HttpGet("{id}/matches")]
-    [ProducesResponseType(typeof(IEnumerable<MatchResultsDto>), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetMatches(
-        Guid id,
-        CancellationToken cancellationToken)
-    {
-        var query = new MatchResultsQuery(id);
-        var result = await mediator.Send(query, cancellationToken);
-
-        return Ok(result);
-    }
-
-    /// <summary>
-    /// Get complete group overview (standings + matches)
-    /// </summary>
-    //[HttpGet("{id}/overview")]
-    //[ProducesResponseType(typeof(GroupOverviewDto), StatusCodes.Status200OK)]
-    //[ProducesResponseType(StatusCodes.Status404NotFound)]
-    //public async Task<IActionResult> GetOverview(
-    //    Guid id,
-    //    CancellationToken cancellationToken)
-    //{
-    //    var query = new GroupOverviewQuery(id);
-    //    var result = await mediator.Send(query, cancellationToken);
-
-    //    return result.IsSuccess ? Ok(result.Value) : NotFound(result.Error);
-    //}
 }

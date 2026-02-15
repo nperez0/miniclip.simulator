@@ -1,5 +1,6 @@
 ﻿using Miniclip.Core;
 using Miniclip.Core.Domain;
+using Miniclip.Simulator.Domain.Aggregates.Groups.Events;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Exceptions;
 using Miniclip.Simulator.Domain.Aggregates.Teams.Entities;
 
@@ -26,6 +27,8 @@ public class Group : AggregateRoot
         Capacity = capacity;
         teams = [];
         matches = [];
+
+        Enqueue(new GroupCreated(Id, Name, Capacity));
     }
 
     public static Result<Group> Create(Guid id, string? name, int capacity)

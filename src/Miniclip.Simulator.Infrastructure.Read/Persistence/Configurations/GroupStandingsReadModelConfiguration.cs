@@ -4,13 +4,9 @@ using Miniclip.Simulator.ReadModels.Models;
 
 namespace Miniclip.Simulator.Infrastructure.Read.Persistence.Configurations;
 
-/// <summary>
-/// EF Core configuration for GroupStandingsReadModel.
-/// Denormalized table for fast standings queries.
-/// </summary>
-public class GroupStandingsReadModelConfiguration : IEntityTypeConfiguration<GroupStandingsReadModel>
+public class GroupStandingsReadModelConfiguration : IEntityTypeConfiguration<GroupStandingsModel>
 {
-    public void Configure(EntityTypeBuilder<GroupStandingsReadModel> builder)
+    public void Configure(EntityTypeBuilder<GroupStandingsModel> builder)
     {
         builder.ToTable("GroupStandings");
 

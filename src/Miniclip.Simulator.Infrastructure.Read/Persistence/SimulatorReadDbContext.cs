@@ -1,15 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
-using Miniclip.Simulator.ReadModels.Models;
 
 namespace Miniclip.Simulator.Infrastructure.Read.Persistence;
 
-public class SimulatorReadDbContext(DbContextOptions<SimulatorReadDbContext> options) : DbContext
+public class SimulatorReadDbContext(DbContextOptions<SimulatorReadDbContext> options) : DbContext(options)
 {
-    public DbSet<GroupStandingsReadModel> GroupStandings => Set<GroupStandingsReadModel>();
-    public DbSet<MatchResultReadModel> MatchResults => Set<MatchResultReadModel>();
-    public DbSet<GroupOverviewReadModel> GroupOverviews => Set<GroupOverviewReadModel>();
-
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(SimulatorReadDbContext).Assembly);

@@ -1,6 +1,6 @@
-namespace Miniclip.Core.Domain;
+﻿namespace Miniclip.Core.ReadModels;
 
-public interface IUnitOfWork
+public interface IReadModelUnitOfWork
 {
     Task BeginTransactionAsync(CancellationToken cancellationToken = default);
 
@@ -9,6 +9,4 @@ public interface IUnitOfWork
     Task RollbackAsync(CancellationToken cancellationToken = default);
 
     Task SaveChangesAsync(CancellationToken cancellationToken = default);
-
-    AggregateRoot[] GetTrackedAggregates();
 }

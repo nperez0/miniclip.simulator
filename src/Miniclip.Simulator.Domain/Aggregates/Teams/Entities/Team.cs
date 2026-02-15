@@ -1,6 +1,5 @@
 ﻿using Miniclip.Core;
 using Miniclip.Core.Domain;
-using Miniclip.Simulator.Domain.Aggregates.Teams.Events;
 using Miniclip.Simulator.Domain.Aggregates.Teams.Exceptions;
 
 namespace Miniclip.Simulator.Domain.Aggregates.Teams.Entities;
@@ -17,8 +16,6 @@ public class Team : AggregateRoot
         Id = id;
         Name = name;
         Strength = strength;
-
-        Enqueue(new TeamCreated(Id, Name, Strength));
     }
 
     public static Result<Team> Create(Guid id, string? name, int strength)

@@ -1,14 +1,14 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Miniclip.Core.Domain;
 using Miniclip.Core.EF;
+using Miniclip.Core.ReadModels;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Entities;
 using Miniclip.Simulator.Domain.Aggregates.Teams.Entities;
 using Miniclip.Simulator.Infrastructure.Read.Persistence;
 using Miniclip.Simulator.Infrastructure.Read.Persistence.Repositories;
 using Miniclip.Simulator.Infrastructure.Write.Persistence;
 using Miniclip.Simulator.Infrastructure.Write.Persistence.Repositories;
-using Miniclip.Simulator.ReadModels.Builders;
-using Miniclip.Simulator.ReadModels.Projections;
+using Miniclip.Simulator.ReadModels.Models;
 using Miniclip.Simulator.ReadModels.Repositories;
 
 namespace Miniclip.Simulator.Api.Infrastructure.Configuration;
@@ -34,19 +34,13 @@ public static class DatabaseConfiguration
         // Unit of Work
         services.AddScoped<IUnitOfWork>(sp =>
             new SimulatorUnitOfWork(sp.GetRequiredService<SimulatorWriteDbContext>()));
+        services.AddScoped<IReadModelUnitOfWork>(sp =>
+            new SimulatorReadModelUnitOfWork(sp.GetRequiredService<SimulatorReadDbContext>()));
 
         // Read models repositories
+        services.AddScoped<IRepository<GroupStandingsModel>>(sp =>
+            new Repository<GroupStandingsModel>(sp.GetRequiredService<SimulatorReadDbContext>()));
         services.AddScoped<IGroupStandingsRepository, GroupStandingsRepository>();
-        services.AddScoped<IMatchResultRepository, MatchResultRepository>();
-        services.AddScoped<IGroupOverviewRepository, GroupOverviewRepository>();
-
-        // Read model builders
-        services.AddScoped<GroupStandingsBuilder>();
-        services.AddScoped<MatchResultBuilder>();
-        services.AddScoped<GroupOverviewBuilder>();
-
-        // Projections
-        services.AddScoped<GroupSimulatedProjection>();
 
         return services;
     }
@@ -55,8 +49,8 @@ public static class DatabaseConfiguration
     {
         using var scope = app.ApplicationServices.CreateScope();
         var writeContext = scope.ServiceProvider.GetRequiredService<SimulatorWriteDbContext>();
-        //var readContext = scope.ServiceProvider.GetRequiredService<SimulatorReadDbContext>();
+        var readContext = scope.ServiceProvider.GetRequiredService<SimulatorReadDbContext>();
         writeContext.Database.Migrate();
-        //readContext.Database.Migrate();
+        readContext.Database.Migrate();
     }
 }

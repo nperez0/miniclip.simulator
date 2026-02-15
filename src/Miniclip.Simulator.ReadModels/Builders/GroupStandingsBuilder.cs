@@ -13,12 +13,12 @@ public class GroupStandingsBuilder
     /// Build complete standings for a group from domain entities.
     /// Returns a flat list of team standings with positions and qualifications.
     /// </summary>
-    public List<GroupStandingsReadModel> BuildStandings(Group group)
+    public List<GroupStandingsModel> BuildStandings(Group group)
     {
         var teamStats = CalculateTeamStatistics(group);
         var sortedStandings = SortByTournamentRules(teamStats);
         
-        return sortedStandings.Select((stat, index) => new GroupStandingsReadModel
+        return sortedStandings.Select((stat, index) => new GroupStandingsModel
         {
             Id = Guid.NewGuid(),
             GroupId = group.Id,

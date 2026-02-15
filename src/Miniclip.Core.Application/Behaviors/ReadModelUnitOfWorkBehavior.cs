@@ -1,11 +1,11 @@
-using MediatR;
+﻿using MediatR;
 using Miniclip.Core.Application.Extensions;
-using Miniclip.Core.Domain;
+using Miniclip.Core.ReadModels;
 
 namespace Miniclip.Core.Application.Behaviors;
 
-public class CommandUnitOfWorkBehavior<TRequest, TResponse>(IUnitOfWork unitOfWork) 
-    : IPipelineBehavior<TRequest, TResponse>
+public class ReadModelUnitOfWorkBehavior<TRequest, TResponse>(IReadModelUnitOfWork unitOfWork)
+: IPipelineBehavior<TRequest, TResponse>
     where TRequest : IRequest<TResponse>
 {
     public async Task<TResponse> Handle(

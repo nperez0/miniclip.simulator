@@ -4,7 +4,7 @@ namespace Miniclip.Simulator.ReadModels.Models;
 /// Denormalized read model optimized for fast queries.
 /// Pre-calculated team standings - no joins or calculations needed at query time.
 /// </summary>
-public class GroupStandingsReadModel
+public class GroupStandingsModel
 {
     public Guid Id { get; set; }
     public Guid GroupId { get; set; }
