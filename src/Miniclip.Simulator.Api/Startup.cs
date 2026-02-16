@@ -13,8 +13,9 @@ public class Startup(IConfiguration configuration)
         services.AddVersionedSwagger();
 
         services.AddMediatR();
-        services.AddDomainDependencies();
         services.AddDatabaseDependencies(configuration);
+        services.AddDomainDependencies();
+        services.AddProjectionsDependencies();
     }
 
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

@@ -1,4 +1,5 @@
-﻿using Miniclip.Core.Application.Behaviors;
+﻿using MediatR;
+using Miniclip.Core.Application.Behaviors;
 
 namespace Miniclip.Simulator.Api.Infrastructure.Configuration;
 
@@ -12,6 +13,8 @@ public static class MediatRConfiguration
                  typeof(Application.Commands.AssemblyReference).Assembly, // Commands
                  typeof(Application.Queries.AssemblyReference).Assembly, // Queries
                  typeof(ReadModels.Projections.AssemblyReference).Assembly); // Projections
+
+             cfg.NotificationPublisher = new OrderedNotificationPublisher();
 
              cfg.AddOpenBehavior(typeof(CommandUnitOfWorkBehavior<,>));
              cfg.AddOpenBehavior(typeof(ReadModelUnitOfWorkBehavior<,>));

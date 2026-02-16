@@ -65,9 +65,6 @@ public class GroupStandingsReadModelConfiguration : IEntityTypeConfiguration<Gro
         builder.Property(x => x.LastUpdated)
             .IsRequired();
 
-        builder.Property(x => x.Version)
-            .IsRequired();
-
         // Indexes for fast queries
         builder.HasIndex(x => x.GroupId)
             .HasDatabaseName("IX_GroupStandings_GroupId");

@@ -5,11 +5,13 @@ using Miniclip.Core.ReadModels;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Entities;
 using Miniclip.Simulator.Domain.Aggregates.Teams.Entities;
 using Miniclip.Simulator.Infrastructure.Read.Persistence;
-using Miniclip.Simulator.Infrastructure.Read.Persistence.Repositories;
 using Miniclip.Simulator.Infrastructure.Write.Persistence;
 using Miniclip.Simulator.Infrastructure.Write.Persistence.Repositories;
-using Miniclip.Simulator.ReadModels.Models;
-using Miniclip.Simulator.ReadModels.Repositories;
+using Miniclip.Simulator.ReadModels.Projections.Services;
+using Read = Miniclip.Simulator.ReadModels.Repositories.Read;
+using ReadRepo = Miniclip.Simulator.Infrastructure.Read.Persistence.Repositories.Read;
+using Write = Miniclip.Simulator.ReadModels.Repositories.Write;
+using WriteRepo = Miniclip.Simulator.Infrastructure.Read.Persistence.Repositories.Write;
 
 namespace Miniclip.Simulator.Api.Infrastructure.Configuration;
 
@@ -37,10 +39,13 @@ public static class DatabaseConfiguration
         services.AddScoped<IReadModelUnitOfWork>(sp =>
             new SimulatorReadModelUnitOfWork(sp.GetRequiredService<SimulatorReadDbContext>()));
 
-        // Read models repositories
-        services.AddScoped<IRepository<GroupStandingsModel>>(sp =>
-            new Repository<GroupStandingsModel>(sp.GetRequiredService<SimulatorReadDbContext>()));
-        services.AddScoped<IGroupStandingsRepository, GroupStandingsRepository>();
+        // Read models repositories - Group Standings
+        services.AddScoped<Read.IGroupStandingsRepository, ReadRepo.GroupStandingsRepository>();
+        services.AddScoped<Write.IGroupStandingsRepository, WriteRepo.GroupStandingsRepository>();
+        
+        // Read models repositories - Match Results
+        services.AddScoped<Read.IMatchResultsRepository, ReadRepo.MatchResultsRepository>();
+        services.AddScoped<Write.IMatchResultsRepository, WriteRepo.MatchResultsRepository>();
 
         return services;
     }

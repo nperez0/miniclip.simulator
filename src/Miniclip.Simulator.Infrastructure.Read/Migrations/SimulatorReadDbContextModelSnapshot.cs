@@ -76,9 +76,6 @@ namespace Miniclip.Simulator.Infrastructure.Read.Migrations
                     b.Property<int>("TeamStrength")
                         .HasColumnType("int");
 
-                    b.Property<long>("Version")
-                        .HasColumnType("bigint");
-
                     b.Property<int>("Wins")
                         .HasColumnType("int");
 
@@ -95,6 +92,71 @@ namespace Miniclip.Simulator.Infrastructure.Read.Migrations
                         .HasDatabaseName("IX_GroupStandings_GroupId_TeamId");
 
                     b.ToTable("GroupStandings", (string)null);
+                });
+
+            modelBuilder.Entity("Miniclip.Simulator.ReadModels.Models.MatchResultModel", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("char(36)");
+
+                    b.Property<int>("AwayScore")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("AwayTeamId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("AwayTeamName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.Property<Guid>("GroupId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("GroupName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.Property<int>("HomeScore")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("HomeTeamId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("HomeTeamName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.Property<bool>("IsPlayed")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<Guid>("MatchId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime?>("PlayedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("Round")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GroupId")
+                        .HasDatabaseName("IX_MatchResults_GroupId");
+
+                    b.HasIndex("MatchId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_MatchResults_MatchId");
+
+                    b.HasIndex("GroupId", "Round")
+                        .HasDatabaseName("IX_MatchResults_GroupId_Round");
+
+                    b.HasIndex("GroupId", "HomeTeamId", "AwayTeamId")
+                        .HasDatabaseName("IX_MatchResults_GroupId_Teams");
+
+                    b.ToTable("MatchResults", (string)null);
                 });
 #pragma warning restore 612, 618
         }

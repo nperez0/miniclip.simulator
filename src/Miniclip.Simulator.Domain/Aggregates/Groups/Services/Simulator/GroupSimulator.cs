@@ -26,19 +26,14 @@ public class GroupSimulator : IGroupSimulator
 
         foreach (var match in matchesNotPlayed)
         {
-            var result = SimulateMatch(match, matchSimulator);
+            var (homeScore, awayScore) = matchSimulator.SimulateMatch(match.HomeTeam.Strength, match.AwayTeam.Strength);
+
+            var result = group.SimulateMatch(match.Id, homeScore, awayScore);
 
             if (result.IsFailure)
                 return result;
         }
 
         return Result.Success();
-    }
-
-    private Result SimulateMatch(Match match, IMatchSimulator matchSimulator)
-    {
-        var (homeScore, awayScore) = matchSimulator.SimulateMatch(match.HomeTeam.Strength, match.AwayTeam.Strength);
-
-        return match.SimulateResult(homeScore, awayScore);
     }
 }

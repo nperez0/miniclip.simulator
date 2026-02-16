@@ -27,8 +27,6 @@ public class Group : AggregateRoot
         Capacity = capacity;
         teams = [];
         matches = [];
-
-        Enqueue(new GroupCreated(Id, Name, Capacity));
     }
 
     public static Result<Group> Create(Guid id, string? name, int capacity)
@@ -63,6 +61,36 @@ public class Group : AggregateRoot
             return matchResult;
             
         matches.Add(matchResult.Value!);
+
+        return Result.Success();
+    }
+
+    public Result SimulateMatch(Guid matchId, int homeScore, int awayScore)
+    {
+        var match = matches.FirstOrDefault(m => m.Id == matchId);
+        
+        if (match == null)
+            return Result.Failure(MatchNotFoundException.NotFound(matchId));
+
+        var result = match.SimulateResult(homeScore, awayScore);
+
+        if (result.IsFailure)
+            return result;
+
+        Enqueue(new MatchPlayed(
+            GroupId: Id,
+            GroupName: Name,
+            MatchId: match.Id,
+            HomeTeamId: match.HomeTeam.Id,
+            HomeTeamName: match.HomeTeam.Name,
+            HomeTeamStrength: match.HomeTeam.Strength,
+            HomeScore: match.HomeScore,
+            AwayTeamId: match.AwayTeam.Id,
+            AwayTeamName: match.AwayTeam.Name,
+            AwayTeamStrength: match.AwayTeam.Strength,
+            AwayScore: match.AwayScore,
+            Round: match.Round
+        ));
 
         return Result.Success();
     }

@@ -29,5 +29,4 @@ public class GroupStandingsModel
     
     // Metadata
     public DateTime LastUpdated { get; set; }
-    public long Version { get; set; }
 }
