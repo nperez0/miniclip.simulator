@@ -17,11 +17,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\Miniclip.Core.ReadModels.Projections\Miniclip.Core.ReadModels.Projections.csproj" />
 		<ProjectReference Include="..\Miniclip.Core.Tests\Miniclip.Core.Tests.csproj" />
+		<ProjectReference Include="..\Miniclip.Simulator.Application.Commands\Miniclip.Simulator.Application.Commands.csproj" />
 		<ProjectReference Include="..\Miniclip.Simulator.Domain\Miniclip.Simulator.Domain.csproj" />
-		<ProjectReference Include="..\Miniclip.Simulator.ReadModels\Miniclip.Simulator.ReadModels.csproj" />
-		<ProjectReference Include="..\Miniclip.Simulator.ReadModels.Projections\Miniclip.Simulator.ReadModels.Projections.csproj" />
 	</ItemGroup>
 
 </Project>
