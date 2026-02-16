@@ -2,7 +2,6 @@
 using Miniclip.Core.EF;
 using Miniclip.Simulator.ReadModels.Models;
 using Miniclip.Simulator.ReadModels.Repositories.Write;
-using System.Linq;
 
 namespace Miniclip.Simulator.Infrastructure.Read.Persistence.Repositories.Write;
 
