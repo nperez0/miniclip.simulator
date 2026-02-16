@@ -1,28 +1,34 @@
 # See https://aka.ms/customizecontainer to learn how to customize your debug container and how Visual Studio uses this Dockerfile to build your images for faster debugging.
 
 # This stage is used when running from VS in fast mode (Default for Debug configuration)
-FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
 USER $APP_UID
 WORKDIR /app
 EXPOSE 8080
 EXPOSE 8081
 
 # This stage is used to build the service project
-FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 
 # Copy Directory.Packages.props first (needed for restore)
 COPY ["Directory.Packages.props", "."]
 
-# Copy all .csproj files to preserve project structure
-COPY ["**/*.csproj", "./"]
+# Copy solution file if it exists (helps with project discovery)
+COPY ["*.sln", "./"]
+
+# Copy all project files while preserving directory structure
+# We copy everything first, then remove test projects
+COPY . .
+
+# Remove unit test projects before restore to avoid unnecessary dependencies
+RUN rm -rf ./**/*.UnitTests/ || true && \
+    rm -rf ./**/*.Tests/ || true && \
+    find . -type f \( -name "*.UnitTests.csproj" -o -name "*.Tests.csproj" \) -delete || true
 
 # Restore dependencies for the API project
-RUN dotnet restore "Miniclip.Simulator.Api/Miniclip.Simulator.Api.csproj"
-
-# Copy all source code
-COPY . .
+RUN dotnet restore "./Miniclip.Simulator.Api/Miniclip.Simulator.Api.csproj"
 
 # Build the project
 WORKDIR "/src/Miniclip.Simulator.Api"
