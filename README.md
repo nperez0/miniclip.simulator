@@ -69,7 +69,7 @@ Content-Type: application/json
 ```
 Generates a new group with random teams from the database. Capacity must be between 2 and 6 teams.
 
-**Response**: `201 Created` with group ID
+**Response**: `204 No Content` with group ID
 
 #### Simulate Group
 ```http
