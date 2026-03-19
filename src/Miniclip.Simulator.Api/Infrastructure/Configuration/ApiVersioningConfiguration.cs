@@ -3,6 +3,7 @@ using Asp.Versioning.ApiExplorer;
 using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
+using Scalar.AspNetCore;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace Miniclip.Simulator.Api.Infrastructure.Configuration;
@@ -31,7 +32,7 @@ public static class ApiVersioningConfiguration
         return services;
     }
 
-    public static IServiceCollection AddVersionedSwagger(this IServiceCollection services)
+    public static IServiceCollection AddVersionedOpenApi(this IServiceCollection services)
     {
         services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
         services.AddSwaggerGen(options =>
@@ -42,22 +43,29 @@ public static class ApiVersioningConfiguration
         return services;
     }
 
-    public static IApplicationBuilder UseVersionedSwagger(this IApplicationBuilder app)
+    public static IApplicationBuilder UseVersionedOpenApi(this IApplicationBuilder app)
     {
-        app.UseSwagger();
-        app.UseSwaggerUI(options =>
+        app.UseSwagger(options =>
         {
-            var provider = app.ApplicationServices.GetRequiredService<IApiVersionDescriptionProvider>();
-
-            foreach (var description in provider.ApiVersionDescriptions)
-            {
-                options.SwaggerEndpoint(
-                    $"/swagger/{description.GroupName}/swagger.json",
-                    description.GroupName.ToUpperInvariant());
-            }
+            options.RouteTemplate = "openapi/{documentName}.json";
         });
 
         return app;
+    }
+
+    public static IEndpointRouteBuilder MapVersionedOpenApi(this IEndpointRouteBuilder endpoints)
+    {
+        var provider = endpoints.ServiceProvider.GetRequiredService<IApiVersionDescriptionProvider>();
+
+        foreach (var description in provider.ApiVersionDescriptions)
+        {
+            endpoints.MapScalarApiReference(description.GroupName, options =>
+            {
+                options.Title = "Miniclip Simulator API";
+            });
+        }
+
+        return endpoints;
     }
 }
 
@@ -92,10 +100,10 @@ public class SwaggerDefaultValues : IOperationFilter
 
         foreach (var responseType in context.ApiDescription.SupportedResponseTypes)
         {
-            var responseKey = responseType.IsDefaultResponse 
-                ? "default" 
+            var responseKey = responseType.IsDefaultResponse
+                ? "default"
                 : responseType.StatusCode.ToString();
-            
+
             var response = operation.Responses[responseKey];
 
             foreach (var contentType in response.Content.Keys)
@@ -115,13 +123,13 @@ public class SwaggerDefaultValues : IOperationFilter
 
             parameter.Description ??= description.ModelMetadata?.Description;
 
-            if (parameter.Schema.Default == null 
-                && description.DefaultValue != null 
-                && description.DefaultValue is not DBNull 
+            if (parameter.Schema.Default == null
+                && description.DefaultValue != null
+                && description.DefaultValue is not DBNull
                 && description.ModelMetadata is { } modelMetadata)
             {
                 var json = System.Text.Json.JsonSerializer.Serialize(
-                    description.DefaultValue, 
+                    description.DefaultValue,
                     modelMetadata.ModelType);
                 parameter.Schema.Default = new Microsoft.OpenApi.Any.OpenApiString(json);
             }

@@ -10,7 +10,7 @@ public class Startup(IConfiguration configuration)
 
         services.AddApiVersioningConfiguration();
         services.AddEndpointsApiExplorer();
-        services.AddVersionedSwagger();
+        services.AddVersionedOpenApi();
 
         services.AddMediatR();
         services.AddDatabaseDependencies(configuration);
@@ -22,8 +22,7 @@ public class Startup(IConfiguration configuration)
     {
         app.InitializeDatabases();
 
-        app.UseVersionedSwagger();
-
+        app.UseVersionedOpenApi();
         app.UseHttpsRedirection();
         app.UseRouting();
         app.UseAuthorization();
@@ -31,6 +30,7 @@ public class Startup(IConfiguration configuration)
         app.UseEndpoints(endpoints =>
         {
             endpoints.MapControllers();
+            endpoints.MapVersionedOpenApi();
         });
     }
 }
