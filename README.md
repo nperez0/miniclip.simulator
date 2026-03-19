@@ -19,17 +19,17 @@ A tournament group simulator API built with .NET 8, implementing CQRS pattern wi
 - **MySQL 8.0** (Write and Read databases)
 - **Entity Framework Core** with Pomelo MySQL provider
 - **MediatR** for CQRS implementation
-- **Docker & Docker Compose** for containerization
+- **.NET Aspire** for local orchestration, observability and service discovery
 - **Swagger/OpenAPI** for API documentation
 
 ## Prerequisites
 
-- [Docker](https://www.docker.com/products/docker-desktop/) (version 20.10 or later)
-- [Docker Compose](https://docs.docker.com/compose/install/) (version 1.29 or later)
+- [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8)
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (used by Aspire to run the MySQL container)
 
 ## Getting Started
 
-### Running with Docker Compose
+### Running with .NET Aspire
 
 1. **Clone the repository**
    ```bash
@@ -37,21 +37,42 @@ A tournament group simulator API built with .NET 8, implementing CQRS pattern wi
    cd miniclip.simulator/src
    ```
 
-2. **Start the application**
+2. **Set the MySQL password in user secrets** (one-time setup)
    ```bash
-   docker-compose up -d
+   cd Miniclip.Simulator.AppHost
+   dotnet user-secrets set "Parameters:mysql-password" "<your-password>"
+   ```
+
+3. **Run the AppHost**
+   ```bash
+   dotnet run --project Miniclip.Simulator.AppHost --launch-profile Miniclip.Simulator.AppHost
    ```
 
    This will:
-   - Start a MySQL 8.0 database container
-   - Build and start the API container
-   - Automatically run database migrations
-   - Expose the API on port 5000
+   - Pull and start a MySQL 8.0 container via Docker
+   - Automatically create both `MiniclipSimulator_Write` and `MiniclipSimulator_Read` databases
+   - Run EF Core migrations on startup
+   - Start the API with all connection strings injected automatically
+   - Open the **Aspire Dashboard** at `https://localhost:15888`
 
-3. **Access the application**
-   - **API Base URL**: http://localhost:5000
-   - **Swagger UI**: http://localhost:5000/swagger
-   - **MySQL Database**: localhost:4306 (root/root)
+4. **Access the application**
+   - **Aspire Dashboard**: `https://localhost:15888` (logs, traces, metrics)
+   - **Swagger UI**: `https://localhost:7087/swagger`
+
+### Running with Visual Studio
+
+Set `Miniclip.Simulator.AppHost` as the startup project and press **F5**. The Aspire Dashboard will open automatically in your browser.
+
+### Running the API directly (without Aspire)
+
+Requires a MySQL 8.0 instance running locally. Set the connection strings via user secrets:
+
+```bash
+cd Miniclip.Simulator.Api
+dotnet user-secrets set "ConnectionStrings:SimulatorWrite" "Server=localhost;Port=3306;Database=MiniclipSimulator_Write;User=root;Password=<your-password>;"
+dotnet user-secrets set "ConnectionStrings:SimulatorRead"  "Server=localhost;Port=3306;Database=MiniclipSimulator_Read;User=root;Password=<your-password>;"
+dotnet run
+```
 
 ## API Endpoints
 
@@ -92,61 +113,44 @@ Retrieves the current standings for a group.
 The project follows Clean Architecture principles with CQRS:
 
 ```
-├── Miniclip.Simulator.Api              # API layer
+├── Miniclip.Simulator.AppHost                 # .NET Aspire orchestrator
+├── Miniclip.Simulator.ServiceDefaults         # Shared OpenTelemetry & health checks
+├── Miniclip.Simulator.Api                     # API layer
 ├── Miniclip.Simulator.Application.Commands    # Write commands
 ├── Miniclip.Simulator.Application.Queries     # Read queries
-├── Miniclip.Simulator.Domain           # Domain entities & logic
-├── Miniclip.Simulator.ReadModels       # Read models
+├── Miniclip.Simulator.Domain                  # Domain entities & logic
+├── Miniclip.Simulator.ReadModels              # Read models
 ├── Miniclip.Simulator.ReadModels.Projections  # Event projections
 ├── Miniclip.Simulator.Infrastructure.Write    # Write database
 ├── Miniclip.Simulator.Infrastructure.Read     # Read database
-└── Miniclip.Core.*                     # Shared core libraries
+└── Miniclip.Core.*                            # Shared core libraries
 ```
 
 ### Database Strategy
 
 - **Write Database** (`MiniclipSimulator_Write`): Stores aggregates
 - **Read Database** (`MiniclipSimulator_Read`): Optimized denormalized views for queries
-- Automatic synchronization through event projections
+- Automatic synchronisation through event projections
 
-## Development
+## Observability
 
-### Running Locally (without Docker)
+When running via Aspire, the **Dashboard** at `https://localhost:15888` provides:
 
-1. **Setup MySQL**
-   - Ensure MySQL 8.0 is running on port 4306
-   - Update connection strings in `appsettings.json`
-
-2. **Run the API**
-   ```bash
-   cd src/Miniclip.Simulator.Api
-   dotnet run
-
-## Configuration
-
-### Environment Variables
-
-When running with Docker Compose, the following environment variables are configured:
-
-- `ASPNETCORE_ENVIRONMENT`: Development
-- `ConnectionStrings__SimulatorWrite`: Write database connection
-- `ConnectionStrings__SimulatorRead`: Read database connection
-
-### Docker Compose Services
-
-- **mysql**: MySQL 8.0 database server (port 4306)
-- **api**: .NET 8 API application (port 5000)
+- **Structured logs** from the API in real time
+- **Distributed traces** (OpenTelemetry) across requests
+- **Metrics** (ASP.NET Core + HTTP client instrumentation)
+- **Resource health** status of MySQL and the API
 
 ## Troubleshooting
 
-### Database Connection Issues
-- Ensure MySQL container is healthy: `docker-compose ps`
-- Check logs: `docker-compose logs mysql`
+### MySQL container not starting
+- Ensure Docker Desktop is running: `docker ps`
+- Check the Aspire Dashboard → Resources tab for container status
 
-### API Not Starting
-- Check API logs: `docker-compose logs api`
-- Ensure port 5000 is not already in use
+### API not starting
+- Open the Aspire Dashboard → Logs tab and select `simulator-api`
+- Verify the MySQL password user secret is set correctly in `Miniclip.Simulator.AppHost`
 
-### Migration Issues
-- Migrations run automatically on startup
-- To reset: `docker-compose down -v` then `docker-compose up -d`
+### Migration issues
+- Migrations run automatically on startup via `Database.Migrate()`
+- To reset data: stop the AppHost, run `docker volume rm` for the MySQL volume, then restart
