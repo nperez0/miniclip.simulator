@@ -8,7 +8,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Miniclip.Core.ReadModels\Miniclip.Core.ReadModels.csproj" />
-    <ProjectReference Include="..\Miniclip.Core\Miniclip.Core.csproj" />
     <ProjectReference Include="..\Miniclip.Simulator.Domain\Miniclip.Simulator.Domain.csproj" />
   </ItemGroup>
 

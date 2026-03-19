@@ -12,8 +12,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Miniclip.Core.Application\Miniclip.Core.Application.csproj" />
-    <ProjectReference Include="..\Miniclip.Core.ReadModels\Miniclip.Core.ReadModels.csproj" />
-    <ProjectReference Include="..\Miniclip.Core\Miniclip.Core.csproj" />
     <ProjectReference Include="..\Miniclip.Simulator.ReadModels\Miniclip.Simulator.ReadModels.csproj" />
   </ItemGroup>
 
