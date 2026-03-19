@@ -93,7 +93,7 @@ public class WithDifferentPoints : WhenRecalculatingPosition
     [Test]
     public void ShouldUpdateLastUpdatedTimestamp()
     {
-        firstPlace.LastUpdated.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
-        secondPlace.LastUpdated.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
+        firstPlace.LastUpdated.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1.0));
+        secondPlace.LastUpdated.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1.0));
     }
 }
