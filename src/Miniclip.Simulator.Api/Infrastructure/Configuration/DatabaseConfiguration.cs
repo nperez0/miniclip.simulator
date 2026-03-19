@@ -7,7 +7,6 @@ using Miniclip.Simulator.Domain.Aggregates.Teams.Entities;
 using Miniclip.Simulator.Infrastructure.Read.Persistence;
 using Miniclip.Simulator.Infrastructure.Write.Persistence;
 using Miniclip.Simulator.Infrastructure.Write.Persistence.Repositories;
-using Miniclip.Simulator.ReadModels.Projections.Services;
 using Read = Miniclip.Simulator.ReadModels.Repositories.Read;
 using ReadRepo = Miniclip.Simulator.Infrastructure.Read.Persistence.Repositories.Read;
 using Write = Miniclip.Simulator.ReadModels.Repositories.Write;

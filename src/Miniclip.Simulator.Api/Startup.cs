@@ -9,7 +9,6 @@ public class Startup(IConfiguration configuration)
         services.AddControllers();
 
         services.AddApiVersioningConfiguration();
-        services.AddEndpointsApiExplorer();
         services.AddVersionedOpenApi();
 
         services.AddMediatR();
@@ -22,7 +21,6 @@ public class Startup(IConfiguration configuration)
     {
         app.InitializeDatabases();
 
-        app.UseVersionedOpenApi();
         app.UseHttpsRedirection();
         app.UseRouting();
         app.UseAuthorization();

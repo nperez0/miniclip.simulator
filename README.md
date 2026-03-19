@@ -1,6 +1,6 @@
 ﻿# Miniclip Simulator API
 
-A tournament group simulator API built with .NET 8, implementing CQRS pattern with separate read/write databases using MySQL.
+A tournament group simulator API built with .NET 10, implementing CQRS pattern with separate read/write databases using MySQL.
 
 ## Features
 
@@ -10,21 +10,21 @@ A tournament group simulator API built with .NET 8, implementing CQRS pattern wi
 - **CQRS Architecture**: Separate read and write models for optimized performance
 - **Event Driven**: Domain events with automatic projection updates
 - **API Versioning**: Versioned API endpoints
-- **OpenAPI/Swagger**: Interactive API documentation
+- **Scalar UI**: Interactive API documentation
 
 ## Tech Stack
 
-- **.NET 8.0**
+- **.NET 10.0**
 - **ASP.NET Core Web API**
 - **MySQL 8.0** (Write and Read databases)
-- **Entity Framework Core** with Pomelo MySQL provider
+- **Entity Framework Core 9.x** with Pomelo MySQL provider
 - **MediatR** for CQRS implementation
-- **.NET Aspire** for local orchestration, observability and service discovery
-- **Swagger/OpenAPI** for API documentation
+- **.NET Aspire 13** for local orchestration, observability and service discovery
+- **Scalar UI** for interactive API documentation
 
 ## Prerequisites
 
-- [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8)
+- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10)
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) (used by Aspire to run the MySQL container)
 
 ## Getting Started
@@ -57,7 +57,8 @@ A tournament group simulator API built with .NET 8, implementing CQRS pattern wi
 
 4. **Access the application**
    - **Aspire Dashboard**: `https://localhost:15888` (logs, traces, metrics)
-   - **Swagger UI**: `https://localhost:7087/swagger`
+   - From the dashboard, the `simulator-api` resource exposes two direct links:
+     - **Scalar UI** → interactive API documentation
 
 ### Running with Visual Studio
 
@@ -73,6 +74,10 @@ dotnet user-secrets set "ConnectionStrings:SimulatorWrite" "Server=localhost;Por
 dotnet user-secrets set "ConnectionStrings:SimulatorRead"  "Server=localhost;Port=3306;Database=MiniclipSimulator_Read;User=root;Password=<your-password>;"
 dotnet run
 ```
+
+Once running, the API documentation is available at:
+- **Scalar UI**: `https://localhost:7087/v1/`
+- **OpenAPI JSON**: `https://localhost:7087/openapi/v1.json`
 
 ## API Endpoints
 
@@ -114,7 +119,7 @@ The project follows Clean Architecture principles with CQRS:
 
 ```
 ├── Miniclip.Simulator.AppHost                 # .NET Aspire orchestrator
-├── Miniclip.Simulator.ServiceDefaults         # Shared OpenTelemetry & health checks
+├── Miniclip.Core.ServiceDefaults              # Shared OpenTelemetry & health checks
 ├── Miniclip.Simulator.Api                     # API layer
 ├── Miniclip.Simulator.Application.Commands    # Write commands
 ├── Miniclip.Simulator.Application.Queries     # Read queries
@@ -150,6 +155,7 @@ When running via Aspire, the **Dashboard** at `https://localhost:15888` provides
 ### API not starting
 - Open the Aspire Dashboard → Logs tab and select `simulator-api`
 - Verify the MySQL password user secret is set correctly in `Miniclip.Simulator.AppHost`
+- If you see a `MissingMethodException` referencing `AbstractionsStrings.ArgumentIsEmpty`, check that EF Core packages in `Directory.Packages.props` are pinned to `9.x` (not `10.x`) — see the note in the Tech Stack section
 
 ### Migration issues
 - Migrations run automatically on startup via `Database.Migrate()`
