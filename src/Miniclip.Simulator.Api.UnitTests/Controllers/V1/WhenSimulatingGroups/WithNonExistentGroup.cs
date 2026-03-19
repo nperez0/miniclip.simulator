@@ -1,5 +1,5 @@
 using FluentAssertions;
-using MediatR;
+using Mediator;
 using Microsoft.AspNetCore.Mvc;
 using Miniclip.Core;
 using Miniclip.Simulator.Application.Commands.Groups.V1.Simulation;
@@ -19,7 +19,7 @@ public class WithNonExistentGroup : WhenSimulatingGroups
 
         var exception = GroupNotFoundException.NotFound(GroupId);
         Mediator.Send(Arg.Any<SimulateGroupCommand>(), Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult(Result.Failure(exception)));
+            .Returns(ValueTask.FromResult(Result.Failure(exception)));
     }
 
     [Test]

@@ -1,4 +1,4 @@
-using MediatR;
+using Mediator;
 using Miniclip.Core.ReadModels.Projections.Attributes;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Events;
 using Miniclip.Simulator.ReadModels.Models;
@@ -10,7 +10,7 @@ namespace Miniclip.Simulator.ReadModels.Projections;
 public class MatchResultProjection(IMatchResultsRepository repository) 
     : INotificationHandler<MatchPlayed>
 {
-    public Task Handle(MatchPlayed notification, CancellationToken cancellationToken)
+    public ValueTask Handle(MatchPlayed notification, CancellationToken cancellationToken)
     {
         var matchResult = new MatchResultModel
         {
@@ -31,6 +31,6 @@ public class MatchResultProjection(IMatchResultsRepository repository)
 
         repository.Add(matchResult);
 
-        return Task.CompletedTask;
+        return ValueTask.CompletedTask;
     }
 }

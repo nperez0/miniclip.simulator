@@ -1,4 +1,4 @@
-using MediatR;
+using Mediator;
 using Miniclip.Core;
 using Miniclip.Core.Domain;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Entities;
@@ -13,7 +13,7 @@ public class GenerateGroupCommandHandler(
     IFixtureSchedulerService fixtureSchedulerService)
     : IRequestHandler<GenerateGroupCommand, Result<Guid>>
 {
-    public async Task<Result<Guid>> Handle(GenerateGroupCommand command, CancellationToken cancellationToken)
+    public async ValueTask<Result<Guid>> Handle(GenerateGroupCommand command, CancellationToken cancellationToken)
     {
         var groupResult = Group.Create(Guid.NewGuid(), command.Name, command.Capacity);
 

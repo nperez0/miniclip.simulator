@@ -1,4 +1,4 @@
-using MediatR;
+using Mediator;
 using Miniclip.Core.Application.Extensions;
 using Miniclip.Core.Domain;
 
@@ -8,19 +8,19 @@ public class CommandUnitOfWorkBehavior<TRequest, TResponse>(IUnitOfWork unitOfWo
     : IPipelineBehavior<TRequest, TResponse>
     where TRequest : IRequest<TResponse>
 {
-    public async Task<TResponse> Handle(
+    public async ValueTask<TResponse> Handle(
         TRequest request,
-        RequestHandlerDelegate<TResponse> next,
+        MessageHandlerDelegate<TRequest, TResponse> next,
         CancellationToken cancellationToken)
     {
         if (!request.IsCommand())
-            return await next(cancellationToken);
+            return await next(request, cancellationToken);
 
         await unitOfWork.BeginTransactionAsync(cancellationToken);
 
         try
         {
-            var response = await next(cancellationToken);
+            var response = await next(request, cancellationToken);
 
             if (response.IsSuccessful())
             {

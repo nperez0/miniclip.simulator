@@ -1,5 +1,5 @@
 using FluentAssertions;
-using MediatR;
+using Mediator;
 using Microsoft.AspNetCore.Mvc;
 using Miniclip.Simulator.Application.Queries.Groups.V1.Standings;
 using NSubstitute;
@@ -20,7 +20,7 @@ public class WithNoStandings : WhenGettingStandings
         emptyDto = new GroupStandingsDto();
 
         Mediator.Send(Arg.Any<GroupStandingsQuery>(), Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult(emptyDto));
+            .Returns(ValueTask.FromResult(emptyDto));
     }
 
     [Test]

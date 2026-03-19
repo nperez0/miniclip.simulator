@@ -1,5 +1,5 @@
 ﻿using AutoFixture;
-using MediatR;
+using Mediator;
 using Microsoft.AspNetCore.Mvc;
 using Miniclip.Core.Tests;
 using Miniclip.Simulator.Api.Controllers.V1;

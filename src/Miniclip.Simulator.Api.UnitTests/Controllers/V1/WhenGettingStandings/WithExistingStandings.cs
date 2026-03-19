@@ -1,5 +1,5 @@
 using FluentAssertions;
-using MediatR;
+using Mediator;
 using Microsoft.AspNetCore.Mvc;
 using Miniclip.Simulator.Application.Queries.Groups.V1.Standings;
 using NSubstitute;
@@ -72,7 +72,7 @@ public class WithExistingStandings : WhenGettingStandings
         };
 
         Mediator.Send(Arg.Any<GroupStandingsQuery>(), Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult(standingsDto));
+            .Returns(ValueTask.FromResult(standingsDto));
     }
 
     [Test]

@@ -1,5 +1,5 @@
 using FluentAssertions;
-using MediatR;
+using Mediator;
 using Microsoft.AspNetCore.Mvc;
 using Miniclip.Core;
 using Miniclip.Simulator.Application.Commands.Groups.V1.Generation;
@@ -20,7 +20,7 @@ public class WithValidRequest : WhenCreatingGroups
         groupId = Guid.NewGuid();
 
         Mediator.Send(Arg.Any<GenerateGroupCommand>(), Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult(Result<Guid>.Success(groupId)));
+            .Returns(ValueTask.FromResult(Result<Guid>.Success(groupId)));
     }
 
     [Test]

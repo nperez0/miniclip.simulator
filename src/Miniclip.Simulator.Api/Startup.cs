@@ -11,7 +11,7 @@ public class Startup(IConfiguration configuration)
         services.AddApiVersioningConfiguration();
         services.AddVersionedOpenApi();
 
-        services.AddMediatR();
+        services.AddMediatorServices();
         services.AddDatabaseDependencies(configuration);
         services.AddDomainDependencies();
         services.AddProjectionsDependencies();

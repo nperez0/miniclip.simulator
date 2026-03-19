@@ -19,7 +19,7 @@ public class WithInvalidRequest : WhenCreatingGroups
         var exception = GroupCreationException.InvalidCapacity(10, 2, 6);
 
         Mediator.Send(Arg.Any<GenerateGroupCommand>(), Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult(Result.Failure<Guid>(exception)));
+            .Returns(ValueTask.FromResult(Result.Failure<Guid>(exception)));
     }
 
     [Test]

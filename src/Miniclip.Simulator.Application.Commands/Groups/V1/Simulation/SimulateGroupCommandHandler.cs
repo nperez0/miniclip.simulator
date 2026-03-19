@@ -1,4 +1,4 @@
-using MediatR;
+using Mediator;
 using Miniclip.Core;
 using Miniclip.Core.Domain;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Entities;
@@ -11,7 +11,7 @@ public class SimulateGroupCommandHandler(
     IGroupSimulator groupSimulator) 
     : IRequestHandler<SimulateGroupCommand, Result>
 {
-    public async Task<Result> Handle(SimulateGroupCommand command, CancellationToken cancellationToken)
+    public async ValueTask<Result> Handle(SimulateGroupCommand command, CancellationToken cancellationToken)
     {
         var group = await repository.FindAsync(command.GroupId, cancellationToken);
         

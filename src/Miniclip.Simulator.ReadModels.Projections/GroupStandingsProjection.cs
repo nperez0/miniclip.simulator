@@ -1,4 +1,4 @@
-using MediatR;
+using Mediator;
 using Miniclip.Core.ReadModels.Projections.Attributes;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Events;
 using Miniclip.Simulator.ReadModels.Models;
@@ -13,7 +13,7 @@ public class GroupStandingsProjection(
     IRecalculatePositionService recalculatePositionService) 
     : INotificationHandler<MatchPlayed>
 {
-    public async Task Handle(MatchPlayed notification, CancellationToken cancellationToken)
+    public async ValueTask Handle(MatchPlayed notification, CancellationToken cancellationToken)
     {
         var allStandings = await GetCurrentStandings(notification.GroupId, cancellationToken);
         

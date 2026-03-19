@@ -1,4 +1,4 @@
-using MediatR;
+using Mediator;
 using Miniclip.Simulator.ReadModels.Repositories.Read;
 
 namespace Miniclip.Simulator.Application.Queries.Groups.V1.Standings;
@@ -8,7 +8,7 @@ public class GroupStandingsQueryHandler(
     IMatchResultsRepository matchResultRepository) 
     : IRequestHandler<GroupStandingsQuery, GroupStandingsDto>
 {
-    public async Task<GroupStandingsDto> Handle(GroupStandingsQuery query, CancellationToken cancellationToken)
+    public async ValueTask<GroupStandingsDto> Handle(GroupStandingsQuery query, CancellationToken cancellationToken)
     {
         var standings = await standingsRepository.GetStandingsByGroupIdAsync(query.GroupId, cancellationToken);
         var matchResults = await matchResultRepository.GetMatchResultsByGroupIdAsync(query.GroupId, cancellationToken);

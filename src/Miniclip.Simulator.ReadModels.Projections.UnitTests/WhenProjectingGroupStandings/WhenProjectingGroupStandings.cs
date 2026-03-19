@@ -22,6 +22,6 @@ public abstract class WhenProjectingGroupStandings : TestBase<GroupStandingsProj
 
     protected override void When()
     {
-        Sut!.Handle(Event, CancellationToken.None).Wait();
+        Sut!.Handle(Event, CancellationToken.None).AsTask().Wait();
     }
 }

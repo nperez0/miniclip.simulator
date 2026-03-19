@@ -16,7 +16,7 @@
     <PackageReference Include="Scalar.AspNetCore" />
     <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
-    <PackageReference Include="MediatR" />
+    <PackageReference Include="Mediator.SourceGenerator" />
   </ItemGroup>
 
   <ItemGroup>

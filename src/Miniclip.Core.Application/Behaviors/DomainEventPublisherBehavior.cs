@@ -1,4 +1,4 @@
-﻿using MediatR;
+﻿using Mediator;
 using Miniclip.Core.Application.Extensions;
 using Miniclip.Core.Domain;
 
@@ -8,12 +8,12 @@ public class DomainEventPublisherBehavior<TRequest, TResponse>(IPublisher publis
     : IPipelineBehavior<TRequest, TResponse>
     where TRequest : IRequest<TResponse>
 {
-    public async Task<TResponse> Handle(
+    public async ValueTask<TResponse> Handle(
         TRequest request,
-        RequestHandlerDelegate<TResponse> next,
+        MessageHandlerDelegate<TRequest, TResponse> next,
         CancellationToken cancellationToken)
     {
-        var response = await next(cancellationToken);
+        var response = await next(request, cancellationToken);
 
         if (!request.IsCommand() || !response.IsSuccessful())
             return response;
