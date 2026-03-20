@@ -17,9 +17,9 @@ public class GroupsController(IMediator mediator) : ControllerBase
     /// Generates a new group with random teams from the database.
     /// </summary>
     /// <param name="request">The group details including capacity (2-6 teams).</param>
-    /// <returns>The unique identifier of the created group (204) or validation error (400).</returns>
+    /// <returns>The unique identifier of the created group (200) or validation error (400).</returns>
     [HttpPost]
-    [ProducesResponseType(typeof(Guid), StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(Guid), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> CreateGroup(
         [FromBody] GenerateGroupRequest request,
