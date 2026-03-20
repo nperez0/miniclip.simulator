@@ -6,10 +6,12 @@ public abstract class AggregateRoot
 {
     public Guid Id { get; protected set; }
 
-    [JsonIgnore]
-    private readonly Queue<object> uncommittedEvents = new();
+    public long Version { get; protected set; } = -1;
 
-    public object[] DequeueUncommittedEvents()
+    [JsonIgnore]
+    private readonly Queue<IDomainEvent> uncommittedEvents = new();
+
+    public IDomainEvent[] DequeueUncommittedEvents()
     {
         var events = uncommittedEvents.ToArray();
 
@@ -18,8 +20,18 @@ public abstract class AggregateRoot
         return events;
     }
 
-    protected void Enqueue(object @event)
+    protected void Enqueue(IDomainEvent @event)
     {
         uncommittedEvents.Enqueue(@event);
+    }
+
+    public void ReplayEvent(IDomainEvent @event, long version)
+    {
+        Apply(@event);
+        Version = version;
+    }
+
+    protected virtual void Apply(IDomainEvent @event)
+    {
     }
 }

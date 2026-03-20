@@ -158,12 +158,12 @@ It provisions a MySQL container and starts the API via .NET Aspire.
 
 The project is currently undergoing an **Event Sourcing migration** using EventStoreDB and Kafka.
 
-**Current Phase:** `0 — Planning & Documentation` ✅
+**Current Phase:** `1 — EventStoreDB: Core Abstractions` ✅
 
 | # | Phase | Status |
 |---|---|---|
 | 0 | Planning & Documentation | ✅ Done |
-| 1 | EventStoreDB — Core Abstractions | ⬜ Pending |
+| 1 | EventStoreDB — Core Abstractions | ✅ Done |
 | 2 | EventStoreDB — Write Side Migration | ⬜ Pending |
 | 3 | Kafka — Event Bus | ⬜ Pending |
 | 4 | Kafka — Read Side Consumers | ⬜ Pending |

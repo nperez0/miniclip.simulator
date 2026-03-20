@@ -30,14 +30,14 @@ This enables full event history, read model rebuilding from scratch, and ordered
 
 ## Phase Overview
 
-| # | Name | Status | Branch |
-|---|---|---|---|
-| 0 | Planning & Documentation | ✅ Done | `main` |
-| 1 | EventStoreDB — Core Abstractions | ⬜ Pending | `feat/phase-1-esdb-abstractions` |
-| 2 | EventStoreDB — Write Side Migration | ⬜ Pending | `feat/phase-2-esdb-write` |
-| 3 | Kafka — Event Bus | ⬜ Pending | `feat/phase-3-kafka-bus` |
-| 4 | Kafka — Read Side Consumers | ⬜ Pending | `feat/phase-4-kafka-read` |
-| 5 | Testing & Hardening | ⬜ Pending | `feat/phase-5-hardening` |
+| # | Name | Status | Branch | Spec |
+|---|---|---|---|---|
+| 0 | Planning & Documentation | ✅ Done | `main` | *(this file)* |
+| 1 | EventStoreDB — Core Abstractions | ✅ Done | `feat/phase-1-esdb-abstractions` | [`PHASE-1.md`](PHASE-1.md) |
+| 2 | EventStoreDB — Write Side Migration | ⬜ Pending | `feat/phase-2-esdb-write` | `PHASE-2.md` *(created before Phase 2 starts)* |
+| 3 | Kafka — Event Bus | ⬜ Pending | `feat/phase-3-kafka-bus` | `PHASE-3.md` *(created before Phase 3 starts)* |
+| 4 | Kafka — Read Side Consumers | ⬜ Pending | `feat/phase-4-kafka-read` | `PHASE-4.md` *(created before Phase 4 starts)* |
+| 5 | Testing & Hardening | ⬜ Pending | `feat/phase-5-hardening` | `PHASE-5.md` *(created before Phase 5 starts)* |
 
 ---
 
@@ -60,11 +60,11 @@ This enables full event history, read model rebuilding from scratch, and ordered
 - `IEventStore` is defined in `Miniclip.Core.Domain` (or `Miniclip.Core.EventSourcing`) — NOT in infrastructure.
 
 ### Definition of Done
-- [ ] EventStoreDB container visible and healthy in the Aspire dashboard
-- [ ] `AggregateRoot` has `Version`, `Apply`, and `DequeueUncommittedEvents` updated
-- [ ] `IEventStore<T>`, `IEventSerializer`, `EventEnvelope<T>` defined
-- [ ] EventStoreDB client project compiles and connects
-- [ ] All existing tests pass (write side not yet migrated)
+- [x] EventStoreDB container visible and healthy in the Aspire dashboard
+- [x] `AggregateRoot` has `Version`, `Apply`, and `DequeueUncommittedEvents` updated
+- [x] `IEventStore<T>`, `IEventSerializer`, `EventEnvelope<T>` defined
+- [x] EventStoreDB client project compiles and connects
+- [x] All existing tests pass (write side not yet migrated)
 
 ---
 
