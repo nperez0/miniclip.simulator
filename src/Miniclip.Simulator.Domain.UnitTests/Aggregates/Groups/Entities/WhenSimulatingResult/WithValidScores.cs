@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using NUnit.Framework;
 
 namespace Miniclip.Simulator.Domain.UnitTests.Aggregates.Groups.Entities.WhenSimulatingResult;
@@ -16,25 +16,25 @@ public class WithValidScores : WhenSimulatingResult
     [Test]
     public void ShouldReturnSuccess()
     {
-        Result.Should().NotBeNull();
-        Result!.IsSuccess.Should().BeTrue();
+        Result.ShouldNotBeNull();
+        Result!.IsSuccess.ShouldBeTrue();
     }
 
     [Test]
     public void ShouldSetHomeScore()
     {
-        Match!.HomeScore.Should().Be(HomeScore);
+        Match!.HomeScore.ShouldBe(HomeScore);
     }
 
     [Test]
     public void ShouldSetAwayScore()
     {
-        Match!.AwayScore.Should().Be(AwayScore);
+        Match!.AwayScore.ShouldBe(AwayScore);
     }
 
     [Test]
     public void ShouldMarkMatchAsPlayed()
     {
-        Match!.IsPlayed.Should().BeTrue();
+        Match!.IsPlayed.ShouldBeTrue();
     }
 }

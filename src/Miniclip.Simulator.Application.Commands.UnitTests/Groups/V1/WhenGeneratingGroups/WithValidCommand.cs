@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using Miniclip.Core;
 using Miniclip.Simulator.Application.Commands.Groups.V1.Generation;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Entities;
@@ -36,13 +36,13 @@ public class WithValidCommand : WhenGeneratingGroups
     [Test]
     public void ShouldReturnSuccess()
     {
-        Result.IsSuccess.Should().BeTrue();
+        Result.IsSuccess.ShouldBeTrue();
     }
 
     [Test]
     public void ShouldReturnGroupId()
     {
-        Result.Value.Should().NotBeEmpty();
+        Result.Value.ShouldNotBe(Guid.Empty);
     }
 
     [Test]

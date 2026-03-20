@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Entities;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Exceptions;
 using Miniclip.Simulator.Domain.Aggregates.Teams.Entities;
@@ -21,8 +21,8 @@ public class WithInsufficientTeams : WhenGeneratingFixtures
     [Test]
     public void ShouldReturnFailure()
     {
-        Result.Should().NotBeNull();
-        Result!.IsFailure.Should().BeTrue();
+        Result.ShouldNotBeNull();
+        Result!.IsFailure.ShouldBeTrue();
     }
 
     [Test]
@@ -40,14 +40,14 @@ public class WithInsufficientTeams : WhenGeneratingFixtures
     [Test]
     public void ShouldIndicateExpectedAndActualTeamCount()
     {
-        Result!.Exception.Should().BeOfType<GroupGenerateFixturesException>();
-        Result!.Exception.Message.Should().Contain("4");
-        Result!.Exception.Message.Should().Contain("2");
+        Result!.Exception.ShouldBeOfType<GroupGenerateFixturesException>();
+        Result!.Exception.Message.ShouldContain("4");
+        Result!.Exception.Message.ShouldContain("2");
     }
 
     [Test]
     public void ShouldNotGenerateAnyMatches()
     {
-        Group!.Matches.Should().BeEmpty();
+        Group!.Matches.ShouldBeEmpty();
     }
 }

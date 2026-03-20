@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using Mediator;
 using Microsoft.AspNetCore.Mvc;
 using Miniclip.Core;
@@ -26,14 +26,14 @@ public class WithValidRequest : WhenCreatingGroups
     [Test]
     public void ShouldReturnOkResult()
     {
-        ActionResult.Should().BeOfType<OkObjectResult>();
+        ActionResult.ShouldBeOfType<OkObjectResult>();
     }
 
     [Test]
     public void ShouldReturnGroupId()
     {
         var okResult = ActionResult as OkObjectResult;
-        okResult!.Value.Should().Be(groupId);
+        okResult!.Value.ShouldBe(groupId);
     }
 
     [Test]

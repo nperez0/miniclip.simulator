@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Entities;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Exceptions;
 using Miniclip.Simulator.Domain.Aggregates.Teams.Entities;
@@ -20,26 +20,26 @@ public class WithDuplicateTeam : WhenAddingTeam
     [Test]
     public void ShouldReturnFailure()
     {
-        Result.Should().NotBeNull();
-        Result!.IsFailure.Should().BeTrue();
+        Result.ShouldNotBeNull();
+        Result!.IsFailure.ShouldBeTrue();
     }
 
     [Test]
     public void ShouldReturnTeamAlreadyExistsException()
     {
-        Result!.Exception.Should().BeOfType<GroupAddTeamException>();
-        Result!.Exception.Message.Should().Contain("already exists");
+        Result!.Exception.ShouldBeOfType<GroupAddTeamException>();
+        Result!.Exception.Message.ShouldContain("already exists");
     }
 
     [Test]
     public void ShouldNotDuplicateTeam()
     {
-        Group!.Teams.Should().HaveCount(1);
+        Group!.Teams.Count().ShouldBe(1);
     }
 
     [Test]
     public void ShouldKeepOriginalTeam()
     {
-        Group!.Teams.Should().Contain(Team!);
+        Group!.Teams.ShouldContain(Team!);
     }
 }

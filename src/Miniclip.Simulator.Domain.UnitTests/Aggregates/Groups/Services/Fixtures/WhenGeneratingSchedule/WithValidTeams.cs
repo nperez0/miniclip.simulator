@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using Miniclip.Simulator.Domain.Aggregates.Teams.Entities;
 using NUnit.Framework;
 
@@ -25,7 +25,7 @@ public class WithValidTeams(int capacity) : WhenGeneratingSchedule
         // Each team plays every other team once: n * (n-1) / 2
         var expectedMatches = Capacity * (Capacity - 1) / 2;
 
-        Schedule!.Should().HaveCount(expectedMatches);
+        Schedule!.Count().ShouldBe(expectedMatches);
     }
 
     [Test]
@@ -40,19 +40,19 @@ public class WithValidTeams(int capacity) : WhenGeneratingSchedule
             .Distinct()
             .Count();
 
-        actualRounds.Should().Be(expectedRounds);
+        actualRounds.ShouldBe(expectedRounds);
     }
 
     [Test]
     public void ShouldNotContainDummyTeams()
     {
-        Schedule!.Should().NotContain(m => m.HomeTeam == Team.Dummy || m.AwayTeam == Team.Dummy);
+        Schedule!.ShouldNotContain(m => m.HomeTeam == Team.Dummy || m.AwayTeam == Team.Dummy);
     }
 
     [Test]
     public void ShouldNotHaveTeamPlayingItself()
     {
-        Schedule!.Should().OnlyContain(m => m.HomeTeam != m.AwayTeam);
+        Schedule!.ShouldAllBe(m => m.HomeTeam != m.AwayTeam);
     }
 
     [Test]
@@ -72,7 +72,7 @@ public class WithValidTeams(int capacity) : WhenGeneratingSchedule
 
         // Each unique pairing should appear exactly once
         var expectedPairings = Capacity * (Capacity - 1) / 2;
-        teamPairings.Should().HaveCount(expectedPairings);
+        teamPairings.Count().ShouldBe(expectedPairings);
     }
 
     [Test]
@@ -85,6 +85,6 @@ public class WithValidTeams(int capacity) : WhenGeneratingSchedule
         var expectedMatchesPerRound = Capacity / 2;
 
         // All rounds should have the same number of matches
-        matchesPerRound.Should().OnlyContain(count => count == expectedMatchesPerRound);
+        matchesPerRound.ShouldAllBe(count => count == expectedMatchesPerRound);
     }
 }

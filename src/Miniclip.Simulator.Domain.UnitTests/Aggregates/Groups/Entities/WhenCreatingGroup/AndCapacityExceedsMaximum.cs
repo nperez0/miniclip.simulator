@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Exceptions;
 using NUnit.Framework;
 
@@ -20,13 +20,13 @@ public class AndCapacityExceedsMaximum(int capacity) : WhenCreatingGroup
     [Test]
     public void ShouldFail()
     {
-        Result!.IsFailure.Should().BeTrue();
+        Result!.IsFailure.ShouldBeTrue();
     }
 
     [Test]
     public void ShouldReturnInvalidCapacityException()
     {
-        Result!.Exception.Should().BeOfType<GroupCreationException>();
-        Result.Exception!.Message.Should().Contain("between 2 and 6");
+        Result!.Exception.ShouldBeOfType<GroupCreationException>();
+        Result.Exception!.Message.ShouldContain("between 2 and 6");
     }
 }

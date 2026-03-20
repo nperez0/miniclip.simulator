@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using NUnit.Framework;
 
 namespace Miniclip.Simulator.Domain.UnitTests.Aggregates.Groups.Services.Simulator.WhenSimulatingMatch;
@@ -18,14 +18,14 @@ public class WithMaximumStrengthTeams : WhenSimulatingMatch
         var totalGoals = HomeScore + AwayScore;
         
         // This is statistical, so we can't guarantee, but on average should be higher
-        totalGoals.Should().BeGreaterThanOrEqualTo(0);
+        totalGoals.ShouldBeGreaterThanOrEqualTo(0);
     }
 
     [Test]
     public void ShouldStayWithinReasonableBounds()
     {
         // Even top teams shouldn't score 20 goals
-        HomeScore.Should().BeLessThanOrEqualTo(10);
-        AwayScore.Should().BeLessThanOrEqualTo(10);
+        HomeScore.ShouldBeLessThanOrEqualTo(10);
+        AwayScore.ShouldBeLessThanOrEqualTo(10);
     }
 }

@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Exceptions;
 using NSubstitute;
 using NUnit.Framework;
@@ -21,14 +21,14 @@ public class WithAllMatchesPlayed : WhenSimulatingGroup
     [Test]
     public void ShouldReturnFailure()
     {
-        Result.Should().NotBeNull();
-        Result!.IsFailure.Should().BeTrue();
+        Result.ShouldNotBeNull();
+        Result!.IsFailure.ShouldBeTrue();
     }
 
     [Test]
     public void ShouldReturnAllMatchesPlayedException()
     {
-        Result!.Exception.Should().BeOfType<GroupSimulationException>();
+        Result!.Exception.ShouldBeOfType<GroupSimulationException>();
     }
 
     [Test]

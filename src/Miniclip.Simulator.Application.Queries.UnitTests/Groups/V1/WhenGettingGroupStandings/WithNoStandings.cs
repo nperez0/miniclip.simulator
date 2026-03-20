@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using Miniclip.Simulator.Application.Queries.Groups.V1.Standings;
 using Miniclip.Simulator.ReadModels.Models;
 using NSubstitute;
@@ -27,31 +27,31 @@ public class WithNoStandings : WhenGettingGroupStandings
     [Test]
     public void ShouldReturnEmptyDto()
     {
-        Result.Should().NotBeNull();
+        Result.ShouldNotBeNull();
     }
 
     [Test]
     public void ShouldReturnEmptyGroupId()
     {
-        Result.Value!.GroupId.Should().Be(Guid.Empty);
+        Result.Value!.GroupId.ShouldBe(Guid.Empty);
     }
 
     [Test]
     public void ShouldReturnEmptyGroupName()
     {
-        Result.Value!.GroupName.Should().BeEmpty();
+        Result.Value!.GroupName.ShouldBeEmpty();
     }
 
     [Test]
     public void ShouldReturnDefaultStandings()
     {
-        Result.Value!.Standings.Should().HaveCount(1);
-        Result.Value!.Standings[0].TeamId.Should().Be(Guid.Empty);
+        Result.Value!.Standings.Count().ShouldBe(1);
+        Result.Value!.Standings[0].TeamId.ShouldBe(Guid.Empty);
     }
 
     [Test]
     public void ShouldReturnEmptyMatchResults()
     {
-        Result.Value!.MatchResults.Should().BeEmpty();
+        Result.Value!.MatchResults.ShouldBeEmpty();
     }
 }

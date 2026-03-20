@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using Mediator;
 using Microsoft.AspNetCore.Mvc;
 using Miniclip.Core;
@@ -23,7 +23,7 @@ public class WithValidGroup : WhenSimulatingGroups
     [Test]
     public void ShouldReturnNoContent()
     {
-        ActionResult.Should().BeOfType<NoContentResult>();
+        ActionResult.ShouldBeOfType<NoContentResult>();
     }
 
     [Test]

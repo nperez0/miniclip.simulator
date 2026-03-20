@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using NSubstitute;
 using NUnit.Framework;
 
@@ -24,8 +24,8 @@ public class WithUnplayedMatches : WhenSimulatingGroup
     [Test]
     public void ShouldReturnSuccess()
     {
-        Result.Should().NotBeNull();
-        Result!.IsSuccess.Should().BeTrue();
+        Result.ShouldNotBeNull();
+        Result!.IsSuccess.ShouldBeTrue();
     }
 
     [Test]
@@ -44,12 +44,12 @@ public class WithUnplayedMatches : WhenSimulatingGroup
     [Test]
     public void ShouldMarkAllMatchesAsPlayed()
     {
-        Group!.Matches.Should().OnlyContain(m => m.IsPlayed);
+        Group!.Matches.ShouldAllBe(m => m.IsPlayed);
     }
 
     [Test]
     public void ShouldSetScoresForAllMatches()
     {
-        Group!.Matches.Should().OnlyContain(m => m.HomeScore == 2 && m.AwayScore == 1);
+        Group!.Matches.ShouldAllBe(m => m.HomeScore == 2 && m.AwayScore == 1);
     }
 }

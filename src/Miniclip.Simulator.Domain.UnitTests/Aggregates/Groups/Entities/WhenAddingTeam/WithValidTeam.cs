@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Entities;
 using Miniclip.Simulator.Domain.Aggregates.Teams.Entities;
 using NUnit.Framework;
@@ -16,19 +16,19 @@ public class WithValidTeam : WhenAddingTeam
     [Test]
     public void ShouldReturnSuccess()
     {
-        Result.Should().NotBeNull();
-        Result!.IsSuccess.Should().BeTrue();
+        Result.ShouldNotBeNull();
+        Result!.IsSuccess.ShouldBeTrue();
     }
 
     [Test]
     public void ShouldAddTeamToGroup()
     {
-        Group!.Teams.Should().Contain(Team!);
+        Group!.Teams.ShouldContain(Team!);
     }
 
     [Test]
     public void ShouldIncreaseTeamCount()
     {
-        Group!.Teams.Should().HaveCount(1);
+        Group!.Teams.Count().ShouldBe(1);
     }
 }

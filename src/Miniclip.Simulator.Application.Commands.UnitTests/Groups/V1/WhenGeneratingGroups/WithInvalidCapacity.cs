@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using Miniclip.Core;
 using Miniclip.Simulator.Application.Commands.Groups.V1.Generation;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Entities;
@@ -29,7 +29,7 @@ public class WithInvalidCapacity : WhenGeneratingGroups
     [Test]
     public void ShouldReturnFailure()
     {
-        Result.IsFailure.Should().BeTrue();
+        Result.IsFailure.ShouldBeTrue();
     }
 
     [Test]

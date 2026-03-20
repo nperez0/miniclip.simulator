@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using Miniclip.Simulator.Application.Queries.Groups.V1.Standings;
 using Miniclip.Simulator.ReadModels.Models;
 using NSubstitute;
@@ -113,49 +113,49 @@ public class WithExistingStandings : WhenGettingGroupStandings
     [Test]
     public void ShouldReturnGroupId()
     {
-        Result.Value!.GroupId.Should().Be(groupId);
+        Result.Value!.GroupId.ShouldBe(groupId);
     }
 
     [Test]
     public void ShouldReturnGroupName()
     {
-        Result.Value!.GroupName.Should().Be("Group A");
+        Result.Value!.GroupName.ShouldBe("Group A");
     }
 
     [Test]
     public void ShouldReturnAllStandings()
     {
-        Result.Value!.Standings.Should().HaveCount(3);
+        Result.Value!.Standings.Count().ShouldBe(3);
     }
 
     [Test]
     public void ShouldMapStandingsCorrectly()
     {
         var firstPlace = Result.Value!.Standings.First(s => s.Position == 1);
-        firstPlace.TeamName.Should().Be("Team 1");
-        firstPlace.Points.Should().Be(9);
-        firstPlace.QualifiesForKnockout.Should().BeTrue();
+        firstPlace.TeamName.ShouldBe("Team 1");
+        firstPlace.Points.ShouldBe(9);
+        firstPlace.QualifiesForKnockout.ShouldBeTrue();
     }
 
     [Test]
     public void ShouldReturnAllMatchResults()
     {
-        Result.Value!.MatchResults.Should().HaveCount(2);
+        Result.Value!.MatchResults.Count().ShouldBe(2);
     }
 
     [Test]
     public void ShouldMapMatchResultsCorrectly()
     {
         var firstMatch = Result.Value!.MatchResults.First(m => m.Round == 1 && m.HomeTeamName == "Team 1");
-        firstMatch.HomeScore.Should().Be(3);
-        firstMatch.AwayScore.Should().Be(1);
-        firstMatch.AwayTeamName.Should().Be("Team 2");
+        firstMatch.HomeScore.ShouldBe(3);
+        firstMatch.AwayScore.ShouldBe(1);
+        firstMatch.AwayTeamName.ShouldBe("Team 2");
     }
 
     [Test]
     public void ShouldReturnQualifiedTeams()
     {
-        Result.Value!.QualifiedTeams.Should().HaveCount(2);
-        Result.Value!.QualifiedTeams.Should().OnlyContain(t => t.QualifiesForKnockout);
+        Result.Value!.QualifiedTeams.Count().ShouldBe(2);
+        Result.Value!.QualifiedTeams.ShouldAllBe(t => t.QualifiesForKnockout);
     }
 }

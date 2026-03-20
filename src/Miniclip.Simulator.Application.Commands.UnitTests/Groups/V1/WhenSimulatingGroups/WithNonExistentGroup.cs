@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using Miniclip.Simulator.Application.Commands.Groups.V1.Simulation;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Entities;
 using NSubstitute;
@@ -24,7 +24,7 @@ public class WithNonExistentGroup : WhenSimulatingGroups
     [Test]
     public void ShouldReturnFailure()
     {
-        Result.IsFailure.Should().BeTrue();
+        Result.IsFailure.ShouldBeTrue();
     }
 
     [Test]
@@ -36,6 +36,6 @@ public class WithNonExistentGroup : WhenSimulatingGroups
     [Test]
     public void ShouldReturnGroupNotFoundException()
     {
-        Result.Exception.Should().BeOfType<SimulateGroupException>();
+        Result.Exception.ShouldBeOfType<SimulateGroupException>();
     }
 }

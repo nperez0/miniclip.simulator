@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Entities;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Exceptions;
 using Miniclip.Simulator.Domain.Aggregates.Teams.Entities;
@@ -23,26 +23,26 @@ public class WithMaxTeamsReached : WhenAddingTeam
     [Test]
     public void ShouldReturnFailure()
     {
-        Result.Should().NotBeNull();
-        Result!.IsFailure.Should().BeTrue();
+        Result.ShouldNotBeNull();
+        Result!.IsFailure.ShouldBeTrue();
     }
 
     [Test]
     public void ShouldReturnMaxTeamsReachedException()
     {
-        Result!.Exception.Should().BeOfType<GroupAddTeamException>();
-        Result!.Exception.Message.Should().Contain("maximum");
+        Result!.Exception.ShouldBeOfType<GroupAddTeamException>();
+        Result!.Exception.Message.ShouldContain("maximum");
     }
 
     [Test]
     public void ShouldNotAddTeamToGroup()
     {
-        Group!.Teams.Should().NotContain(Team!);
+        Group!.Teams.ShouldNotContain(Team!);
     }
 
     [Test]
     public void ShouldMaintainTeamCount()
     {
-        Group!.Teams.Should().HaveCount(2);
+        Group!.Teams.Count().ShouldBe(2);
     }
 }

@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using NUnit.Framework;
 
 namespace Miniclip.Simulator.Domain.UnitTests.Aggregates.Groups.Services.Simulator.WhenSimulatingMatch;
@@ -24,7 +24,7 @@ public class WithMultipleSimulations : WhenSimulatingMatch
     public void ShouldProduceDifferentResults()
     {
         // Results should vary (not all identical)
-        results.Distinct().Count().Should().BeGreaterThan(10);
+        results.Distinct().Count().ShouldBeGreaterThan(10);
     }
 
     [Test]
@@ -34,6 +34,6 @@ public class WithMultipleSimulations : WhenSimulatingMatch
         var lowScoringGames = results.Count(r => r.home <= 3 && r.away <= 3);
         var percentage = (double)lowScoringGames / results.Count;
         
-        percentage.Should().BeGreaterThan(0.6); // At least 60% should be low-scoring
+        percentage.ShouldBeGreaterThan(0.6); // At least 60% should be low-scoring
     }
 }

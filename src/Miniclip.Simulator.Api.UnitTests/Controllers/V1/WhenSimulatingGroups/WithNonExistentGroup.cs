@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using Mediator;
 using Microsoft.AspNetCore.Mvc;
 using Miniclip.Core;
@@ -25,18 +25,18 @@ public class WithNonExistentGroup : WhenSimulatingGroups
     [Test]
     public void ShouldReturnNotFound()
     {
-        ActionResult.Should().BeOfType<NotFoundObjectResult>();
+        ActionResult.ShouldBeOfType<NotFoundObjectResult>();
     }
 
     [Test]
     public void ShouldReturnErrorMessage()
     {
         var notFoundResult = ActionResult as NotFoundObjectResult;
-        notFoundResult!.Value.Should().NotBeNull();
+        notFoundResult!.Value.ShouldNotBeNull();
         
         var errorProperty = notFoundResult.Value!.GetType().GetProperty("error");
         var errorMessage = errorProperty!.GetValue(notFoundResult.Value) as string;
-        errorMessage.Should().Contain("not found");
+        errorMessage.ShouldContain("not found");
     }
 
     [Test]

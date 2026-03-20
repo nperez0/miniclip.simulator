@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using Miniclip.Simulator.Domain.Aggregates.Teams.Entities;
 using NUnit.Framework;
 
@@ -17,25 +17,25 @@ public class AndParametersAreValid : WhenCreatingMatch
     [Test]
     public void ShouldCreateAMatchCorrectly()
     {
-        Result.Should().NotBeNull();
-        Result!.IsSuccess.Should().BeTrue();
-        Result.Value.Should().NotBeNull();
-        Result.Value!.Id.Should().Be(Id);
-        Result.Value.HomeTeam.Should().Be(HomeTeam);
-        Result.Value.AwayTeam.Should().Be(AwayTeam);
-        Result.Value.Round.Should().Be(Round);
+        Result.ShouldNotBeNull();
+        Result!.IsSuccess.ShouldBeTrue();
+        Result.Value.ShouldNotBeNull();
+        Result.Value!.Id.ShouldBe(Id);
+        Result.Value.HomeTeam.ShouldBe(HomeTeam);
+        Result.Value.AwayTeam.ShouldBe(AwayTeam);
+        Result.Value.Round.ShouldBe(Round);
     }
 
     [Test]
     public void ShouldHaveIsPlayedSetToFalse()
     {
-        Result!.Value!.IsPlayed.Should().BeFalse();
+        Result!.Value!.IsPlayed.ShouldBeFalse();
     }
 
     [Test]
     public void ShouldHaveZeroScores()
     {
-        Result!.Value!.HomeScore.Should().Be(0);
-        Result!.Value!.AwayScore.Should().Be(0);
+        Result!.Value!.HomeScore.ShouldBe(0);
+        Result!.Value!.AwayScore.ShouldBe(0);
     }
 }

@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using Miniclip.Simulator.ReadModels.Models;
 using NSubstitute;
 using NUnit.Framework;
@@ -62,16 +62,16 @@ public class WithSamePointsDifferentGoalDifference : WhenRecalculatingPosition
     [Test]
     public void ShouldRankByGoalDifference()
     {
-        firstPlace.Position.Should().Be(1);
-        secondPlace.Position.Should().Be(2);
-        thirdPlace.Position.Should().Be(3);
+        firstPlace.Position.ShouldBe(1);
+        secondPlace.Position.ShouldBe(2);
+        thirdPlace.Position.ShouldBe(3);
     }
 
     [Test]
     public void ShouldMarkTopTwoAsQualified()
     {
-        firstPlace.QualifiesForKnockout.Should().BeTrue();
-        secondPlace.QualifiesForKnockout.Should().BeTrue();
-        thirdPlace.QualifiesForKnockout.Should().BeFalse();
+        firstPlace.QualifiesForKnockout.ShouldBeTrue();
+        secondPlace.QualifiesForKnockout.ShouldBeTrue();
+        thirdPlace.QualifiesForKnockout.ShouldBeFalse();
     }
 }

@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Exceptions;
 using NUnit.Framework;
 
@@ -21,27 +21,27 @@ public class WithAlreadyPlayedMatch : WhenSimulatingResult
     [Test]
     public void ShouldReturnFailure()
     {
-        Result.Should().NotBeNull();
-        Result!.IsFailure.Should().BeTrue();
+        Result.ShouldNotBeNull();
+        Result!.IsFailure.ShouldBeTrue();
     }
 
     [Test]
     public void ShouldReturnAlreadyPlayedException()
     {
-        Result!.Exception.Should().BeOfType<GroupSimulationException>();
-        Result!.Exception.Message.Should().Be($"Match '{Match!.Id}' has already been played.");
+        Result!.Exception.ShouldBeOfType<GroupSimulationException>();
+        Result!.Exception.Message.ShouldBe($"Match '{Match!.Id}' has already been played.");
     }
 
     [Test]
     public void ShouldKeepOriginalScores()
     {
-        Match!.HomeScore.Should().Be(3);
-        Match!.AwayScore.Should().Be(1);
+        Match!.HomeScore.ShouldBe(3);
+        Match!.AwayScore.ShouldBe(1);
     }
 
     [Test]
     public void ShouldRemainMarkedAsPlayed()
     {
-        Match!.IsPlayed.Should().BeTrue();
+        Match!.IsPlayed.ShouldBeTrue();
     }
 }

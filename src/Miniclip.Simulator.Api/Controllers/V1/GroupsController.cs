@@ -64,6 +64,6 @@ public class GroupsController(IMediator mediator) : ControllerBase
         var query = new GroupStandingsQuery(id);
         var result = await mediator.Send(query, cancellationToken);
 
-        return Ok(result);
+        return result.ToActionResult();
     }
 }

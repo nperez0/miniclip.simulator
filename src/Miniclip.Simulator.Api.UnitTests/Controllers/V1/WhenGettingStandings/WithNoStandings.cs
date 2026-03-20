@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using Mediator;
 using Microsoft.AspNetCore.Mvc;
 using Miniclip.Core;
@@ -27,7 +27,7 @@ public class WithNoStandings : WhenGettingStandings
     [Test]
     public void ShouldReturnOkResult()
     {
-        ActionResult.Should().BeOfType<OkObjectResult>();
+        ActionResult.ShouldBeOfType<OkObjectResult>();
     }
 
     [Test]
@@ -35,9 +35,9 @@ public class WithNoStandings : WhenGettingStandings
     {
         var okResult = ActionResult as OkObjectResult;
         var dto = okResult!.Value as GroupStandingsDto;
-        dto.Should().NotBeNull();
-        dto!.GroupId.Should().Be(Guid.Empty);
-        dto.GroupName.Should().BeEmpty();
+        dto.ShouldNotBeNull();
+        dto!.GroupId.ShouldBe(Guid.Empty);
+        dto.GroupName.ShouldBeEmpty();
     }
 
     [Test]

@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using Miniclip.Simulator.ReadModels.Models;
 using NSubstitute;
 using NUnit.Framework;
@@ -83,14 +83,14 @@ public class WithHeadToHeadTiebreaker : WhenRecalculatingPosition
     [Test]
     public void ShouldApplyHeadToHeadTiebreaker()
     {
-        teamA.Position.Should().Be(1);
-        teamB.Position.Should().Be(2);
+        teamA.Position.ShouldBe(1);
+        teamB.Position.ShouldBe(2);
     }
 
     [Test]
     public void ShouldMarkBothAsQualified()
     {
-        teamA.QualifiesForKnockout.Should().BeTrue();
-        teamB.QualifiesForKnockout.Should().BeTrue();
+        teamA.QualifiesForKnockout.ShouldBeTrue();
+        teamB.QualifiesForKnockout.ShouldBeTrue();
     }
 }

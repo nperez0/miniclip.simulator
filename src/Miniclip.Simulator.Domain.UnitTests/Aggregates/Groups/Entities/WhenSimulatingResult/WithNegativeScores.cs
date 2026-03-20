@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Exceptions;
 using NUnit.Framework;
 
@@ -17,27 +17,27 @@ public class WithNegativeScores : WhenSimulatingResult
     [Test]
     public void ShouldReturnFailure()
     {
-        Result.Should().NotBeNull();
-        Result!.IsFailure.Should().BeTrue();
+        Result.ShouldNotBeNull();
+        Result!.IsFailure.ShouldBeTrue();
     }
 
     [Test]
     public void ShouldReturnNegativeScoreException()
     {
-        Result!.Exception.Should().BeOfType<GroupSimulationException>();
-        Result!.Exception.Message.Should().Be("Scores cannot be negative.");
+        Result!.Exception.ShouldBeOfType<GroupSimulationException>();
+        Result!.Exception.Message.ShouldBe("Scores cannot be negative.");
     }
 
     [Test]
     public void ShouldNotSetScores()
     {
-        Match!.HomeScore.Should().Be(0);
-        Match!.AwayScore.Should().Be(0);
+        Match!.HomeScore.ShouldBe(0);
+        Match!.AwayScore.ShouldBe(0);
     }
 
     [Test]
     public void ShouldNotMarkMatchAsPlayed()
     {
-        Match!.IsPlayed.Should().BeFalse();
+        Match!.IsPlayed.ShouldBeFalse();
     }
 }

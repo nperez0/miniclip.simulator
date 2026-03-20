@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using Microsoft.AspNetCore.Mvc;
 using Miniclip.Core;
 using Miniclip.Simulator.Application.Commands.Groups.V1.Generation;
@@ -25,18 +25,18 @@ public class WithInvalidRequest : WhenCreatingGroups
     [Test]
     public void ShouldReturnBadRequest()
     {
-        ActionResult.Should().BeOfType<BadRequestObjectResult>();
+        ActionResult.ShouldBeOfType<BadRequestObjectResult>();
     }
 
     [Test]
     public void ShouldReturnErrorMessage()
     {
         var badRequestResult = ActionResult as BadRequestObjectResult;
-        badRequestResult!.Value.Should().NotBeNull();
+        badRequestResult!.Value.ShouldNotBeNull();
         
         var errorProperty = badRequestResult.Value!.GetType().GetProperty("error");
         var errorMessage = errorProperty!.GetValue(badRequestResult.Value) as string;
-        errorMessage.Should().Contain("capacity");
+        errorMessage.ShouldContain("capacity");
     }
 
     [Test]

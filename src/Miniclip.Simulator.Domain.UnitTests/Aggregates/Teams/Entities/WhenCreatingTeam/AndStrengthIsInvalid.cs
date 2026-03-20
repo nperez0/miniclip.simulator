@@ -1,4 +1,4 @@
-﻿using FluentAssertions;
+using Shouldly;
 using Miniclip.Simulator.Domain.Aggregates.Teams.Exceptions;
 using NUnit.Framework;
 
@@ -20,10 +20,10 @@ public class AndStrengthIsInvalid(int strength) : WhenCreatingTeam
     [Test]
     public void ShouldReturnAnException()
     {
-        Result.Should().NotBeNull();
-        Result.IsFailure.Should().BeTrue();
-        Result.Value.Should().BeNull();
-        Result.Exception.Should().BeOfType<TeamCreationException>();
-        Result.Exception.Message.Should().Be($"Strength '{strength}' must be between 0 and 100.");
+        Result.ShouldNotBeNull();
+        Result.IsFailure.ShouldBeTrue();
+        Result.Value.ShouldBeNull();
+        Result.Exception.ShouldBeOfType<TeamCreationException>();
+        Result.Exception.Message.ShouldBe($"Strength '{strength}' must be between 0 and 100.");
     }
 }

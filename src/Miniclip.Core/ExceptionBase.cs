@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Miniclip.Core;
+﻿namespace Miniclip.Core;
 
 public class ExceptionBase : Exception
 {

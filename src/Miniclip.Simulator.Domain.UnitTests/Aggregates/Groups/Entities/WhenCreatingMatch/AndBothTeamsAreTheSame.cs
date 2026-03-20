@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Exceptions;
 using Miniclip.Simulator.Domain.Aggregates.Teams.Entities;
 using NUnit.Framework;
@@ -18,10 +18,10 @@ public class AndBothTeamsAreTheSame : WhenCreatingMatch
     [Test]
     public void ShouldReturnAnException()
     {
-        Result.Should().NotBeNull();
-        Result!.IsFailure.Should().BeTrue();
-        Result.Value.Should().BeNull();
-        Result.Exception.Should().BeOfType<GroupGenerateFixturesException>();
-        Result.Exception.Message.Should().Contain("cannot play against itself");
+        Result.ShouldNotBeNull();
+        Result!.IsFailure.ShouldBeTrue();
+        Result.Value.ShouldBeNull();
+        Result.Exception.ShouldBeOfType<GroupGenerateFixturesException>();
+        Result.Exception.Message.ShouldContain("cannot play against itself");
     }
 }

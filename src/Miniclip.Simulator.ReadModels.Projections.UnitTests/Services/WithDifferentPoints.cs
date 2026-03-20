@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using Miniclip.Simulator.ReadModels.Models;
 using NSubstitute;
 using NUnit.Framework;
@@ -75,25 +75,25 @@ public class WithDifferentPoints : WhenRecalculatingPosition
     [Test]
     public void ShouldAssignCorrectPositions()
     {
-        firstPlace.Position.Should().Be(1);
-        secondPlace.Position.Should().Be(2);
-        thirdPlace.Position.Should().Be(3);
-        fourthPlace.Position.Should().Be(4);
+        firstPlace.Position.ShouldBe(1);
+        secondPlace.Position.ShouldBe(2);
+        thirdPlace.Position.ShouldBe(3);
+        fourthPlace.Position.ShouldBe(4);
     }
 
     [Test]
     public void ShouldMarkTopTwoAsQualified()
     {
-        firstPlace.QualifiesForKnockout.Should().BeTrue();
-        secondPlace.QualifiesForKnockout.Should().BeTrue();
-        thirdPlace.QualifiesForKnockout.Should().BeFalse();
-        fourthPlace.QualifiesForKnockout.Should().BeFalse();
+        firstPlace.QualifiesForKnockout.ShouldBeTrue();
+        secondPlace.QualifiesForKnockout.ShouldBeTrue();
+        thirdPlace.QualifiesForKnockout.ShouldBeFalse();
+        fourthPlace.QualifiesForKnockout.ShouldBeFalse();
     }
 
     [Test]
     public void ShouldUpdateLastUpdatedTimestamp()
     {
-        firstPlace.LastUpdated.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1.0));
-        secondPlace.LastUpdated.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1.0));
+        firstPlace.LastUpdated.ShouldBe(DateTime.UtcNow, TimeSpan.FromSeconds(1.0));
+        secondPlace.LastUpdated.ShouldBe(DateTime.UtcNow, TimeSpan.FromSeconds(1.0));
     }
 }

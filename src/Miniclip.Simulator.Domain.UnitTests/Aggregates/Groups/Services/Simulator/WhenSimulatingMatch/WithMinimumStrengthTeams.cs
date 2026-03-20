@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using NUnit.Framework;
 
 namespace Miniclip.Simulator.Domain.UnitTests.Aggregates.Groups.Services.Simulator.WhenSimulatingMatch;
@@ -16,13 +16,13 @@ public class WithMinimumStrengthTeams : WhenSimulatingMatch
     {
         // Very weak teams should produce very low scores
         var totalGoals = HomeScore + AwayScore;
-        totalGoals.Should().BeLessThanOrEqualTo(2);
+        totalGoals.ShouldBeLessThanOrEqualTo(2);
     }
 
     [Test]
     public void ShouldNotProduceNegativeScores()
     {
-        HomeScore.Should().BeGreaterThanOrEqualTo(0);
-        AwayScore.Should().BeGreaterThanOrEqualTo(0);
+        HomeScore.ShouldBeGreaterThanOrEqualTo(0);
+        AwayScore.ShouldBeGreaterThanOrEqualTo(0);
     }
 }

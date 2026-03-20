@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using NUnit.Framework;
 
 namespace Miniclip.Simulator.Domain.UnitTests.Aggregates.Groups.Entities.WhenCreatingGroup;
@@ -15,23 +15,23 @@ public class AndParametersAreValid : WhenCreatingGroup
     [Test]
     public void ShouldCreateAGroupCorrectly()
     {
-        Result.Should().NotBeNull();
-        Result!.IsSuccess.Should().BeTrue();
-        Result.Value.Should().NotBeNull();
-        Result.Value!.Id.Should().Be(Id);
-        Result.Value.Name.Should().Be(Name);
-        Result.Value.Capacity.Should().Be(Capacity);
+        Result.ShouldNotBeNull();
+        Result!.IsSuccess.ShouldBeTrue();
+        Result.Value.ShouldNotBeNull();
+        Result.Value!.Id.ShouldBe(Id);
+        Result.Value.Name.ShouldBe(Name);
+        Result.Value.Capacity.ShouldBe(Capacity);
     }
 
     [Test]
     public void ShouldHaveEmptyTeamsCollection()
     {
-        Result!.Value!.Teams.Should().BeEmpty();
+        Result!.Value!.Teams.ShouldBeEmpty();
     }
 
     [Test]
     public void ShouldHaveEmptyMatchesCollection()
     {
-        Result!.Value!.Matches.Should().BeEmpty();
+        Result!.Value!.Matches.ShouldBeEmpty();
     }
 }

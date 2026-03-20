@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Exceptions;
 using NUnit.Framework;
 
@@ -20,10 +20,10 @@ public class AndNameIsInvalid(string? name) : WhenCreatingGroup
     [Test]
     public void ShouldReturnAnException()
     {
-        Result.Should().NotBeNull();
-        Result!.IsFailure.Should().BeTrue();
-        Result.Value.Should().BeNull();
-        Result.Exception.Should().BeOfType<GroupCreationException>();
-        Result.Exception.Message.Should().Contain("cannot be empty");
+        Result.ShouldNotBeNull();
+        Result!.IsFailure.ShouldBeTrue();
+        Result.Value.ShouldBeNull();
+        Result.Exception.ShouldBeOfType<GroupCreationException>();
+        Result.Exception.Message.ShouldContain("cannot be empty");
     }
 }

@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Events;
 using Miniclip.Simulator.ReadModels.Models;
 using NSubstitute;
@@ -87,27 +87,27 @@ public class WithExistingStandings : WhenProjectingGroupStandings
     [Test]
     public void ShouldUpdateHomeTeamStats()
     {
-        existingHomeStanding.MatchesPlayed.Should().Be(2);
-        existingHomeStanding.Wins.Should().Be(0);
-        existingHomeStanding.Draws.Should().Be(2);
-        existingHomeStanding.Losses.Should().Be(0);
-        existingHomeStanding.GoalsFor.Should().Be(4);
-        existingHomeStanding.GoalsAgainst.Should().Be(4);
-        existingHomeStanding.GoalDifference.Should().Be(0);
-        existingHomeStanding.Points.Should().Be(2);
+        existingHomeStanding.MatchesPlayed.ShouldBe(2);
+        existingHomeStanding.Wins.ShouldBe(0);
+        existingHomeStanding.Draws.ShouldBe(2);
+        existingHomeStanding.Losses.ShouldBe(0);
+        existingHomeStanding.GoalsFor.ShouldBe(4);
+        existingHomeStanding.GoalsAgainst.ShouldBe(4);
+        existingHomeStanding.GoalDifference.ShouldBe(0);
+        existingHomeStanding.Points.ShouldBe(2);
     }
 
     [Test]
     public void ShouldUpdateAwayTeamStats()
     {
-        existingAwayStanding.MatchesPlayed.Should().Be(2);
-        existingAwayStanding.Wins.Should().Be(1);
-        existingAwayStanding.Draws.Should().Be(1);
-        existingAwayStanding.Losses.Should().Be(0);
-        existingAwayStanding.GoalsFor.Should().Be(5);
-        existingAwayStanding.GoalsAgainst.Should().Be(3);
-        existingAwayStanding.GoalDifference.Should().Be(2);
-        existingAwayStanding.Points.Should().Be(4);
+        existingAwayStanding.MatchesPlayed.ShouldBe(2);
+        existingAwayStanding.Wins.ShouldBe(1);
+        existingAwayStanding.Draws.ShouldBe(1);
+        existingAwayStanding.Losses.ShouldBe(0);
+        existingAwayStanding.GoalsFor.ShouldBe(5);
+        existingAwayStanding.GoalsAgainst.ShouldBe(3);
+        existingAwayStanding.GoalDifference.ShouldBe(2);
+        existingAwayStanding.Points.ShouldBe(4);
     }
 
     [Test]

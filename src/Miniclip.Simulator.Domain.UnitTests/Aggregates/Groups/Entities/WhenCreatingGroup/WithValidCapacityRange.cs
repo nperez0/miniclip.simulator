@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using NUnit.Framework;
 
 namespace Miniclip.Simulator.Domain.UnitTests.Aggregates.Groups.Entities.WhenCreatingGroup;
@@ -20,18 +20,18 @@ public class WithValidCapacityRange(int capacity) : WhenCreatingGroup
     [Test]
     public void ShouldSucceed()
     {
-        Result!.IsSuccess.Should().BeTrue();
+        Result!.IsSuccess.ShouldBeTrue();
     }
 
     [Test]
     public void ShouldReturnGroup()
     {
-        Result!.Value.Should().NotBeNull();
+        Result!.Value.ShouldNotBeNull();
     }
 
     [Test]
     public void ShouldHaveCorrectCapacity()
     {
-        Result!.Value!.Capacity.Should().Be(capacity);
+        Result!.Value!.Capacity.ShouldBe(capacity);
     }
 }

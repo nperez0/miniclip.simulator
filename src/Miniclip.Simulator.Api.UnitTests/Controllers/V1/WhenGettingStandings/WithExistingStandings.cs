@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using Mediator;
 using Microsoft.AspNetCore.Mvc;
 using Miniclip.Core;
@@ -79,14 +79,14 @@ public class WithExistingStandings : WhenGettingStandings
     [Test]
     public void ShouldReturnOkResult()
     {
-        ActionResult.Should().BeOfType<OkObjectResult>();
+        ActionResult.ShouldBeOfType<OkObjectResult>();
     }
 
     [Test]
     public void ShouldReturnStandingsDto()
     {
         var okResult = ActionResult as OkObjectResult;
-        okResult!.Value.Should().Be(standingsDto);
+        okResult!.Value.ShouldBe(standingsDto);
     }
 
     [Test]

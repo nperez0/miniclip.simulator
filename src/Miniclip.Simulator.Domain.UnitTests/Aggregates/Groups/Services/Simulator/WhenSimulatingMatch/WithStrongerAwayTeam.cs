@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using NUnit.Framework;
 
 namespace Miniclip.Simulator.Domain.UnitTests.Aggregates.Groups.Services.Simulator.WhenSimulatingMatch;
@@ -31,7 +31,7 @@ public class WithStrongerAwayTeam : WhenSimulatingMatch
     [Test]
     public void ShouldFavorStrongerAwayTeam()
     {
-        awayWins.Should().BeGreaterThan(homeWins);
+        awayWins.ShouldBeGreaterThan(homeWins);
     }
 
     [Test]
@@ -40,6 +40,6 @@ public class WithStrongerAwayTeam : WhenSimulatingMatch
         var awayWinPercentage = (double)awayWins / Iterations;
         
         // Even with home advantage, stronger away team should win more
-        awayWinPercentage.Should().BeGreaterThan(0.4);
+        awayWinPercentage.ShouldBeGreaterThan(0.4);
     }
 }

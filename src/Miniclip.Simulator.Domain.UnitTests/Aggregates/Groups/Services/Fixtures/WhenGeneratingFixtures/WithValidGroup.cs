@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using Miniclip.Simulator.Domain.Aggregates.Teams.Entities;
 using NSubstitute;
 using NUnit.Framework;
@@ -36,8 +36,8 @@ public class WithValidGroup() : WhenGeneratingFixtures
     [Test]
     public void ShouldReturnSuccess()
     {
-        Result.Should().NotBeNull();
-        Result!.IsSuccess.Should().BeTrue();
+        Result.ShouldNotBeNull();
+        Result!.IsSuccess.ShouldBeTrue();
     }
 
     [Test]
@@ -56,7 +56,7 @@ public class WithValidGroup() : WhenGeneratingFixtures
     public void ShouldAddAllMatchesToGroup()
     {
         var expectedMatchCount = mockSchedule.Count;
-        Group!.Matches.Should().HaveCount(expectedMatchCount);
+        Group!.Matches.Count().ShouldBe(expectedMatchCount);
     }
 
     [Test]
@@ -64,7 +64,7 @@ public class WithValidGroup() : WhenGeneratingFixtures
     {
         foreach (var (homeTeam, awayTeam, round) in mockSchedule)
         {
-            Group!.Matches.Should().Contain(m => 
+            Group!.Matches.ShouldContain(m => 
                 m.HomeTeamId == homeTeam.Id && 
                 m.AwayTeamId == awayTeam.Id &&
                 m.Round == round);
@@ -74,12 +74,12 @@ public class WithValidGroup() : WhenGeneratingFixtures
     [Test]
     public void ShouldNotHaveTeamPlayingItself()
     {
-        Group!.Matches.Should().OnlyContain(m => m.HomeTeamId != m.AwayTeamId);
+        Group!.Matches.ShouldAllBe(m => m.HomeTeamId != m.AwayTeamId);
     }
 
     [Test]
     public void ShouldHaveAllMatchesUnplayed()
     {
-        Group!.Matches.Should().OnlyContain(m => m.IsPlayed == false);
+        Group!.Matches.ShouldAllBe(m => m.IsPlayed == false);
     }
 }

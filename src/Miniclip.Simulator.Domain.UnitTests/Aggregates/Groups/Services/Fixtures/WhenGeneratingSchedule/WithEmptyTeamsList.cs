@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using NUnit.Framework;
 
 namespace Miniclip.Simulator.Domain.UnitTests.Aggregates.Groups.Services.Fixtures.WhenGeneratingSchedule;
@@ -14,6 +14,6 @@ public class WithEmptyTeamsList : WhenGeneratingSchedule
     [Test]
     public void ShouldGenerateEmptySchedule()
     {
-        Schedule!.Should().BeEmpty();
+        Schedule!.ShouldBeEmpty();
     }
 }
