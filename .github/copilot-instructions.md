@@ -141,3 +141,24 @@ The entry point for local development is the **AppHost**:
 Miniclip.Simulator.AppHost
 ```
 It provisions a MySQL container and starts the API via .NET Aspire.
+
+---
+
+## Active Migration
+
+The project is currently undergoing an **Event Sourcing migration** using EventStoreDB and Kafka.
+
+**Current Phase:** `0 — Planning & Documentation` ✅
+
+| # | Phase | Status |
+|---|---|---|
+| 0 | Planning & Documentation | ✅ Done |
+| 1 | EventStoreDB — Core Abstractions | ⬜ Pending |
+| 2 | EventStoreDB — Write Side Migration | ⬜ Pending |
+| 3 | Kafka — Event Bus | ⬜ Pending |
+| 4 | Kafka — Read Side Consumers | ⬜ Pending |
+| 5 | Testing & Hardening | ⬜ Pending |
+
+Full plan and per-phase specs: [`docs/event-sourcing/PLAN.md`](docs/event-sourcing/PLAN.md)
+
+> **For AI agents:** Before working on any migration task, read `PLAN.md` and confirm the current phase status above. Update the phase status in this file when a phase is completed.
