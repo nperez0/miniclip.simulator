@@ -1,5 +1,4 @@
 using Mediator;
-using Miniclip.Core;
 using Miniclip.Core.Domain;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Entities;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Services.Fixtures;
@@ -15,30 +14,18 @@ public class GenerateGroupCommandHandler(
 {
     public async ValueTask<Result<Guid>> Handle(GenerateGroupCommand command, CancellationToken cancellationToken)
     {
-        var groupResult = Group.Create(Guid.NewGuid(), command.Name, command.Capacity);
-
-        if (groupResult.IsFailure)
-            return Result.Failure<Guid>(groupResult.Exception);
-
-        var group = groupResult.Value!;
         var teams = await GetRandomTeams(command.Capacity, cancellationToken);
 
-        foreach (var team in teams)
-        {
-            var addTeamResult = group.AddTeam(team);
-            if (addTeamResult.IsFailure)
-                return Result.Failure<Guid>(addTeamResult.Exception);
-        }
-
-        var schedulerResult = fixtureSchedulerService.GenerateFixtures(group);
-
-        if (schedulerResult.IsFailure)
-            return Result.Failure<Guid>(schedulerResult.Exception);
-
-        groupsRepository.Add(group);
-
-        return Result.Success(groupResult.Value!.Id);
+        return Group.Create(Guid.NewGuid(), command.Name, command.Capacity)
+            .Then(group => AddTeams(group, teams))
+            .Then(fixtureSchedulerService.GenerateFixtures)
+            .Tap(groupsRepository.Add)
+            .Map(group => group.Id);
     }
+
+    private Result<Group> AddTeams(Group group, IEnumerable<Team> teams)
+        => teams.Traverse(group.AddTeam)
+            .Map(() => group);
 
     public async Task<IEnumerable<Team>> GetRandomTeams(int count, CancellationToken cancellationToken)
     {

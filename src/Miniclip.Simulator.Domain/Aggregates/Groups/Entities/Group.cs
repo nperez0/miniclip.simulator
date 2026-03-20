@@ -53,16 +53,8 @@ public class Group : AggregateRoot
     }
 
     public Result AddMatch(Guid id, Team homeTeam, Team awayTeam, int round)
-    {
-        var matchResult = Match.Create(id, homeTeam, awayTeam, round);
-
-        if (matchResult.IsFailure)
-            return matchResult;
-            
-        matches.Add(matchResult.Value!);
-
-        return Result.Success();
-    }
+        => Match.Create(id, homeTeam, awayTeam, round)
+            .Tap(matches.Add);
 
     public Result SimulateMatch(Guid matchId, int homeScore, int awayScore)
     {
@@ -71,26 +63,23 @@ public class Group : AggregateRoot
         if (match == null)
             return Result.Failure(GroupSimulationException.MatchNotFound(matchId));
 
-        var result = match.SimulateResult(homeScore, awayScore);
-
-        if (result.IsFailure)
-            return result;
-
-        Enqueue(new MatchPlayed(
-            GroupId: Id,
-            GroupName: Name,
-            MatchId: match.Id,
-            HomeTeamId: match.HomeTeam.Id,
-            HomeTeamName: match.HomeTeam.Name,
-            HomeTeamStrength: match.HomeTeam.Strength,
-            HomeScore: match.HomeScore,
-            AwayTeamId: match.AwayTeam.Id,
-            AwayTeamName: match.AwayTeam.Name,
-            AwayTeamStrength: match.AwayTeam.Strength,
-            AwayScore: match.AwayScore,
-            Round: match.Round
-        ));
-
-        return Result.Success();
+        return match.SimulateResult(homeScore, awayScore)
+            .Tap(() =>
+            {
+                Enqueue(new MatchPlayed(
+                    GroupId: Id,
+                    GroupName: Name,
+                    MatchId: match.Id,
+                    HomeTeamId: match.HomeTeam.Id,
+                    HomeTeamName: match.HomeTeam.Name,
+                    HomeTeamStrength: match.HomeTeam.Strength,
+                    HomeScore: match.HomeScore,
+                    AwayTeamId: match.AwayTeam.Id,
+                    AwayTeamName: match.AwayTeam.Name,
+                    AwayTeamStrength: match.AwayTeam.Strength,
+                    AwayScore: match.AwayScore,
+                    Round: match.Round
+                ));
+            });
     }
 }

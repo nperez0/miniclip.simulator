@@ -24,16 +24,14 @@ public class GroupSimulator : IGroupSimulator
         if (matchesNotPlayed.Length == 0)
             return Result.Failure(GroupSimulationException.AllMatchesPlayed());
 
-        foreach (var match in matchesNotPlayed)
-        {
-            var (homeScore, awayScore) = matchSimulator.SimulateMatch(match.HomeTeam.Strength, match.AwayTeam.Strength);
+        return matchesNotPlayed
+            .Traverse(match => SimulateMatch(group, match, matchSimulator));
+    }
 
-            var result = group.SimulateMatch(match.Id, homeScore, awayScore);
+    private static Result SimulateMatch(Group group, Match match, IMatchSimulator matchSimulator)
+    {
+        var (homeScore, awayScore) = matchSimulator.SimulateMatch(match.HomeTeam.Strength, match.AwayTeam.Strength);
 
-            if (result.IsFailure)
-                return result;
-        }
-
-        return Result.Success();
+        return group.SimulateMatch(match.Id, homeScore, awayScore);
     }
 }

@@ -20,14 +20,7 @@ public class FixtureSchedulerService : IFixtureSchedulerService
 
         var fixtureScheduler = fixtureSchedulerFactory.Create(group);
 
-        foreach (var match in fixtureScheduler.GenerateSchedule())
-        {
-            var matchResult = group.AddMatch(Guid.NewGuid(), match.HomeTeam, match.AwayTeam, match.Round);
-
-            if (matchResult.IsFailure)
-                return matchResult;
-        }
-
-        return Result.Success();
+        return fixtureScheduler.GenerateSchedule()
+            .Traverse(match => group.AddMatch(Guid.NewGuid(), match.HomeTeam, match.AwayTeam, match.Round));
     }
 }
