@@ -24,8 +24,8 @@ public class WithNegativeScores : WhenSimulatingResult
     [Test]
     public void ShouldReturnNegativeScoreException()
     {
-        Result!.Exception.Should().BeOfType<MatchSimulateResultException>();
-        Result!.Exception.Message.Should().Contain("negative");
+        Result!.Exception.Should().BeOfType<GroupSimulationException>();
+        Result!.Exception.Message.Should().Be("Scores cannot be negative.");
     }
 
     [Test]

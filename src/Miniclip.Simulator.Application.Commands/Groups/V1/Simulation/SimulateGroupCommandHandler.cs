@@ -1,5 +1,4 @@
 using Mediator;
-using Miniclip.Core;
 using Miniclip.Core.Domain;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Entities;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Services.Simulator;
@@ -16,7 +15,7 @@ public class SimulateGroupCommandHandler(
         var group = await repository.FindAsync(command.GroupId, cancellationToken);
         
         if (group == null)
-            return Result.Failure(GroupNotFoundException.NotFound(command.GroupId));
+            return Result.Failure(SimulateGroupException.GroupNotFound(command.GroupId));
 
         return groupSimulator.SimulateAllMatches(group);
     }

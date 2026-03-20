@@ -5,7 +5,7 @@ VisualStudioVersion = 18.1.11312.151
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "0 - Core", "0 - Core", "{019F5A8A-E7A1-4FC5-B48B-60F4B99BA6DD}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "3 - Domain", "3 - Domain", "{DE241CCF-9BC6-4F8C-9E86-52C9ED4F7468}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "4 - Domain", "4 - Domain", "{DE241CCF-9BC6-4F8C-9E86-52C9ED4F7468}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Miniclip.Simulator.Domain", "Miniclip.Simulator.Domain\Miniclip.Simulator.Domain.csproj", "{3C525DB2-DC43-44D2-B88F-95C2CAEE2D23}"
 EndProject
@@ -13,7 +13,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Miniclip.Core", "Miniclip.C
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Miniclip.Core.Tests", "Miniclip.Core.Tests\Miniclip.Core.Tests.csproj", "{474BFA2A-B036-4662-B28E-D8773353273A}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "6 - Tests", "6 - Tests", "{AE9C4A53-80F3-4A99-A99F-E80DE81615B6}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "7 - Tests", "7 - Tests", "{AE9C4A53-80F3-4A99-A99F-E80DE81615B6}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Miniclip.Simulator.Domain.UnitTests", "Miniclip.Simulator.Domain.UnitTests\Miniclip.Simulator.Domain.UnitTests.csproj", "{500E7086-283D-1BC9-BBFD-A254980B8113}"
 EndProject
@@ -24,13 +24,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Miniclip.Core.Domain", "Miniclip.Core.Domain\Miniclip.Core.Domain.csproj", "{8D377D63-1E1C-4653-A468-3CD393438E9C}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "1 - Web Api", "1 - Web Api", "{E658381E-E2B2-4E16-A9C6-ADC0BDB16834}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "2 - Web Api", "2 - Web Api", "{E658381E-E2B2-4E16-A9C6-ADC0BDB16834}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "2 - Application", "2 - Application", "{4B7CBEDC-CEFD-4A1E-843A-29AE14217C12}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "3 - Application", "3 - Application", "{4B7CBEDC-CEFD-4A1E-843A-29AE14217C12}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "5 - Infrastructure", "5 - Infrastructure", "{5BFE56AA-5A28-4F3A-8AED-5AAF851F4468}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "4 - Read Models", "4 - Read Models", "{2B41BF8D-60FC-4390-A995-9D9CE1F9AC9D}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "6 - Read Models", "6 - Read Models", "{2B41BF8D-60FC-4390-A995-9D9CE1F9AC9D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Miniclip.Simulator.ReadModels", "Miniclip.Simulator.ReadModels\Miniclip.Simulator.ReadModels.csproj", "{E8F65341-8BA6-4215-9E31-69AAC037746E}"
 EndProject

@@ -17,7 +17,7 @@ public class WithNonExistentGroup : WhenSimulatingGroups
 
         GroupId = Guid.NewGuid();
 
-        var exception = GroupNotFoundException.NotFound(GroupId);
+        var exception = SimulateGroupException.GroupNotFound(GroupId);
         Mediator.Send(Arg.Any<SimulateGroupCommand>(), Arg.Any<CancellationToken>())
             .Returns(ValueTask.FromResult(Result.Failure(exception)));
     }

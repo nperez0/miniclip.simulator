@@ -33,25 +33,25 @@ public class WithNoStandings : WhenGettingGroupStandings
     [Test]
     public void ShouldReturnEmptyGroupId()
     {
-        Result.GroupId.Should().Be(Guid.Empty);
+        Result.Value!.GroupId.Should().Be(Guid.Empty);
     }
 
     [Test]
     public void ShouldReturnEmptyGroupName()
     {
-        Result.GroupName.Should().BeEmpty();
+        Result.Value!.GroupName.Should().BeEmpty();
     }
 
     [Test]
     public void ShouldReturnDefaultStandings()
     {
-        Result.Standings.Should().HaveCount(1);
-        Result.Standings[0].TeamId.Should().Be(Guid.Empty);
+        Result.Value!.Standings.Should().HaveCount(1);
+        Result.Value!.Standings[0].TeamId.Should().Be(Guid.Empty);
     }
 
     [Test]
     public void ShouldReturnEmptyMatchResults()
     {
-        Result.MatchResults.Should().BeEmpty();
+        Result.Value!.MatchResults.Should().BeEmpty();
     }
 }

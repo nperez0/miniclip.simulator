@@ -1,6 +1,6 @@
 ﻿namespace Miniclip.Core;
 
-public class EmptyException : Exception
+public class EmptyException : ExceptionBase
 {
     public static readonly EmptyException Instance = new();
 }

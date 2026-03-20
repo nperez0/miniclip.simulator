@@ -36,6 +36,6 @@ public class WithNonExistentGroup : WhenSimulatingGroups
     [Test]
     public void ShouldReturnGroupNotFoundException()
     {
-        Result.Exception.Should().BeOfType<GroupNotFoundException>();
+        Result.Exception.Should().BeOfType<SimulateGroupException>();
     }
 }

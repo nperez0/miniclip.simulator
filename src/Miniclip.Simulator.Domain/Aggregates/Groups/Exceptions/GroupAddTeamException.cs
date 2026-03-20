@@ -1,6 +1,6 @@
 ﻿namespace Miniclip.Simulator.Domain.Aggregates.Groups.Exceptions;
 
-public class GroupAddTeamException(string message) : Exception(message)
+public class GroupAddTeamException(string message) : ExceptionBase(message)
 {
     public static GroupAddTeamException MaxTeamsReached(int capacity)
         => new($"Has reached the maximum number of teams: {capacity}.");

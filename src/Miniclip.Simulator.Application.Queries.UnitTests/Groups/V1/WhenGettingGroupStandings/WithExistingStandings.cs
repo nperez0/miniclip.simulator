@@ -113,25 +113,25 @@ public class WithExistingStandings : WhenGettingGroupStandings
     [Test]
     public void ShouldReturnGroupId()
     {
-        Result.GroupId.Should().Be(groupId);
+        Result.Value!.GroupId.Should().Be(groupId);
     }
 
     [Test]
     public void ShouldReturnGroupName()
     {
-        Result.GroupName.Should().Be("Group A");
+        Result.Value!.GroupName.Should().Be("Group A");
     }
 
     [Test]
     public void ShouldReturnAllStandings()
     {
-        Result.Standings.Should().HaveCount(3);
+        Result.Value!.Standings.Should().HaveCount(3);
     }
 
     [Test]
     public void ShouldMapStandingsCorrectly()
     {
-        var firstPlace = Result.Standings.First(s => s.Position == 1);
+        var firstPlace = Result.Value!.Standings.First(s => s.Position == 1);
         firstPlace.TeamName.Should().Be("Team 1");
         firstPlace.Points.Should().Be(9);
         firstPlace.QualifiesForKnockout.Should().BeTrue();
@@ -140,13 +140,13 @@ public class WithExistingStandings : WhenGettingGroupStandings
     [Test]
     public void ShouldReturnAllMatchResults()
     {
-        Result.MatchResults.Should().HaveCount(2);
+        Result.Value!.MatchResults.Should().HaveCount(2);
     }
 
     [Test]
     public void ShouldMapMatchResultsCorrectly()
     {
-        var firstMatch = Result.MatchResults.First(m => m.Round == 1 && m.HomeTeamName == "Team 1");
+        var firstMatch = Result.Value!.MatchResults.First(m => m.Round == 1 && m.HomeTeamName == "Team 1");
         firstMatch.HomeScore.Should().Be(3);
         firstMatch.AwayScore.Should().Be(1);
         firstMatch.AwayTeamName.Should().Be("Team 2");
@@ -155,7 +155,7 @@ public class WithExistingStandings : WhenGettingGroupStandings
     [Test]
     public void ShouldReturnQualifiedTeams()
     {
-        Result.QualifiedTeams.Should().HaveCount(2);
-        Result.QualifiedTeams.Should().OnlyContain(t => t.QualifiesForKnockout);
+        Result.Value!.QualifiedTeams.Should().HaveCount(2);
+        Result.Value!.QualifiedTeams.Should().OnlyContain(t => t.QualifiesForKnockout);
     }
 }

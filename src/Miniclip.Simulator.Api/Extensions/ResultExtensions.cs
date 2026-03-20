@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Miniclip.Core;
-using Miniclip.Core.Domain.Exceptions;
 
 namespace Miniclip.Simulator.Api.Extensions;
 
@@ -16,11 +15,11 @@ public static class ResultExtensions
             ? new OkObjectResult(result.Value)
             : ProcessFailedResult(result.Exception);
 
-    private static IActionResult ProcessFailedResult(Exception ex)
+    private static IActionResult ProcessFailedResult(ExceptionBase ex)
     {
-        return ex switch
+        return ex.Type switch
         {
-            NotFoundException => new NotFoundObjectResult(new { error = ex.Message }),
+            ExceptionType.NotFound => new NotFoundObjectResult(new { error = ex.Message }),
             _ => new BadRequestObjectResult(new { error = ex.Message })
         };
     }

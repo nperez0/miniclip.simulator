@@ -1,4 +1,5 @@
 ﻿using AutoFixture;
+using Miniclip.Core;
 using Miniclip.Core.Tests;
 using Miniclip.Simulator.Application.Queries.Groups.V1.Standings;
 using Miniclip.Simulator.ReadModels.Repositories.Read;
@@ -10,7 +11,7 @@ public abstract class WhenGettingGroupStandings : TestBase<GroupStandingsQueryHa
     protected IGroupStandingsRepository StandingsRepository { get; private set; } = null!;
     protected IMatchResultsRepository MatchResultsRepository { get; private set; } = null!;
     protected GroupStandingsQuery Query { get; set; } = null!;
-    protected GroupStandingsDto Result { get; set; } = null!;
+    protected Result<GroupStandingsDto> Result { get; set; } = null!;
 
     protected override void Given()
     {

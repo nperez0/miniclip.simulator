@@ -6,4 +6,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Miniclip.Core.ServiceDefaults\Miniclip.Core.ServiceDefaults.csproj" />
+  </ItemGroup>
+
 </Project>

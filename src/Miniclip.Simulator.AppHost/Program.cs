@@ -2,7 +2,7 @@ var builder = DistributedApplication.CreateBuilder(args);
 
 var mysqlPassword = builder.AddParameter("mysql-password", secret: true);
 
-var mysql = builder.AddMySql("mysql", password: mysqlPassword)
+var mysql = builder.AddMySql("mysql", password: mysqlPassword, port: 3306)
     .WithDataVolume();
 
 var writeDb = mysql.AddDatabase("SimulatorWrite", "MiniclipSimulator_Write");

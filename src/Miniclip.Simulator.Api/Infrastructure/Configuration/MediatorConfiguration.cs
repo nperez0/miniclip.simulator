@@ -1,5 +1,4 @@
 using Mediator;
-using Microsoft.Extensions.DependencyInjection;
 using Miniclip.Core.Application.Behaviors;
 
 namespace Miniclip.Simulator.Api.Infrastructure.Configuration;
@@ -10,7 +9,7 @@ public static class MediatorConfiguration
     {
         services.AddSingleton<INotificationPublisher, OrderedNotificationPublisher>();
 
-        services.AddMediator();
+        services.AddMediator(options => options.ServiceLifetime = ServiceLifetime.Scoped);
 
         services.AddScoped(typeof(IPipelineBehavior<,>), typeof(CommandUnitOfWorkBehavior<,>));
         services.AddScoped(typeof(IPipelineBehavior<,>), typeof(ReadModelUnitOfWorkBehavior<,>));

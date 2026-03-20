@@ -1,5 +1,6 @@
+using Miniclip.Core;
 using Miniclip.Core.Application;
 
 namespace Miniclip.Simulator.Application.Queries.Groups.V1.Standings;
 
-public record GroupStandingsQuery(Guid GroupId) : IQuery<GroupStandingsDto>;
+public record GroupStandingsQuery(Guid GroupId) : IQuery<Result<GroupStandingsDto>>;

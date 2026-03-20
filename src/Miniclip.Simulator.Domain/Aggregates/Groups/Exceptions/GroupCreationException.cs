@@ -1,8 +1,6 @@
-﻿using Miniclip.Simulator.Domain.Aggregates.Teams.Exceptions;
+﻿namespace Miniclip.Simulator.Domain.Aggregates.Groups.Exceptions;
 
-namespace Miniclip.Simulator.Domain.Aggregates.Groups.Exceptions;
-
-public class GroupCreationException(string message) : Exception(message)
+public class GroupCreationException(string message) : ExceptionBase(message)
 {
     public static GroupCreationException EmptyName(string? name)
         => new($"Team name '{name}' cannot be empty.");

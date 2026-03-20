@@ -1,5 +1,4 @@
-﻿using Miniclip.Core;
-using Miniclip.Core.Domain;
+﻿using Miniclip.Core.Domain;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Events;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Exceptions;
 using Miniclip.Simulator.Domain.Aggregates.Teams.Entities;
@@ -70,7 +69,7 @@ public class Group : AggregateRoot
         var match = matches.FirstOrDefault(m => m.Id == matchId);
         
         if (match == null)
-            return Result.Failure(MatchNotFoundException.NotFound(matchId));
+            return Result.Failure(GroupSimulationException.MatchNotFound(matchId));
 
         var result = match.SimulateResult(homeScore, awayScore);
 

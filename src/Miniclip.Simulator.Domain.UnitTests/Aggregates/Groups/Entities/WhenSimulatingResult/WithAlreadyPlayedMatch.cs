@@ -28,8 +28,8 @@ public class WithAlreadyPlayedMatch : WhenSimulatingResult
     [Test]
     public void ShouldReturnAlreadyPlayedException()
     {
-        Result!.Exception.Should().BeOfType<MatchSimulateResultException>();
-        Result!.Exception.Message.Should().Contain("already");
+        Result!.Exception.Should().BeOfType<GroupSimulationException>();
+        Result!.Exception.Message.Should().Be($"Match '{Match!.Id}' has already been played.");
     }
 
     [Test]

@@ -21,7 +21,7 @@ public class AndBothTeamsAreTheSame : WhenCreatingMatch
         Result.Should().NotBeNull();
         Result!.IsFailure.Should().BeTrue();
         Result.Value.Should().BeNull();
-        Result.Exception.Should().BeOfType<MatchCreationException>();
+        Result.Exception.Should().BeOfType<GroupGenerateFixturesException>();
         Result.Exception.Message.Should().Contain("cannot play against itself");
     }
 }

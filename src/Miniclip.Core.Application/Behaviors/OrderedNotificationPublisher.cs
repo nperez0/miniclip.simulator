@@ -12,7 +12,7 @@ public class OrderedNotificationPublisher : INotificationPublisher
         CancellationToken cancellationToken)
         where TNotification : INotification
     {
-        var orderedHandlers = ((IEnumerable<INotificationHandler<TNotification>>)handlers)
+        var orderedHandlers = handlers
             .OrderBy(handler => handler.GetType()
                 .GetCustomAttribute<HandlerPriorityAttribute>()?.Priority ?? int.MaxValue);
 
