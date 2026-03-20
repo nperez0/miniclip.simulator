@@ -1,7 +1,5 @@
 using Shouldly;
-using Miniclip.Simulator.Domain.Aggregates.Groups.Entities;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Exceptions;
-using Miniclip.Simulator.Domain.Aggregates.Teams.Entities;
 using NUnit.Framework;
 
 namespace Miniclip.Simulator.Domain.UnitTests.Aggregates.Groups.Entities.WhenAddingTeam;
@@ -10,14 +8,16 @@ public class WithMaxTeamsReached : WhenAddingTeam
 {
     protected override void Given()
     {
-        Group = Group.Create(Guid.NewGuid(), "Group A", 2).Value;
-        
+        const int capacity = 2;
+
+        Group = GroupMother.Default(capacity);
+
         // Fill the group to capacity
-        Group!.AddTeam(Team.Create(Guid.NewGuid(), "Team 1", 80).Value!);
-        Group!.AddTeam(Team.Create(Guid.NewGuid(), "Team 2", 70).Value!);
+        foreach (var team in TeamMother.Many(capacity))
+            Group!.AddTeam(team);
 
         // Try to add one more team
-        Team = Team.Create(Guid.NewGuid(), "Team 3", 60).Value!;
+        Team = TeamMother.Default();
     }
 
     [Test]

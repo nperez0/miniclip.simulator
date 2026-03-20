@@ -8,7 +8,7 @@ public class WhenGeneratingSchedule : TestBase<RoundRobinScheduler>
 {
     protected int Capacity { get; set; }
 
-    protected List<Team> Teams { get; set; } = [];
+    protected Team[] Teams { get; set; } = [];
 
     protected IEnumerable<(Team HomeTeam, Team AwayTeam, int Round)>? Schedule { get; set; }
 

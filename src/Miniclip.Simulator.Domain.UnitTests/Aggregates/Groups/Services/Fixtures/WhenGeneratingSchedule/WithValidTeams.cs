@@ -14,9 +14,7 @@ public class WithValidTeams(int capacity) : WhenGeneratingSchedule
     protected override void Given()
     {
         Capacity = capacity;
-        Teams = Enumerable.Range(1, Capacity)
-            .Select(x => Team.Create(Guid.NewGuid(), $"Team {x}", x * 10).Value!)
-            .ToList();
+        Teams = TeamMother.Many(Capacity);
     }
 
     [Test]
