@@ -23,7 +23,7 @@ public class GenerateGroupCommandHandler(
             .Map(group => group.Id);
     }
 
-    private Result<Group> AddTeams(Group group, IEnumerable<Team> teams)
+    private static Result<Group> AddTeams(Group group, IEnumerable<Team> teams)
         => teams.Traverse(group.AddTeam)
             .Map(() => group);
 
