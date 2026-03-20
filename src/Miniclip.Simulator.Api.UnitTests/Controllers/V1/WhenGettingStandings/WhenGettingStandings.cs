@@ -7,7 +7,7 @@ using Miniclip.Simulator.Application.Queries.Groups.V1.Standings;
 
 namespace Miniclip.Simulator.Api.UnitTests.Controllers.V1.WhenGettingStandings;
 
-public abstract class WhenGettingStandings : TestBase<GroupsController>
+public abstract class WhenGettingStandings : AsyncTestBase<GroupsController>
 {
     protected IMediator Mediator { get; private set; } = null!;
     protected Guid GroupId { get; set; }
@@ -23,8 +23,8 @@ public abstract class WhenGettingStandings : TestBase<GroupsController>
         return new GroupsController(Mediator);
     }
 
-    protected override void When()
+    protected override async ValueTask WhenAsync()
     {
-        ActionResult = Sut!.GetStandings(GroupId, CancellationToken.None).Result;
+        ActionResult = await Sut!.GetStandings(GroupId, CancellationToken.None).ConfigureAwait(false);
     }
 }

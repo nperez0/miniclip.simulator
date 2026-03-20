@@ -8,7 +8,7 @@ using Miniclip.Simulator.Domain.Aggregates.Groups.Services.Simulator;
 
 namespace Miniclip.Simulator.Application.Commands.UnitTests.Groups.V1.WhenSimulatingGroups;
 
-public abstract class WhenSimulatingGroups : TestBase<SimulateGroupCommandHandler>
+public abstract class WhenSimulatingGroups : AsyncTestBase<SimulateGroupCommandHandler>
 {
     protected IRepository<Group> GroupRepository { get; private set; } = null!;
     protected IGroupSimulator GroupSimulator { get; private set; } = null!;
@@ -21,8 +21,8 @@ public abstract class WhenSimulatingGroups : TestBase<SimulateGroupCommandHandle
         GroupSimulator = Fixture.Freeze<IGroupSimulator>();
     }
 
-    protected override void When()
+    protected override async ValueTask WhenAsync()
     {
-        Result = Sut!.Handle(Command, CancellationToken.None).Result;
+        Result = await Sut!.Handle(Command, CancellationToken.None).ConfigureAwait(false);
     }
 }

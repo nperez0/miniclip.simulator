@@ -9,7 +9,7 @@ using Miniclip.Simulator.Domain.Aggregates.Teams.Entities;
 
 namespace Miniclip.Simulator.Application.Commands.UnitTests.Groups.V1.WhenGeneratingGroups;
 
-public abstract class WhenGeneratingGroups : TestBase<GenerateGroupCommandHandler>
+public abstract class WhenGeneratingGroups : AsyncTestBase<GenerateGroupCommandHandler>
 {
     protected IRepository<Group> GroupRepository { get; private set; } = null!;
     protected IRepository<Team> TeamRepository { get; private set; } = null!;
@@ -24,8 +24,8 @@ public abstract class WhenGeneratingGroups : TestBase<GenerateGroupCommandHandle
         FixtureSchedulerService = Fixture.Freeze<IFixtureSchedulerService>();
     }
 
-    protected override void When()
+    protected override async ValueTask WhenAsync()
     {
-        Result = Sut!.Handle(Command, CancellationToken.None).Result;
+        Result = await Sut!.Handle(Command, CancellationToken.None).ConfigureAwait(false);
     }
 }

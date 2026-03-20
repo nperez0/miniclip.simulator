@@ -6,7 +6,7 @@ using Miniclip.Simulator.ReadModels.Repositories.Read;
 
 namespace Miniclip.Simulator.Application.Queries.UnitTests.Groups.V1.WhenGettingGroupStandings;
 
-public abstract class WhenGettingGroupStandings : TestBase<GroupStandingsQueryHandler>
+public abstract class WhenGettingGroupStandings : AsyncTestBase<GroupStandingsQueryHandler>
 {
     protected IGroupStandingsRepository StandingsRepository { get; private set; } = null!;
     protected IMatchResultsRepository MatchResultsRepository { get; private set; } = null!;
@@ -19,8 +19,8 @@ public abstract class WhenGettingGroupStandings : TestBase<GroupStandingsQueryHa
         MatchResultsRepository = Fixture.Freeze<IMatchResultsRepository>();
     }
 
-    protected override void When()
+    protected override async ValueTask WhenAsync()
     {
-        Result = Sut!.Handle(Query, CancellationToken.None).Result;
+        Result = await Sut!.Handle(Query, CancellationToken.None).ConfigureAwait(false);
     }
 }

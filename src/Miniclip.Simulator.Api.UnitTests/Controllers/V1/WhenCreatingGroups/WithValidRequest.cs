@@ -20,7 +20,7 @@ public class WithValidRequest : WhenCreatingGroups
         groupId = Guid.NewGuid();
 
         Mediator.Send(Arg.Any<GenerateGroupCommand>(), Arg.Any<CancellationToken>())
-            .Returns(ValueTask.FromResult(Result<Guid>.Success(groupId)));
+            .Returns(ValueTask.FromResult(Result.Success(groupId)));
     }
 
     [Test]

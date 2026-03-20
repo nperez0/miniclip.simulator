@@ -7,7 +7,7 @@ using Miniclip.Simulator.Application.Commands.Groups.V1.Generation;
 
 namespace Miniclip.Simulator.Api.UnitTests.Controllers.V1.WhenCreatingGroups;
 
-public abstract class WhenCreatingGroups : TestBase<GroupsController>
+public abstract class WhenCreatingGroups : AsyncTestBase<GroupsController>
 {
     protected IMediator Mediator { get; private set; } = null!;
     protected GenerateGroupRequest Request { get; set; } = null!;
@@ -23,8 +23,8 @@ public abstract class WhenCreatingGroups : TestBase<GroupsController>
         return new GroupsController(Mediator);
     }
 
-    protected override void When()
+    protected override async ValueTask WhenAsync()
     {
-        ActionResult = Sut!.CreateGroup(Request, CancellationToken.None).Result;
+        ActionResult = await Sut!.CreateGroup(Request, CancellationToken.None).ConfigureAwait(false);
     }
 }
