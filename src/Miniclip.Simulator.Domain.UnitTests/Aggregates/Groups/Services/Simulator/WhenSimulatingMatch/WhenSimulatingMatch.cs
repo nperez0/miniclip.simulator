@@ -6,11 +6,15 @@ namespace Miniclip.Simulator.Domain.UnitTests.Aggregates.Groups.Services.Simulat
 public class WhenSimulatingMatch : TestBase<MatchSimulator>
 {
     protected int HomeTeamStrength { get; set; }
+
     protected int AwayTeamStrength { get; set; }
 
     protected int HomeScore { get; set; }
 
     protected int AwayScore { get; set; }
+
+    protected override MatchSimulator CreateSystemUnderTest()
+        => new(new Random(42));
 
     protected override void When()
     {

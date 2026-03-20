@@ -3,6 +3,7 @@ using NUnit.Framework;
 
 namespace Miniclip.Simulator.Domain.UnitTests.Aggregates.Groups.Services.Simulator.WhenSimulatingMatch;
 
+[Category("Statistical")]
 public class WithMultipleSimulations : WhenSimulatingMatch
 {
     private List<(int home, int away)> results = [];
