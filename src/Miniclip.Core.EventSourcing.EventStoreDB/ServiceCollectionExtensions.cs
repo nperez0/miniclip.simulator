@@ -12,6 +12,8 @@ public static class ServiceCollectionExtensions
         var settings = EventStoreClientSettings.Create(connectionString);
 
         services.AddSingleton(_ => new EventStoreClient(settings));
+        services.AddSingleton<IEventSerializer, SystemTextJsonEventSerializer>();
+        services.AddSingleton(typeof(IEventStore<>), typeof(EventStoreDbEventStore<>));
 
         return services;
     }

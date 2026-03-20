@@ -4,12 +4,11 @@ namespace Miniclip.Core.Domain;
 
 public abstract class AggregateRoot
 {
+    private readonly Queue<IDomainEvent> uncommittedEvents = new();
+
     public Guid Id { get; protected set; }
 
     public long Version { get; protected set; } = -1;
-
-    [JsonIgnore]
-    private readonly Queue<IDomainEvent> uncommittedEvents = new();
 
     public IDomainEvent[] DequeueUncommittedEvents()
     {
