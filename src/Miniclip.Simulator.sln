@@ -28,9 +28,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "2 - Web Api", "2 - Web Api"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "3 - Application", "3 - Application", "{4B7CBEDC-CEFD-4A1E-843A-29AE14217C12}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "5 - Infrastructure", "5 - Infrastructure", "{5BFE56AA-5A28-4F3A-8AED-5AAF851F4468}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "6 - Infrastructure", "6 - Infrastructure", "{5BFE56AA-5A28-4F3A-8AED-5AAF851F4468}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "6 - Read Models", "6 - Read Models", "{2B41BF8D-60FC-4390-A995-9D9CE1F9AC9D}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "5 - Read Models", "5 - Read Models", "{2B41BF8D-60FC-4390-A995-9D9CE1F9AC9D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Miniclip.Simulator.ReadModels", "Miniclip.Simulator.ReadModels\Miniclip.Simulator.ReadModels.csproj", "{E8F65341-8BA6-4215-9E31-69AAC037746E}"
 EndProject
