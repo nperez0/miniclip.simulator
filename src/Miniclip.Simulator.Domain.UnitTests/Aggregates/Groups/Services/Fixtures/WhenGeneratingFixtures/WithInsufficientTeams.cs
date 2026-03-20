@@ -1,7 +1,6 @@
 using Shouldly;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Entities;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Exceptions;
-using Miniclip.Simulator.Domain.Aggregates.Teams.Entities;
 using NSubstitute;
 using NUnit.Framework;
 
@@ -15,7 +14,7 @@ public class WithInsufficientTeams : WhenGeneratingFixtures
 
         Capacity = 4;
 
-        GivenGroupWithTeams(2);
+        (Group, _) = GroupMother.WithTeams(2, Capacity);
     }
 
     [Test]

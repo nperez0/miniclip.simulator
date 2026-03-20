@@ -11,7 +11,7 @@ public class WithAllMatchesPlayed : WhenSimulatingGroup
     {
         base.Given();
 
-        var teams = GivenGroupWithTeams(2);
+        (Group, var teams) = GroupMother.WithTeams(2);
 
         // Add and simulate match
         Group!.AddMatch(Guid.NewGuid(), teams[0], teams[1], 1);

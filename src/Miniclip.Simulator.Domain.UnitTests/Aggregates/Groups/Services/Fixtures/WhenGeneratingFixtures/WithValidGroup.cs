@@ -15,7 +15,7 @@ public class WithValidGroup() : WhenGeneratingFixtures
 
         Capacity = 4;
 
-        var teams = GivenGroupWithTeams(Capacity);
+        (Group, var teams) = GroupMother.WithTeams(Capacity);
 
         // Create mock schedule data
         mockSchedule = [];

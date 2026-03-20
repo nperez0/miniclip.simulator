@@ -10,7 +10,7 @@ public class WithUnplayedMatches : WhenSimulatingGroup
     {
         base.Given();
 
-        var teams = GivenGroupWithTeams(3);
+        (Group, var teams) = GroupMother.WithTeams(3);
 
         // Add matches
         Group!.AddMatch(Guid.NewGuid(), teams[0], teams[1], 1);

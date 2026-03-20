@@ -10,8 +10,8 @@ public class Group : AggregateRoot
     private readonly List<Team> teams;
     private readonly List<Match> matches;
 
-    public const int MinCapacity = 2;
-    public const int MaxCapacity = 6;
+    private const int MinCapacity = 2;
+    private const int MaxCapacity = 6;
 
     public string Name { get; }
     public int Capacity { get; }
