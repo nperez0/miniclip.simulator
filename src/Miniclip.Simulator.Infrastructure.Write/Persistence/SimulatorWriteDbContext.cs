@@ -17,7 +17,7 @@ public class SimulatorWriteDbContext(DbContextOptions<SimulatorWriteDbContext> o
         public SimulatorWriteDbContext CreateDbContext(string[] args)
         {
             var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING") 
-                ?? "Server=localhost;Port=4306;Database=MiniclipSimulator_Write;User=root;Password=root;";
+                ?? "Server=localhost;Port=3306;Database=MiniclipSimulator_Write;User=root;Password=root;";
             
             var serverVersion = ServerVersion.AutoDetect(connectionString);
             var optionsBuilder = new DbContextOptionsBuilder<SimulatorWriteDbContext>()

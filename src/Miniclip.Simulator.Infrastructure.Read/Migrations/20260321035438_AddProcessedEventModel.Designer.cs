@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Miniclip.Simulator.Infrastructure.Read.Persistence;
 
@@ -11,9 +12,11 @@ using Miniclip.Simulator.Infrastructure.Read.Persistence;
 namespace Miniclip.Simulator.Infrastructure.Read.Migrations
 {
     [DbContext(typeof(SimulatorReadDbContext))]
-    partial class SimulatorReadDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260321035438_AddProcessedEventModel")]
+    partial class AddProcessedEventModel
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
