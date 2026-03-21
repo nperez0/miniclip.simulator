@@ -4,4 +4,5 @@ namespace Miniclip.Core.Domain;
 
 public interface IDomainEvent : INotification
 {
+    Guid AggregateId { get; }
 }

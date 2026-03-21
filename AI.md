@@ -51,7 +51,7 @@ The **Read** side is still on MySQL, populated through `MatchPlayed` domain even
 
 Registration order (first = outermost):
 1. `ReadModelUnitOfWorkBehavior` — wraps the full pipeline; saves the read model (MySQL) on success
-2. `DomainEventPublisherBehavior` — publishes committed events after EventStoreDB commit
+2. `DomainEventPublisherBehavior` — publishes committed events via `IEventBus` (Kafka) after EventStoreDB commit
 3. `EventStoreCommandBehavior` — innermost; calls `IEventStoreSession.CommitAsync()` after the handler succeeds
 
 ---
@@ -68,6 +68,7 @@ Registration order (first = outermost):
 | `Miniclip.Core.EF` | EF Infrastructure | Generic EF Core base context and repository |
 | `Miniclip.Core.EventSourcing` | Event Sourcing Abstractions | `IEventStore<T>`, `IEventStoreSession`, `IEventSerializer`, `EventEnvelope`, `EventSourcedRepository<T>` |
 | `Miniclip.Core.EventSourcing.EventStoreDB` | Event Sourcing Infrastructure | EventStoreDB client, `EventStoreDbEventStore<T>`, `EventStoreSession`, `SystemTextJsonEventSerializer` |
+| `Miniclip.Core.Kafka` | Kafka Infrastructure | `KafkaEventBus`, `KafkaConsumerService` base, `TopicNaming`, `ServiceCollectionExtensions` |
 | `Miniclip.Simulator.Domain` | Domain | `Group`, `Team`, `Match` aggregates, fixture scheduling, match simulation |
 | `Miniclip.Simulator.Application.Commands` | Application – Write | `GenerateGroupCommand`, `SimulateGroupCommand` handlers |
 | `Miniclip.Simulator.Application.Queries` | Application – Read | `GroupStandingsQuery` handler |
@@ -112,7 +113,8 @@ throw new Exception("Invalid capacity");
 
 ### Domain Events
 - Aggregates enqueue events via `Enqueue(IDomainEvent)` (inherited from `AggregateRoot`).
-- Events are dequeued and dispatched as `INotification` via **Mediator** after persistence.
+- Events are committed to **EventStoreDB** first, then forwarded to **Kafka** via `IEventBus` by `DomainEventPublisherBehavior`.
+- A `MatchPlayedKafkaRelayService` (`BackgroundService`) consumes `simulator.match-played` from Kafka and re-publishes via Mediator so existing projection handlers work unchanged (temporary bridge, removed in Phase 4).
 - Projections implement `INotificationHandler<TEvent>` and are decorated with `[HandlerPriority(n)]` to control execution order.
 
 ### Mediator

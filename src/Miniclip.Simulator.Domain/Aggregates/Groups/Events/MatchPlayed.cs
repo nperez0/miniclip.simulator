@@ -15,4 +15,7 @@ public record MatchPlayed(
     int AwayTeamStrength,
     int AwayScore,
     int Round
-) : IDomainEvent;
+) : IDomainEvent
+{
+    Guid IDomainEvent.AggregateId => GroupId;
+}

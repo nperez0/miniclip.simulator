@@ -23,6 +23,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Miniclip.Core.ServiceDefaults\Miniclip.Core.ServiceDefaults.csproj" />
     <ProjectReference Include="..\Miniclip.Core.EventSourcing.EventStoreDB\Miniclip.Core.EventSourcing.EventStoreDB.csproj" />
+    <ProjectReference Include="..\Miniclip.Core.Kafka\Miniclip.Core.Kafka.csproj" />
     <ProjectReference Include="..\Miniclip.Simulator.Application.Commands\Miniclip.Simulator.Application.Commands.csproj" />
     <ProjectReference Include="..\Miniclip.Simulator.Application.Queries\Miniclip.Simulator.Application.Queries.csproj" />
     <ProjectReference Include="..\Miniclip.Simulator.Infrastructure.Write\Miniclip.Simulator.Infrastructure.Write.csproj" />

@@ -57,6 +57,9 @@ The **Read** side is populated exclusively through **domain event projections** 
 | `Miniclip.Core.ReadModels` | Read Abstractions | Read model base types and repository interfaces |
 | `Miniclip.Core.ReadModels.Projections` | Projection Infrastructure | `[HandlerPriority]` attribute, ordered projection execution |
 | `Miniclip.Core.EF` | EF Infrastructure | Generic EF Core base context and repository |
+| `Miniclip.Core.EventSourcing` | Event Sourcing Abstractions | `IEventStore<T>`, `IEventStoreSession`, `IEventSerializer`, `EventEnvelope`, `EventSourcedRepository<T>` |
+| `Miniclip.Core.EventSourcing.EventStoreDB` | Event Sourcing Infrastructure | EventStoreDB client, `EventStoreDbEventStore<T>`, `EventStoreSession`, `SystemTextJsonEventSerializer` |
+| `Miniclip.Core.Kafka` | Kafka Infrastructure | `KafkaEventBus`, `KafkaConsumerService` base, `TopicNaming`, `ServiceCollectionExtensions` |
 | `Miniclip.Core.ServiceDefaults` | Aspire Defaults | Shared .NET Aspire service defaults |
 | `Miniclip.Simulator.Domain` | Domain | `Group`, `Team`, `Match` aggregates, fixture scheduling, match simulation |
 | `Miniclip.Simulator.Application.Commands` | Application – Write | `GenerateGroupCommand`, `SimulateGroupCommand` handlers |
@@ -101,7 +104,8 @@ throw new Exception("Invalid capacity");
 
 ### Domain Events
 - Aggregates enqueue events via `Enqueue(IDomainEvent)` (inherited from `AggregateRoot`).
-- Events are dequeued and dispatched as `INotification` via **Mediator** after persistence.
+- Events are dequeued and dispatched via `IEventBus` (Kafka) by `DomainEventPublisherBehavior` after EventStoreDB commit.
+- A `MatchPlayedKafkaRelayService` (`BackgroundService`) consumes `simulator.match-played` from Kafka and re-publishes via Mediator so existing projection handlers work unchanged (temporary bridge, removed in Phase 4).
 - Projections implement `INotificationHandler<TEvent>` and are decorated with `[HandlerPriority(n)]` to control execution order.
 
 ### Mediator
@@ -148,14 +152,14 @@ It provisions a MySQL container and starts the API via .NET Aspire.
 
 The project is currently undergoing an **Event Sourcing migration** using EventStoreDB and Kafka.
 
-**Current Phase:** `1 — EventStoreDB: Core Abstractions` ✅
+**Current Phase:** `4 — Kafka: Read Side Consumers` ⬜
 
 | # | Phase | Status |
 |---|---|---|
 | 0 | Planning & Documentation | ✅ Done |
 | 1 | EventStoreDB — Core Abstractions | ✅ Done |
 | 2 | EventStoreDB — Write Side Migration | ✅ Done |
-| 3 | Kafka — Event Bus | ⬜ Pending |
+| 3 | Kafka — Event Bus | ✅ Done |
 | 4 | Kafka — Read Side Consumers | ⬜ Pending |
 | 5 | Testing & Hardening | ⬜ Pending |
 

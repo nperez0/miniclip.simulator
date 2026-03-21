@@ -3,11 +3,13 @@ using Miniclip.Core.Domain;
 using Miniclip.Core.EF;
 using Miniclip.Core.EventSourcing;
 using Miniclip.Core.EventSourcing.EventStoreDB;
+using Miniclip.Core.Kafka;
 using Miniclip.Core.ReadModels;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Entities;
 using Miniclip.Simulator.Domain.Aggregates.Teams.Entities;
 using Miniclip.Simulator.Infrastructure.Read.Persistence;
 using Miniclip.Simulator.Infrastructure.Write.Persistence;
+using Miniclip.Simulator.ReadModels.Projections;
 using Read = Miniclip.Simulator.ReadModels.Repositories.Read;
 using ReadRepo = Miniclip.Simulator.Infrastructure.Read.Persistence.Repositories.Read;
 using Write = Miniclip.Simulator.ReadModels.Repositories.Write;
@@ -22,6 +24,7 @@ public static class DatabaseConfiguration
         var writeConnectionString = configuration.GetConnectionString("SimulatorWrite");
         var readConnectionString = configuration.GetConnectionString("SimulatorRead");
         var eventStoreConnectionString = configuration.GetConnectionString("EventStore")!;
+        var kafkaBootstrapServers = configuration.GetConnectionString("kafka")!;
 
         services.AddDbContext<SimulatorWriteDbContext>(options =>
             options.UseMySql(writeConnectionString, ServerVersion.AutoDetect(writeConnectionString)));
@@ -39,6 +42,10 @@ public static class DatabaseConfiguration
 
         services.AddScoped<IReadModelUnitOfWork>(sp =>
             new SimulatorReadModelUnitOfWork(sp.GetRequiredService<SimulatorReadDbContext>()));
+
+        // Kafka
+        services.AddKafkaEventBus(kafkaBootstrapServers);
+        services.AddHostedService<MatchPlayedKafkaRelayService>();
 
         // Read models repositories - Group Standings
         services.AddScoped<Read.IGroupStandingsRepository, ReadRepo.GroupStandingsRepository>();

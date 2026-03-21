@@ -1,6 +1,6 @@
 # Phase 3 — Kafka: Event Bus
 
-> **Status:** ⬜ Pending
+> **Status:** ✅ Complete
 > **Branch:** `feat/phase-3-kafka-bus`
 > **Depends on:** Phase 2 complete ✅
 > **Must not break:** all existing API behaviour and tests must remain green during the transition
@@ -493,16 +493,16 @@ Any test that asserts on `IPublisher.Publish` calls must be updated to assert on
 
 ## Definition of Done
 
-- [ ] `IDomainEvent` has `Guid AggregateId { get; }` and all 4 Group events implement it
-- [ ] `IEventBus` is defined in `Miniclip.Core.Application`
-- [ ] `DomainEventPublisherBehavior` publishes via `IEventBus` (not `IPublisher`)
-- [ ] `Miniclip.Core.Kafka` project exists with `KafkaEventBus`, `KafkaConsumerService`, `TopicNaming`
-- [ ] `MatchPlayedKafkaRelayService` runs in the API as a `BackgroundService`
-- [ ] Kafka and Kafka UI containers are visible and healthy in the Aspire dashboard
-- [ ] After simulating a group, `MatchPlayed` events appear in the `simulator.match-played` topic in Kafka UI
-- [ ] Read models are still correctly populated after simulation (relay consumer works end-to-end)
-- [ ] All existing unit tests pass (including updated `DomainEventPublisherBehavior` tests)
-- [ ] Build is green
+- [x] `IDomainEvent` has `Guid AggregateId { get; }` and all 4 Group events implement it
+- [x] `IEventBus` is defined in `Miniclip.Core.Application`
+- [x] `DomainEventPublisherBehavior` publishes via `IEventBus` (not `IPublisher`)
+- [x] `Miniclip.Core.Kafka` project exists with `KafkaEventBus`, `KafkaConsumerService`, `TopicNaming`
+- [x] `MatchPlayedKafkaRelayService` runs in the API as a `BackgroundService`
+- [x] Kafka and Kafka UI containers are visible and healthy in the Aspire dashboard
+- [x] After simulating a group, `MatchPlayed` events appear in the `simulator.match-played` topic in Kafka UI
+- [x] Read models are still correctly populated after simulation (relay consumer works end-to-end)
+- [x] All existing unit tests pass (including updated `DomainEventPublisherBehavior` tests)
+- [x] Build is green
 
 ---
 

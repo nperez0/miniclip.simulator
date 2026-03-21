@@ -4,7 +4,7 @@ using Miniclip.Core.EventSourcing;
 
 namespace Miniclip.Core.Application.Behaviors;
 
-public class DomainEventPublisherBehavior<TRequest, TResponse>(IPublisher publisher, IEventStoreSession session)
+public class DomainEventPublisherBehavior<TRequest, TResponse>(IEventBus eventBus, IEventStoreSession session)
     : IPipelineBehavior<TRequest, TResponse>
     where TRequest : IRequest<TResponse>
 {
@@ -19,7 +19,7 @@ public class DomainEventPublisherBehavior<TRequest, TResponse>(IPublisher publis
             return response;
 
         foreach (var @event in session.GetCommittedEvents())
-            await publisher.Publish(@event, cancellationToken);
+            await eventBus.PublishAsync(@event, cancellationToken);
 
         return response;
     }

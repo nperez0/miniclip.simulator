@@ -18,10 +18,15 @@ builder.AddContainer("eventstoredb", "eventstore/eventstore")
     .WithHttpEndpoint(port: 2113, targetPort: 2113, name: "http")
     .WithVolume("eventstore-data", "/var/lib/eventstore");
 
+var kafka = builder.AddKafka("kafka")
+    .WithKafkaUI();
+
 builder.AddProject<Projects.Miniclip_Simulator_Api>("simulator-api")
     .WithReference(writeDb)
     .WithReference(readDb)
+    .WithReference(kafka)
     .WaitFor(writeDb)
-    .WaitFor(readDb);
+    .WaitFor(readDb)
+    .WaitFor(kafka);
 
 builder.Build().Run();
