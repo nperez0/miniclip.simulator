@@ -14,17 +14,6 @@ using NSubstitute;
 
 namespace Miniclip.Simulator.ReadModels.Projections.UnitTests.WhenConsumingMatchPlayed;
 
-public sealed class TestableConsumer(
-    IEventSerializer serializer,
-    IServiceScopeFactory scopeFactory,
-    IConfiguration configuration,
-    ILogger<ProjectionsConsumerService<MatchPlayed>> logger)
-    : ProjectionsConsumerService<MatchPlayed>(serializer, scopeFactory, configuration, logger)
-{
-    public Task InvokeHandleAsync(ConsumeResult<string, byte[]> result, CancellationToken ct)
-        => HandleAsync(result, ct);
-}
-
 public abstract class WhenConsumingEvents : AsyncTestBase<TestableConsumer>
 {
     protected IEventSerializer Serializer { get; private set; } = null!;
