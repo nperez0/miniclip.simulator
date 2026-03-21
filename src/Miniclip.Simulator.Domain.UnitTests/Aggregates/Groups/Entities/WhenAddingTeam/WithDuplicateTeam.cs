@@ -1,6 +1,7 @@
-using Shouldly;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Exceptions;
+using Miniclip.Simulator.Domain.Aggregates.Groups.ValueObjects;
 using NUnit.Framework;
+using Shouldly;
 
 namespace Miniclip.Simulator.Domain.UnitTests.Aggregates.Groups.Entities.WhenAddingTeam;
 
@@ -9,8 +10,8 @@ public class WithDuplicateTeam : WhenAddingTeam
     protected override void Given()
     {
         Group = GroupMother.Default();
-        Team = TeamMother.Default();
-        
+        Team = TeamInfoMother.Default();
+
         // Add the team first time
         Group!.AddTeam(Team);
     }

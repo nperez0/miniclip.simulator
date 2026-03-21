@@ -1,5 +1,6 @@
-using Shouldly;
+using Miniclip.Simulator.Domain.Aggregates.Groups.ValueObjects;
 using NUnit.Framework;
+using Shouldly;
 
 namespace Miniclip.Simulator.Domain.UnitTests.Aggregates.Groups.Entities.WhenAddingTeam;
 
@@ -8,7 +9,7 @@ public class WithValidTeam : WhenAddingTeam
     protected override void Given()
     {
         Group = GroupMother.Default();
-        Team = TeamMother.Default();
+        Team = TeamInfoMother.Default();
     }
 
     [Test]

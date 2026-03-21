@@ -13,7 +13,8 @@ public static class ServiceCollectionExtensions
 
         services.AddSingleton(_ => new EventStoreClient(settings));
         services.AddSingleton<IEventSerializer, SystemTextJsonEventSerializer>();
-        services.AddSingleton(typeof(IEventStore<>), typeof(EventStoreDbEventStore<>));
+        services.AddScoped<IEventStoreSession, EventStoreSession>();
+        services.AddScoped(typeof(IEventStore<>), typeof(EventStoreDbEventStore<>));
 
         return services;
     }

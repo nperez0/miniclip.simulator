@@ -1,6 +1,7 @@
-using Shouldly;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Exceptions;
+using Miniclip.Simulator.Domain.Aggregates.Groups.ValueObjects;
 using NUnit.Framework;
+using Shouldly;
 
 namespace Miniclip.Simulator.Domain.UnitTests.Aggregates.Groups.Entities.WhenCreatingMatch;
 
@@ -9,7 +10,7 @@ public class AndBothTeamsAreTheSame : WhenCreatingMatch
     protected override void Given()
     {
         Id = Guid.NewGuid();
-        HomeTeam = TeamMother.Default();
+        HomeTeam = TeamInfoMother.Default();
         AwayTeam = HomeTeam; // Same team
         Round = 1;
     }

@@ -1,6 +1,7 @@
-using Shouldly;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Exceptions;
+using Miniclip.Simulator.Domain.Aggregates.Groups.ValueObjects;
 using NUnit.Framework;
+using Shouldly;
 
 namespace Miniclip.Simulator.Domain.UnitTests.Aggregates.Groups.Entities.WhenAddingTeam;
 
@@ -13,11 +14,11 @@ public class WithMaxTeamsReached : WhenAddingTeam
         Group = GroupMother.Default(capacity);
 
         // Fill the group to capacity
-        foreach (var team in TeamMother.Many(capacity))
+        foreach (var team in TeamInfoMother.Many(capacity))
             Group!.AddTeam(team);
 
         // Try to add one more team
-        Team = TeamMother.Default();
+        Team = TeamInfoMother.Default();
     }
 
     [Test]

@@ -5,37 +5,12 @@ namespace Miniclip.Core.EventSourcing.EventStoreDB;
 
 public sealed class EventStoreDbEventStore<T>(
     EventStoreClient client,
-    IEventSerializer serializer) : IEventStore<T>
+    IEventSerializer serializer,
+    IEventStoreSession session) : IEventStore<T>
     where T : AggregateRoot
 {
-    public async Task AppendAsync(T aggregate, CancellationToken cancellationToken = default)
-    {
-        var events = aggregate.DequeueUncommittedEvents();
-        if (events.Length == 0)
-            return;
-
-        var streamName = GetStreamName(aggregate.Id);
-        var eventData = events
-            .Select(ToEventData)
-            .ToArray();
-
-        if (aggregate.Version < 0)
-        {
-            await client.AppendToStreamAsync(streamName, StreamState.NoStream, eventData, cancellationToken: cancellationToken);
-
-            SetVersion(aggregate, eventData.Length - 1);
-
-            return;
-        }
-
-        await client.AppendToStreamAsync(
-            streamName,
-            StreamRevision.FromInt64(aggregate.Version),
-            eventData,
-            cancellationToken: cancellationToken);
-
-        SetVersion(aggregate, aggregate.Version + eventData.Length);
-    }
+    public void Track(T aggregate)
+        => session.Track(ct => AppendAsync(aggregate, ct));
 
     public async Task<T?> LoadAsync(Guid aggregateId, CancellationToken cancellationToken = default)
     {
@@ -58,7 +33,43 @@ public sealed class EventStoreDbEventStore<T>(
             aggregate.ReplayEvent(domainEvent, version);
         }
 
-        return version < 0 ? null : aggregate;
+        if (version < 0)
+            return null;
+
+        Track(aggregate);
+
+        return aggregate;
+    }
+
+    private async Task<IDomainEvent[]> AppendAsync(T aggregate, CancellationToken cancellationToken)
+    {
+        var events = aggregate.DequeueUncommittedEvents();
+        if (events.Length == 0)
+            return events;
+
+        var streamName = GetStreamName(aggregate.Id);
+        var eventData = events
+            .Select(ToEventData)
+            .ToArray();
+
+        if (aggregate.Version < 0)
+        {
+            await client.AppendToStreamAsync(streamName, StreamState.NoStream, eventData, cancellationToken: cancellationToken);
+
+            SetVersion(aggregate, eventData.Length - 1);
+
+            return events;
+        }
+
+        await client.AppendToStreamAsync(
+            streamName,
+            StreamRevision.FromInt64(aggregate.Version),
+            eventData,
+            cancellationToken: cancellationToken);
+
+        SetVersion(aggregate, aggregate.Version + eventData.Length);
+
+        return events;
     }
 
     private EventData ToEventData(IDomainEvent @event)
@@ -78,3 +89,4 @@ public sealed class EventStoreDbEventStore<T>(
             ?.SetValue(aggregate, version);
     }
 }
+

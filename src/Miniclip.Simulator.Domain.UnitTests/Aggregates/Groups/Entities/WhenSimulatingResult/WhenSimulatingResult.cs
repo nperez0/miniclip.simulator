@@ -24,8 +24,8 @@ public class WhenSimulatingResult : TestBase<Match>
 
     protected void GivenMatchWithTeams()
     {
-        var homeTeam = TeamMother.Default();
-        var awayTeam = TeamMother.Default();
+        var homeTeam = TeamInfoMother.Default();
+        var awayTeam = TeamInfoMother.Default();
 
         Match = Match.Create(Guid.NewGuid(), homeTeam, awayTeam, 1).Value!;
     }

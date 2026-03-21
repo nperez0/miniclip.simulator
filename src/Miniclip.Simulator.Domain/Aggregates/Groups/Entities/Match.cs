@@ -1,15 +1,13 @@
 ﻿using Miniclip.Simulator.Domain.Aggregates.Groups.Exceptions;
-using Miniclip.Simulator.Domain.Aggregates.Teams.Entities;
+using Miniclip.Simulator.Domain.Aggregates.Groups.ValueObjects;
 
 namespace Miniclip.Simulator.Domain.Aggregates.Groups.Entities;
 
 public class Match
 {
     public Guid Id { get; private set; }
-    public Guid HomeTeamId { get; private set; }
-    public Guid AwayTeamId { get; private set; }
-    public Team HomeTeam { get; private set; } = null!;
-    public Team AwayTeam { get; private set; } = null!;
+    public TeamInfo HomeTeam { get; private set; } = null!;
+    public TeamInfo AwayTeam { get; private set; } = null!;
     public int HomeScore { get; private set; }
     public int AwayScore { get; private set; }
     public int Round { get; private set; }
@@ -19,26 +17,27 @@ public class Match
     {
     }
 
-    private Match(Guid id, Team homeTeam, Team awayTeam, int round)
+    private Match(Guid id, TeamInfo homeTeam, TeamInfo awayTeam, int round)
     {
         Id = id;
         HomeTeam = homeTeam;
-        HomeTeamId = homeTeam.Id;
         AwayTeam = awayTeam;
-        AwayTeamId = awayTeam.Id;
         Round = round;
         IsPlayed = false;
         HomeScore = 0;
         AwayScore = 0;
     }
 
-    public static Result<Match> Create(Guid id, Team homeTeam, Team awayTeam, int round)
+    public static Result<Match> Create(Guid id, TeamInfo homeTeam, TeamInfo awayTeam, int round)
     {
         if (homeTeam == awayTeam)
             return Result.Failure<Match>(GroupGenerateFixturesException.SameTeam());
 
         return new Match(id, homeTeam, awayTeam, round);
     }
+
+    internal static Match Restore(Guid id, TeamInfo homeTeam, TeamInfo awayTeam, int round)
+        => new(id, homeTeam, awayTeam, round);
 
     public Result SimulateResult(int homeScore, int awayScore)
     {
@@ -53,5 +52,12 @@ public class Match
         IsPlayed = true;
 
         return Result.Success();
+    }
+
+    internal void ApplyResult(int homeScore, int awayScore)
+    {
+        HomeScore = homeScore;
+        AwayScore = awayScore;
+        IsPlayed = true;
     }
 }

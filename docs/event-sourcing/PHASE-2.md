@@ -1,6 +1,6 @@
 # Phase 2 - EventStoreDB: Write Side Migration
 
-> **Status:** ⬜ Pending
+> **Status:** ✅ Complete
 > **Branch:** `feat/phase-2-esdb-write`
 > **Depends on:** Phase 1 complete
 > **Must not break:** all existing API behaviour and tests must remain green during the transition
@@ -19,8 +19,8 @@ The read model remains on MySQL and is untouched in this phase.
 
 | Area | Current State |
 |---|---|
-| `Group` | Private parameterised constructor `Group(Guid id, string name, int capacity)`; `Create`, `AddTeam`, `AddMatch`, `SimulateMatch`; only `SimulateMatch` calls `Enqueue(new MatchPlayed(...))`. |
-| `Match` | Private parameterless constructor already present; `Create` factory; `SimulateResult` with validation; owned by `Group`. |
+| `Group` | Private parameterised constructor `Group(Guid id, string name, int capacity)`; `Create`, `AddTeam`, `AddMatch`, `SimulateMatch`; only `SimulateMatch` calls `Enqueue(new MatchPlayed(...))`. Holds `List<Team>` — full `Team` aggregate entity references inside the `Group` aggregate boundary. |
+| `Match` | Private parameterless constructor already present; `Create` factory; `SimulateResult` with validation; owned by `Group`. Holds `Team HomeTeam` and `Team AwayTeam` as full entity references. |
 | `MatchPlayed` | Rich `record MatchPlayed(...) : IDomainEvent` carrying all denormalised match data (GroupId, GroupName, MatchId, HomeTeamId, HomeTeamName, HomeTeamStrength, HomeScore, AwayTeamId, AwayTeamName, AwayTeamStrength, AwayScore, Round). Only domain event in the system. |
 | `GenerateGroupCommandHandler` | Calls `Group.Create`, adds teams, generates fixtures via `fixtureSchedulerService`, calls `.Tap(groupsRepository.Add)`. |
 | `SimulateGroupCommandHandler` | Calls `repository.FindAsync(command.GroupId)`, then `groupSimulator.SimulateAllMatches(group)`. Does **not** explicitly save. |
@@ -29,7 +29,7 @@ The read model remains on MySQL and is untouched in this phase.
 | `CommandUnitOfWorkBehavior` | Wraps every command in `BeginTransaction -> next -> SaveChanges + Commit or Rollback`. |
 | `DatabaseConfiguration` | Registers `IRepository<Group>` -> `GroupsRepository` and `IUnitOfWork` -> `SimulatorUnitOfWork`, both backed by `SimulatorWriteDbContext`. Also registers `IRepository<Team>` against the same write context. |
 | `MediatorConfiguration` | Pipeline order: `CommandUnitOfWorkBehavior` -> `ReadModelUnitOfWorkBehavior` -> `DomainEventPublisherBehavior`. |
-| `IEventStore<T>` | Already implemented: `AppendAsync` (appends uncommitted events, updates `Version`), `LoadAsync` (replays stream, returns null when stream not found). |
+| `IEventStore<T>` | Already implemented: `AppendAsync` (appends uncommitted events, updates `Version`), `LoadAsync` (replays stream, returns null when stream not found). The public interface will change in this phase — `AppendAsync` moves off the public contract. |
 
 ---
 
@@ -41,13 +41,35 @@ This makes event-sourced replay impossible for the write side: `EventStoreDbEven
 
 Additionally, `SimulateGroupCommandHandler` relies on `Group` having fully populated `Match` objects with `HomeTeam` and `AwayTeam` entity references (including `Strength`) to run the simulation. A `Group` replayed only from `MatchPlayed` events would not have those references for **unplayed** matches.
 
-**These two gaps must be closed in Phase 2 before any infrastructure change makes sense.**
+Finally, `Group` and `Match` currently hold full `Team` **aggregate** entity references in their internal state. This violates the DDD aggregate boundary rule — an aggregate must not hold object references to another aggregate; it should only hold an identifier or a value object snapshot of the data it needs. The `Group` aggregate needs team data (Id, Name, Strength) to replay state and to simulate matches, but it does not need the full `Team` lifecycle.
+
+**These three gaps must be closed in Phase 2 before any infrastructure change makes sense.**
 
 ---
 
 ## Proposed Design
 
-### 1. Add three new domain events to close the replay gap
+### 1. Introduce `TeamInfo` as a value object snapshot inside `Group`
+
+`Group` and `Match` currently hold full `Team` entity references. The fix is to capture only the data the aggregate needs at the moment a team is added, and store it as a value object snapshot:
+
+```csharp
+public record TeamInfo(Guid Id, string Name, int Strength);
+```
+
+`Group` stores `List<TeamInfo>` internally. `Match` holds `TeamInfo HomeTeam` and `TeamInfo AwayTeam`. `GroupSimulator` is unchanged — it still accesses `match.HomeTeam.Strength`, which works because `TeamInfo` has a `Strength` property.
+
+The `AddTeam` signature changes from `AddTeam(Team team)` to `AddTeam(TeamInfo teamInfo)`. In `GenerateGroupCommandHandler`, the `Team` aggregate fetched from `IRepository<Team>` is immediately converted:
+
+```csharp
+group.AddTeam(new TeamInfo(team.Id, team.Name, team.Strength))
+```
+
+This explicitly documents the "snapshot at creation time" design intent at the call site. The handler is the only place that knows about both `Team` (the aggregate) and `TeamInfo` (the snapshot).
+
+After group creation, the `Group` aggregate is fully self-contained — it never needs to fetch team data again, including during simulation replay.
+
+### 2. Add three new domain events to close the replay gap
 
 | New Event | Emitted From | Purpose |
 |---|---|---|
@@ -57,52 +79,67 @@ Additionally, `SimulateGroupCommandHandler` relies on `Group` having fully popul
 
 Together with the existing `MatchPlayed`, these four events capture the full lifecycle of a `Group` and make complete replay possible.
 
-### 2. Add a private parameterless constructor and `Apply` overrides to `Group`
+### 3. Add a private parameterless constructor and `Apply` overrides to `Group`
 
 `EventStoreDbEventStore.LoadAsync` uses `Activator.CreateInstance(typeof(T), nonPublic: true)` to create the shell aggregate, then calls `ReplayEvent(event, version)` for each stored event. `Group` needs:
 
 - `private Group()` — initialises `teams` and `matches` lists (parameterless, for replay only)
 - `protected override void Apply(IDomainEvent @event)` — dispatches to a private handler per event type
 - `private void Apply(GroupCreated e)` — sets `Id`, `Name`, `Capacity`
-- `private void Apply(TeamAdded e)` — reconstructs and adds a `Team` to the internal list
-- `private void Apply(MatchScheduled e)` — reconstructs and adds a `Match` to the internal list using team references already in the list
+- `private void Apply(TeamAdded e)` — adds a `TeamInfo` snapshot to the internal list
+- `private void Apply(MatchScheduled e)` — looks up the two `TeamInfo` snapshots already in the list and reconstructs a `Match`
 - `private void Apply(MatchPlayed e)` — finds the match by Id and calls `match.ApplyResult(e.HomeScore, e.AwayScore)`
 
-### 3. Add `Match.ApplyResult` for replay
+### 4. Add `Match.ApplyResult` for replay
 
 `Match.SimulateResult` validates inputs (no negative scores, not already played) before mutating state. During replay, the event is already valid and must be applied without failure. Add:
 
 `internal void ApplyResult(int homeScore, int awayScore)` — sets `HomeScore`, `AwayScore`, `IsPlayed = true` with no validation.
 
-### 4. Keep `IRepository<Group>` — back it with an event-sourced implementation
+### 5. Keep `IRepository<Group>` — back it with a generic event-sourced implementation
 
-Command handlers already depend on `IRepository<Group>` via constructor injection. Keeping the interface avoids touching the handlers. The new `EventSourcedGroupsRepository` implements it and also implements a new `IFlushable` interface.
+Command handlers already depend on `IRepository<Group>` via constructor injection. Keeping the interface avoids touching the handlers.
 
-`IRepository<Group>.Add` is synchronous (it is called via `.Tap(...)` in the handler). The repository stores the aggregate in a scoped field. A command pipeline behavior flushes it to EventStoreDB after the handler succeeds.
+The implementation is a generic `EventSourcedRepository<T>` that lives in `Miniclip.Core.EventSourcing`. It has no aggregate-specific logic — all replay and event-emission behaviour lives in the aggregate and the store. Any future event-sourced aggregate gets its repository for free just by registering the type in DI.
 
-`IRepository<Group>.FindAsync` calls `eventStore.LoadAsync` and caches the result in the same scoped field so the post-command flush appends only new events.
+`IRepository<T>.Add` is synchronous (called via `.Tap(...)` in the handler). It delegates directly to `eventStore.Track(aggregate)`, which registers the aggregate with the session internally.
 
-### 5. Introduce `IFlushable` and `EventStoreCommandBehavior`
+`IRepository<T>.FindAsync` calls `eventStore.LoadAsync`, which automatically tracks the loaded aggregate inside the store. The repository needs no extra tracking call.
 
-`IFlushable` is a single-method interface:
+### 6. Introduce `IEventStoreSession` and `EventStoreCommandBehavior`
+
+`IEventStoreSession` is a scoped service that collects deferred append actions and executes them all on `CommitAsync`:
 
 ```csharp
-public interface IFlushable
+// Miniclip.Core.EventSourcing
+public interface IEventStoreSession
 {
-    Task FlushAsync(CancellationToken cancellationToken = default);
+    void Track(Func<CancellationToken, Task> commitAction);
+    Task CommitAsync(CancellationToken cancellationToken = default);
 }
 ```
 
-`EventStoreCommandBehavior<TRequest, TResponse>` replaces `CommandUnitOfWorkBehavior` in the mediator pipeline. It:
+`IEventStore<T>` is updated: `AppendAsync` is removed from the public contract and replaced with `Track(T aggregate)`. `LoadAsync` auto-tracks the loaded aggregate internally by calling `session.Track(ct => AppendAsync(aggregate, ct))` before returning. `Track(T aggregate)` does the same for new aggregates.
+
+```csharp
+// Updated IEventStore<T>
+public interface IEventStore<T> where T : AggregateRoot
+{
+    void Track(T aggregate);
+    Task<T?> LoadAsync(Guid aggregateId, CancellationToken cancellationToken = default);
+}
+```
+
+`EventStoreCommandBehavior<TRequest, TResponse>` replaces `CommandUnitOfWorkBehavior` in the mediator pipeline. It injects a single `IEventStoreSession` and:
 
 - skips non-command requests (using the existing `IsCommand()` extension)
 - calls `next(request, cancellationToken)`
-- if the response `IsSuccessful()`, calls `FlushAsync` on all registered `IFlushable` instances
-- on exception or failure, does nothing (EventStoreDB append was never called)
+- if the response `IsSuccessful()`, calls `session.CommitAsync(cancellationToken)`
+- on exception or failure, does nothing (no appends were made)
 
-### 6. Handle the `Team` repository after write context removal
+### 7. Handle the `Team` repository after write context removal
 
-`IRepository<Team>` is currently registered against `SimulatorWriteDbContext`. Teams are read-only reference data. When the write context is removed, `IRepository<Team>` must be re-registered against a context that still has a `Team` table. Two options:
+`IRepository<Team>` is used only in `GenerateGroupCommandHandler` — to fetch team data and convert it to `TeamInfo` snapshots. It is **not** needed during simulation; the `Group` aggregate carries all the team data it needs. This means `IRepository<Team>` remains a read-only reference-data lookup used exclusively at group creation time.
 
 | Option | Pros | Cons |
 |---|---|---|
@@ -121,10 +158,13 @@ public interface IFlushable
 ### In scope
 
 - Three new domain events: `GroupCreated`, `TeamAdded`, `MatchScheduled`
-- `Group`: private parameterless constructor, `Apply` overrides for all four events
-- `Match`: `ApplyResult` for replay without validation
-- `IFlushable` interface
-- `EventSourcedGroupsRepository` (implements `IRepository<Group>` and `IFlushable`)
+- `TeamInfo` value object in `Miniclip.Simulator.Domain`
+- `Group`: stores `List<TeamInfo>` internally; `AddTeam` accepts `TeamInfo`; private parameterless constructor, `Apply` overrides for all four events
+- `Match`: holds `TeamInfo HomeTeam / AwayTeam` instead of `Team` entity references; `Restore` factory accepts `TeamInfo`; `ApplyResult` for replay without validation
+- `IFixtureSchedulerService` / `RoundRobinScheduler`: updated to work with `TeamInfo` (since `group.Teams` now returns `IReadOnlyCollection<TeamInfo>`)
+- `IEventStoreSession` interface and `EventStoreSession` implementation
+- `IEventStore<T>` updated: `AppendAsync` removed from public contract, `Track(T aggregate)` added, `LoadAsync` auto-tracks
+- `EventSourcedRepository<T>` (generic, in `Miniclip.Core.EventSourcing`, implements `IRepository<T>`)
 - `EventStoreCommandBehavior` replacing `CommandUnitOfWorkBehavior`
 - DI wiring update in `DatabaseConfiguration` and `MediatorConfiguration`
 - Removal of `SimulatorUnitOfWork`, `SimulatorWriteDbContext`, EF `GroupsRepository`, `GroupConfiguration`, EF migrations for the write side
@@ -144,10 +184,11 @@ public interface IFlushable
 
 | Project | Planned Change |
 |---|---|
-| `Miniclip.Simulator.Domain` | Add `GroupCreated`, `TeamAdded`, `MatchScheduled` events; emit them from `Group.Create`, `AddTeam`, `AddMatch`; add private parameterless constructor and `Apply` overrides to `Group`; add `Match.ApplyResult`. |
-| `Miniclip.Core.Domain` | Add `IFlushable` interface. |
-| `Miniclip.Core.Application` | Add `EventStoreCommandBehavior<TRequest, TResponse>`; keep or remove `CommandUnitOfWorkBehavior` (becomes dead code). |
-| `Miniclip.Simulator.Infrastructure.Write` | Add `EventSourcedGroupsRepository`; delete EF `GroupsRepository`, `SimulatorUnitOfWork`, `SimulatorWriteDbContext`, `GroupConfiguration`, and migrations. |
+| `Miniclip.Simulator.Domain` | Add `TeamInfo` value object. Add `GroupCreated`, `TeamAdded`, `MatchScheduled` events; emit them from `Group.Create`, `AddTeam`, `AddMatch`. Change `Group` to store `List<TeamInfo>`; change `AddTeam` to accept `TeamInfo`. Change `Match` to hold `TeamInfo` instead of `Team` references; add `Match.Restore(TeamInfo, TeamInfo)` and `Match.ApplyResult`. Add private parameterless constructor and `Apply` overrides to `Group`. Update `IFixtureSchedulerService` and `RoundRobinScheduler` for `TeamInfo`. |
+| `Miniclip.Core.EventSourcing` | Update `IEventStore<T>`: remove `AppendAsync`, add `Track(T aggregate)`. Add `IEventStoreSession` interface. Add generic `EventSourcedRepository<T>`. |
+| `Miniclip.Core.EventSourcing.EventStoreDB` | Update `EventStoreDbEventStore<T>`: inject `IEventStoreSession`; `LoadAsync` auto-tracks; `Track` registers deferred append; `AppendAsync` becomes private. Add `EventStoreSession` implementation. |
+| `Miniclip.Core.Application` | Add `EventStoreCommandBehavior<TRequest, TResponse>`; remove or keep `CommandUnitOfWorkBehavior` (becomes dead code). |
+| `Miniclip.Simulator.Infrastructure.Write` | Delete EF `GroupsRepository`, `SimulatorUnitOfWork`, `SimulatorWriteDbContext`, `GroupConfiguration`, and migrations. No new repository file needed — the generic one from `Core.EventSourcing` covers it. |
 | `Miniclip.Simulator.Api` | Update `DatabaseConfiguration` and `MediatorConfiguration` for event-sourced wiring. |
 | `Miniclip.Simulator.Application.Commands.UnitTests` | Update mocks and assertions for all generation and simulation tests. |
 
@@ -155,7 +196,39 @@ public interface IFlushable
 
 ## Implementation Plan
 
-### Step 1 — Add new domain events
+### Step 1 — Add `TeamInfo` and update `Group` and `Match` internal structure
+
+Create `TeamInfo` in `Miniclip.Simulator.Domain/Aggregates/Groups/`:
+
+```csharp
+public record TeamInfo(Guid Id, string Name, int Strength);
+```
+
+Change `Group` internal state:
+
+- Replace `List<Team> teams` with `List<TeamInfo> teams`
+- Change `AddTeam(Team team)` to `AddTeam(TeamInfo teamInfo)` — stores the snapshot directly
+- Change `AddMatch` to accept `TeamInfo homeTeam, TeamInfo awayTeam` instead of `Team` references
+- Change `Teams` property to return `IReadOnlyCollection<TeamInfo>`
+
+Change `Match` internal state:
+
+- Replace `Team HomeTeam` and `Team AwayTeam` with `TeamInfo HomeTeam` and `TeamInfo AwayTeam`
+- Remove `HomeTeamId` and `AwayTeamId` backing fields (they are now on `TeamInfo`)
+- Add `internal static Match Restore(Guid id, TeamInfo home, TeamInfo away, int round)` — creates a `Match` without the same-team guard
+- Update `Match.Create` to accept `TeamInfo` instead of `Team`
+
+Update `GenerateGroupCommandHandler` — convert `Team` aggregates to `TeamInfo` before calling `AddTeam`:
+
+```csharp
+private static Result<Group> AddTeams(Group group, IEnumerable<Team> teams)
+    => teams.Traverse(t => group.AddTeam(new TeamInfo(t.Id, t.Name, t.Strength)))
+        .Map(() => group);
+```
+
+Update `IFixtureSchedulerService` / `RoundRobinScheduler` — `group.Teams` now returns `IReadOnlyCollection<TeamInfo>`; update any usage of `team.Id` or `team.Name` accordingly (no behavioural change, only type change).
+
+### Step 2 — Add new domain events
 
 Create three event records in `Miniclip.Simulator.Domain/Aggregates/Groups/Events/`:
 
@@ -176,12 +249,12 @@ public record MatchScheduled(
 Emit them from the aggregate:
 
 - `Group.Create`: replace `return new Group(id, name, capacity)` with a factory that creates the group **and** calls `Enqueue(new GroupCreated(id, name, capacity))`
-- `Group.AddTeam`: call `Enqueue(new TeamAdded(Id, team.Id, team.Name, team.Strength))` before returning `Result.Success()`
+- `Group.AddTeam`: call `Enqueue(new TeamAdded(Id, teamInfo.Id, teamInfo.Name, teamInfo.Strength))` before returning `Result.Success()`
 - `Group.AddMatch`: call `Enqueue(new MatchScheduled(Id, id, homeTeam.Id, awayTeam.Id, round))` after the match is added
 
 > Note: `Enqueue` is called **after** state mutation succeeds so that events are only raised for valid transitions.
 
-### Step 2 — Make `Group` replayable
+### Step 3 — Make `Group` replayable
 
 In `Group.cs`:
 
@@ -205,7 +278,7 @@ protected override void Apply(IDomainEvent @event)
 }
 
 private void Apply(GroupCreated e) { /* set Id, Name, Capacity via backing fields or init */ }
-private void Apply(TeamAdded e)    { teams.Add(Team.Restore(e.TeamId, e.Name, e.Strength)); }
+private void Apply(TeamAdded e)    { teams.Add(new TeamInfo(e.TeamId, e.Name, e.Strength)); }
 private void Apply(MatchScheduled e)
 {
     var home = teams.First(t => t.Id == e.HomeTeamId);
@@ -220,12 +293,11 @@ private void Apply(MatchPlayed e)
 
 `Group.Name` and `Group.Capacity` are `{ get; }` (immutable). Change them to `{ get; private set; }` to allow replay assignment, or add `init` setters.
 
-`Team.Restore` and `Match.Restore` are internal static factory methods that bypass validation for replay:
+`Match.Restore` is an internal static factory that creates a `Match` from `TeamInfo` snapshots without running the same-team validation guard:
 
-- `Team.Restore(Guid id, string name, int strength)` — creates a `Team` directly without validation
-- `Match.Restore(Guid id, Team home, Team away, int round)` — creates a `Match` without the same-team guard
+- `Match.Restore(Guid id, TeamInfo home, TeamInfo away, int round)` — creates a `Match` directly from `TeamInfo` values
 
-### Step 3 — Add `Match.ApplyResult`
+### Step 4 — Add `Match.ApplyResult`
 
 ```csharp
 internal void ApplyResult(int homeScore, int awayScore)
@@ -236,58 +308,105 @@ internal void ApplyResult(int homeScore, int awayScore)
 }
 ```
 
-### Step 4 — Add `IFlushable`
+### Step 5 — Add `IEventStoreSession` and update `IEventStore<T>`
 
-Create in `Miniclip.Core.Domain`:
+In `Miniclip.Core.EventSourcing`, add:
 
 ```csharp
-namespace Miniclip.Core.Domain;
-
-public interface IFlushable
+public interface IEventStoreSession
 {
-    Task FlushAsync(CancellationToken cancellationToken = default);
+    void Track(Func<CancellationToken, Task> commitAction);
+    Task CommitAsync(CancellationToken cancellationToken = default);
 }
 ```
 
-### Step 5 — Create `EventSourcedGroupsRepository`
-
-Create in `Miniclip.Simulator.Infrastructure.Write/Persistence/Repositories/`:
+Update `IEventStore<T>` — remove `AppendAsync` from the public contract and add `Track`:
 
 ```csharp
-public class EventSourcedGroupsRepository(IEventStore<Group> eventStore)
-    : IRepository<Group>, IFlushable
+public interface IEventStore<T> where T : AggregateRoot
 {
-    private Group? _tracked;
+    void Track(T aggregate);
+    Task<T?> LoadAsync(Guid aggregateId, CancellationToken cancellationToken = default);
+}
+```
 
-    public void Add(Group aggregate) => _tracked = aggregate;
+In `Miniclip.Core.EventSourcing.EventStoreDB`, add `EventStoreSession`:
 
-    public async Task<Group?> FindAsync(Guid id, CancellationToken cancellationToken)
+```csharp
+public sealed class EventStoreSession : IEventStoreSession
+{
+    private readonly List<Func<CancellationToken, Task>> _pending = [];
+
+    public void Track(Func<CancellationToken, Task> commitAction)
+        => _pending.Add(commitAction);
+
+    public async Task CommitAsync(CancellationToken cancellationToken = default)
     {
-        _tracked = await eventStore.LoadAsync(id, cancellationToken);
-        return _tracked;
+        foreach (var commit in _pending)
+            await commit(cancellationToken);
+    }
+}
+```
+
+Update `EventStoreDbEventStore<T>` to inject `IEventStoreSession`. `AppendAsync` becomes private. `Track` and `LoadAsync` register deferred appends with the session:
+
+```csharp
+public sealed class EventStoreDbEventStore<T>(
+    EventStoreClient client,
+    IEventSerializer serializer,
+    IEventStoreSession session) : IEventStore<T>
+    where T : AggregateRoot
+{
+    public void Track(T aggregate)
+        => session.Track(ct => AppendAsync(aggregate, ct));
+
+    public async Task<T?> LoadAsync(Guid aggregateId, CancellationToken cancellationToken = default)
+    {
+        var aggregate = await LoadInternalAsync(aggregateId, cancellationToken);
+        if (aggregate is not null)
+            Track(aggregate);
+        return aggregate;
     }
 
-    public Task<IEnumerable<Group>> GetAllAsync(CancellationToken cancellationToken)
+    private Task AppendAsync(T aggregate, CancellationToken cancellationToken) { /* existing logic */ }
+}
+```
+
+Register `IEventStoreSession` as scoped in `ServiceCollectionExtensions`:
+
+```csharp
+services.AddScoped<IEventStoreSession, EventStoreSession>();
+```
+
+### Step 6 — Add generic `EventSourcedRepository<T>`
+
+Create in `Miniclip.Core.EventSourcing/`. The class has no aggregate-specific logic — it is a pure adapter between `IRepository<T>` and `IEventStore<T>`:
+
+```csharp
+public class EventSourcedRepository<T>(IEventStore<T> eventStore) : IRepository<T>
+    where T : AggregateRoot
+{
+    public void Add(T aggregate) => eventStore.Track(aggregate);
+
+    public Task<T?> FindAsync(Guid id, CancellationToken cancellationToken)
+        => eventStore.LoadAsync(id, cancellationToken);
+
+    public Task<IEnumerable<T>> GetAllAsync(CancellationToken cancellationToken)
         => throw new NotSupportedException("GetAllAsync is not supported for event-sourced repositories.");
 
-    public void Delete(Group aggregate)
+    public void Delete(T aggregate)
         => throw new NotSupportedException("Delete is not supported for event-sourced repositories.");
-
-    public async Task FlushAsync(CancellationToken cancellationToken = default)
-    {
-        if (_tracked is not null)
-            await eventStore.AppendAsync(_tracked, cancellationToken);
-    }
 }
 ```
 
-### Step 6 — Add `EventStoreCommandBehavior`
+Any future event-sourced aggregate gets its repository for free just by registering `IRepository<ConcreteType>` against this class in DI.
 
-Create in `Miniclip.Core.Application/Behaviors/`:
+### Step 7 — Add `EventStoreCommandBehavior`
+
+Create in `Miniclip.Core.Application/Behaviors/`. The behavior has a single dependency on `IEventStoreSession`:
 
 ```csharp
-public class EventStoreCommandBehavior<TRequest, TResponse>(
-    IEnumerable<IFlushable> flushables)
+public class EventStoreCommandBehavior<TRequest, TResponse>(IEventStoreSession session)
     : IPipelineBehavior<TRequest, TResponse>
     where TRequest : IRequest<TResponse>
 {
@@ -302,41 +421,35 @@ public class EventStoreCommandBehavior<TRequest, TResponse>(
         var response = await next(request, cancellationToken);
 
         if (response.IsSuccessful())
-            foreach (var flushable in flushables)
-                await flushable.FlushAsync(cancellationToken);
+            await session.CommitAsync(cancellationToken);
 
         return response;
     }
 }
 ```
 
-Note: `EventStoreDb` appends are idempotent per stream revision. If the handler fails partway through, no append was made, so there is nothing to roll back.
-
-### Step 7 — Update DI wiring
+### Step 8 — Update DI wiring
 
 In `DatabaseConfiguration`:
 
 - Remove `SimulatorWriteDbContext` registration
 - Remove `IRepository<Group>` -> `GroupsRepository`
 - Remove `IUnitOfWork` -> `SimulatorUnitOfWork`
-- Register `IEventStore<Group>` — already covered by the open-generic `IEventStore<>` registration from `AddEventStoreDbClient`
-- Register `EventSourcedGroupsRepository` as **scoped** for both `IRepository<Group>` and `IFlushable`:
+- Register `IRepository<Group>` against `EventSourcedRepository<T>`:
 
 ```csharp
-services.AddScoped<EventSourcedGroupsRepository>();
-services.AddScoped<IRepository<Group>>(sp => sp.GetRequiredService<EventSourcedGroupsRepository>());
-services.AddScoped<IFlushable>(sp => sp.GetRequiredService<EventSourcedGroupsRepository>());
+services.AddScoped<IRepository<Group>, EventSourcedRepository<Group>>();
 ```
 
+- `IEventStore<Group>` and `IEventStoreSession` are already registered by `AddEventStoreDbClient` (update that extension to include `IEventStoreSession`)
 - Re-register `IRepository<Team>` against `SimulatorReadDbContext` (teams are read-only reference data)
 - Call `AddEventStoreDbClient(connectionString)` with the EventStoreDB connection string from configuration
 
 In `MediatorConfiguration`:
 
 - Replace `CommandUnitOfWorkBehavior<,>` with `EventStoreCommandBehavior<,>`
-- Remove `IUnitOfWork` pipeline references
 
-### Step 8 — Remove EF write infrastructure
+### Step 9 — Remove EF write infrastructure
 
 Delete from `Miniclip.Simulator.Infrastructure.Write`:
 
@@ -350,53 +463,56 @@ Verify that `TeamConfiguration.cs` can also be removed or moved. If `IRepository
 
 Update `DatabaseConfiguration.InitializeDatabases` to remove the write context migration call.
 
-### Step 9 — Update command tests
+### Step 10 — Update command tests
 
 **`WhenGeneratingGroups`:**
 
-- `GroupRepository` mock no longer needs a `FindAsync` setup
-- `GroupRepository.Add` assertion remains (the call is unchanged)
-- Add an `IFlushable` mock (or mock `IEventStore<Group>`) and assert `FlushAsync` is called once after a successful command
-- Since `Group.Create`, `AddTeam`, and `AddMatch` now enqueue events, `DequeueUncommittedEvents()` in the `Add` flow will have items — no change needed in the handler test, but may need updating in domain unit tests
+- `GroupRepository.Add` assertion remains (the call is unchanged in the handler)
+- Since `Group.Create`, `AddTeam`, and `AddMatch` now enqueue events, domain unit tests may need updating
+- Mock `IEventStoreSession` and assert `CommitAsync` is called once after a successful command
 
 **`WhenSimulatingGroups`:**
 
-- `GroupRepository.FindAsync` mock still returns a `Group` built via `GroupMother` — this remains valid because the test constructs the group in-memory
-- Add assertion that `FlushAsync` is called once after simulation
-- Add a test for the case where `FindAsync` returns `null` (stream does not exist in EventStoreDB)
+- `GroupRepository.FindAsync` mock still returns a `Group` built via `GroupMother` — valid because the test constructs the group in-memory
+- Mock `IEventStoreSession` and assert `CommitAsync` is called once after simulation
+- Add a test for `FindAsync` returning `null` (stream does not exist in EventStoreDB)
 
 **New test: concurrency conflict:**
 
-- Mock `IEventStore<Group>.AppendAsync` to throw `WrongExpectedVersionException`
+- Mock `IEventStoreSession.CommitAsync` to throw `WrongExpectedVersionException`
 - Assert the command returns a failure result with a conflict message
 
 ---
 
 ## Definition of Done
 
-- [ ] `GroupCreated`, `TeamAdded`, and `MatchScheduled` events exist and are emitted from the aggregate
-- [ ] `Group` has a private parameterless constructor and `Apply` overrides for all four event types
-- [ ] `Match` has `ApplyResult` for replay
-- [ ] `Team` has a `Restore` factory for replay
-- [ ] `IFlushable` is defined in `Miniclip.Core.Domain`
-- [ ] `EventSourcedGroupsRepository` is the registered `IRepository<Group>` in production
-- [ ] `EventStoreCommandBehavior` is in the mediator pipeline instead of `CommandUnitOfWorkBehavior`
-- [ ] `GenerateGroupCommand` appends events to EventStoreDB
-- [ ] `SimulateGroupCommand` loads the group from EventStoreDB and appends new `MatchPlayed` events
-- [ ] `SimulatorUnitOfWork`, `SimulatorWriteDbContext`, EF `GroupsRepository`, `GroupConfiguration`, and migrations are deleted
-- [ ] All command tests pass with updated mocks
-- [ ] Flush and append assertions are present in updated tests
-- [ ] Read-side MySQL remains unchanged
-- [ ] Build is green; all tests pass
+- [x] `GroupCreated`, `TeamAdded`, and `MatchScheduled` events exist and are emitted from the aggregate
+- [x] `TeamInfo` value object is defined in `Miniclip.Simulator.Domain`
+- [x] `Group` stores `List<TeamInfo>` internally; `AddTeam` accepts `TeamInfo`
+- [x] `Match` holds `TeamInfo` instead of `Team` entity references
+- [x] `Group` has a private parameterless constructor and `Apply` overrides for all four event types
+- [x] `Match` has `ApplyResult` for replay
+- [x] `IEventStoreSession` is defined in `Miniclip.Core.EventSourcing` and `EventStoreSession` is implemented in `Miniclip.Core.EventSourcing.EventStoreDB`
+- [x] `IEventStore<T>` updated: `AppendAsync` removed from the public contract, `Track` added, `LoadAsync` auto-tracks
+- [x] `EventSourcedRepository<T>` is in `Miniclip.Core.EventSourcing` and is the registered `IRepository<Group>` in production
+- [x] `EventStoreCommandBehavior` is in the mediator pipeline instead of `CommandUnitOfWorkBehavior`
+- [x] `GenerateGroupCommand` appends events to EventStoreDB
+- [x] `SimulateGroupCommand` loads the group from EventStoreDB and appends new `MatchPlayed` events
+- [x] `SimulatorUnitOfWork`, EF `GroupsRepository`, `GroupConfiguration`, and `CommandUnitOfWorkBehavior` deleted
+- [x] All command tests pass with updated mocks
+- [x] Read-side MySQL remains unchanged
+- [x] Build is green; all tests pass (161 of 161)
 
 ---
 
-## Open Questions to Resolve During Implementation
+## Open Questions — Resolved
 
-1. `Group.Name` and `Group.Capacity` are `{ get; }` — they need `private set` or `init` for replay. Confirm the preferred approach.
-2. Should `Team.Restore` live on `Team` itself (`internal static`), or should the restore logic live inside `Group.Apply(TeamAdded)`?
-3. Should `CommandUnitOfWorkBehavior` and `IUnitOfWork` be deleted entirely, or kept for potential future use?
-4. Should concurrency conflicts from EventStoreDB (`WrongExpectedVersionException`) be caught in the behavior or in the repository and translated to a domain `Result.Failure`?
+1. **`Group.Name` and `Group.Capacity` init** — Changed to `{ get; private set; }` to allow replay assignment.
+2. **`TeamInfo` location** — Placed in `Miniclip.Simulator.Domain/Aggregates/Groups/ValueObjects/` (domain-specific, not shared kernel).
+3. **`CommandUnitOfWorkBehavior` and `IUnitOfWork`** — Both deleted. `IUnitOfWork` had a single remaining consumer (`DomainEventPublisherBehavior`) which was updated to use `IEventStoreSession.GetCommittedEvents()` instead.
+4. **Concurrency conflicts** — Deferred to Phase 3/5. `WrongExpectedVersionException` from EventStoreDB propagates as an unhandled exception for now.
+5. **`SimulatorWriteDbContext`** — Kept (not deleted). It still serves `Team` reference data via `TeamConfiguration`. Only `GroupConfiguration` was removed.
+6. **`IEventStoreSession.Track` signature** — Changed to `Func<CancellationToken, Task<IDomainEvent[]>>` so the session can collect committed events and expose them to `DomainEventPublisherBehavior` via `GetCommittedEvents()`. This solves the pipeline ordering problem where events would otherwise be drained before being appended.
 
 ---
 

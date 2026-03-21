@@ -4,7 +4,7 @@ namespace Miniclip.Core.EventSourcing;
 
 public interface IEventStore<T> where T : AggregateRoot
 {
-    Task AppendAsync(T aggregate, CancellationToken cancellationToken = default);
+    void Track(T aggregate);
 
     Task<T?> LoadAsync(Guid aggregateId, CancellationToken cancellationToken = default);
 }

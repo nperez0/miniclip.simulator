@@ -1,10 +1,10 @@
-﻿using Mediator;
+using Mediator;
 using Miniclip.Core.Application.Extensions;
 using Miniclip.Core.EventSourcing;
 
 namespace Miniclip.Core.Application.Behaviors;
 
-public class DomainEventPublisherBehavior<TRequest, TResponse>(IPublisher publisher, IEventStoreSession session)
+public class EventStoreCommandBehavior<TRequest, TResponse>(IEventStoreSession session)
     : IPipelineBehavior<TRequest, TResponse>
     where TRequest : IRequest<TResponse>
 {
@@ -18,8 +18,7 @@ public class DomainEventPublisherBehavior<TRequest, TResponse>(IPublisher publis
         if (!request.IsCommand() || !response.IsSuccessful())
             return response;
 
-        foreach (var @event in session.GetCommittedEvents())
-            await publisher.Publish(@event, cancellationToken);
+        await session.CommitAsync(cancellationToken);
 
         return response;
     }

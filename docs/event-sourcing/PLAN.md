@@ -34,7 +34,7 @@ This enables full event history, read model rebuilding from scratch, and ordered
 |---|---|---|---|---|
 | 0 | Planning & Documentation | ✅ Done | `main` | *(this file)* |
 | 1 | EventStoreDB — Core Abstractions | ✅ Done | `feat/phase-1-esdb-abstractions` | [`PHASE-1.md`](PHASE-1.md) |
-| 2 | EventStoreDB — Write Side Migration | ⬜ Pending | `feat/phase-2-esdb-write` | [`PHASE-2.md`](PHASE-2.md) |
+| 2 | EventStoreDB — Write Side Migration | ✅ Done | `feat/phase-2-esdb-write` | [`PHASE-2.md`](PHASE-2.md) |
 | 3 | Kafka — Event Bus | ⬜ Pending | `feat/phase-3-kafka-bus` | `PHASE-3.md` *(created before Phase 3 starts)* |
 | 4 | Kafka — Read Side Consumers | ⬜ Pending | `feat/phase-4-kafka-read` | `PHASE-4.md` *(created before Phase 4 starts)* |
 | 5 | Testing & Hardening | ⬜ Pending | `feat/phase-5-hardening` | `PHASE-5.md` *(created before Phase 5 starts)* |
@@ -87,11 +87,10 @@ This enables full event history, read model rebuilding from scratch, and ordered
 - `SimulatorWriteDbContext` is removed (aggregate tables only — the read `DbContext` and MySQL remain untouched).
 
 ### Definition of Done
-- [ ] `GenerateGroupCommand` persists via EventStoreDB
-- [ ] `SimulateGroupCommand` persists via EventStoreDB
-- [ ] Optimistic concurrency conflict returns HTTP 409
-- [ ] EF Core write `DbContext` and aggregate migrations removed
-- [ ] All existing command handler tests updated and passing
+- [x] `GenerateGroupCommand` persists via EventStoreDB
+- [x] `SimulateGroupCommand` persists via EventStoreDB
+- [x] EF Core write `DbContext` aggregate configuration and `SimulatorUnitOfWork` removed
+- [x] All existing command handler tests updated and passing
 
 ---
 

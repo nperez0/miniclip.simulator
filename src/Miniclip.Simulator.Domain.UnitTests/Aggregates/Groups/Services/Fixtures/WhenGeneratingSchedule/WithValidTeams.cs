@@ -1,5 +1,5 @@
 using Shouldly;
-using Miniclip.Simulator.Domain.Aggregates.Teams.Entities;
+using Miniclip.Simulator.Domain.Aggregates.Groups.ValueObjects;
 using NUnit.Framework;
 
 namespace Miniclip.Simulator.Domain.UnitTests.Aggregates.Groups.Services.Fixtures.WhenGeneratingSchedule;
@@ -14,7 +14,7 @@ public class WithValidTeams(int capacity) : WhenGeneratingSchedule
     protected override void Given()
     {
         Capacity = capacity;
-        Teams = TeamMother.Many(Capacity);
+        Teams = TeamInfoMother.Many(Capacity);
     }
 
     [Test]
@@ -44,7 +44,7 @@ public class WithValidTeams(int capacity) : WhenGeneratingSchedule
     [Test]
     public void ShouldNotContainDummyTeams()
     {
-        Schedule!.ShouldNotContain(m => m.HomeTeam == Team.Dummy || m.AwayTeam == Team.Dummy);
+        Schedule!.ShouldNotContain(m => m.HomeTeam == TeamInfo.Dummy || m.AwayTeam == TeamInfo.Dummy);
     }
 
     [Test]

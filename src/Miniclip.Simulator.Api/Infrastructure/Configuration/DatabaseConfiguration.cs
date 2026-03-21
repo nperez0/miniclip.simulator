@@ -1,12 +1,13 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Miniclip.Core.Domain;
 using Miniclip.Core.EF;
+using Miniclip.Core.EventSourcing;
+using Miniclip.Core.EventSourcing.EventStoreDB;
 using Miniclip.Core.ReadModels;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Entities;
 using Miniclip.Simulator.Domain.Aggregates.Teams.Entities;
 using Miniclip.Simulator.Infrastructure.Read.Persistence;
 using Miniclip.Simulator.Infrastructure.Write.Persistence;
-using Miniclip.Simulator.Infrastructure.Write.Persistence.Repositories;
 using Read = Miniclip.Simulator.ReadModels.Repositories.Read;
 using ReadRepo = Miniclip.Simulator.Infrastructure.Read.Persistence.Repositories.Read;
 using Write = Miniclip.Simulator.ReadModels.Repositories.Write;
@@ -20,6 +21,7 @@ public static class DatabaseConfiguration
     {
         var writeConnectionString = configuration.GetConnectionString("SimulatorWrite");
         var readConnectionString = configuration.GetConnectionString("SimulatorRead");
+        var eventStoreConnectionString = configuration.GetConnectionString("EventStore")!;
 
         services.AddDbContext<SimulatorWriteDbContext>(options =>
             options.UseMySql(writeConnectionString, ServerVersion.AutoDetect(writeConnectionString)));
@@ -27,21 +29,21 @@ public static class DatabaseConfiguration
         services.AddDbContext<SimulatorReadDbContext>(options =>
             options.UseMySql(readConnectionString, ServerVersion.AutoDetect(readConnectionString)));
 
-        // Domain repositories
-        services.AddScoped<IRepository<Group>, GroupsRepository>();
+        // EventStoreDB
+        services.AddEventStoreDbClient(eventStoreConnectionString);
+        services.AddScoped<IRepository<Group>, EventSourcedRepository<Group>>();
+
+        // Team reference data — read from write DB (snapshot at group creation time)
         services.AddScoped<IRepository<Team>>(sp =>
             new Repository<Team>(sp.GetRequiredService<SimulatorWriteDbContext>()));
 
-        // Unit of Work
-        services.AddScoped<IUnitOfWork>(sp =>
-            new SimulatorUnitOfWork(sp.GetRequiredService<SimulatorWriteDbContext>()));
         services.AddScoped<IReadModelUnitOfWork>(sp =>
             new SimulatorReadModelUnitOfWork(sp.GetRequiredService<SimulatorReadDbContext>()));
 
         // Read models repositories - Group Standings
         services.AddScoped<Read.IGroupStandingsRepository, ReadRepo.GroupStandingsRepository>();
         services.AddScoped<Write.IGroupStandingsRepository, WriteRepo.GroupStandingsRepository>();
-        
+
         // Read models repositories - Match Results
         services.AddScoped<Read.IMatchResultsRepository, ReadRepo.MatchResultsRepository>();
         services.AddScoped<Write.IMatchResultsRepository, WriteRepo.MatchResultsRepository>();

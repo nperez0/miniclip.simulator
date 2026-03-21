@@ -1,5 +1,5 @@
 using Shouldly;
-using Miniclip.Simulator.Domain.Aggregates.Teams.Entities;
+using Miniclip.Simulator.Domain.Aggregates.Groups.ValueObjects;
 using NSubstitute;
 using NUnit.Framework;
 
@@ -7,7 +7,7 @@ namespace Miniclip.Simulator.Domain.UnitTests.Aggregates.Groups.Services.Fixture
 
 public class WithValidGroup() : WhenGeneratingFixtures
 {
-    private List<(Team HomeTeam, Team AwayTeam, int Round)> mockSchedule = null!;
+    private List<(TeamInfo HomeTeam, TeamInfo AwayTeam, int Round)> mockSchedule = null!;
 
     protected override void Given()
     {
@@ -65,8 +65,8 @@ public class WithValidGroup() : WhenGeneratingFixtures
         foreach (var (homeTeam, awayTeam, round) in mockSchedule)
         {
             Group!.Matches.ShouldContain(m => 
-                m.HomeTeamId == homeTeam.Id && 
-                m.AwayTeamId == awayTeam.Id &&
+                m.HomeTeam == homeTeam && 
+                m.AwayTeam == awayTeam &&
                 m.Round == round);
         }
     }
@@ -74,7 +74,7 @@ public class WithValidGroup() : WhenGeneratingFixtures
     [Test]
     public void ShouldNotHaveTeamPlayingItself()
     {
-        Group!.Matches.ShouldAllBe(m => m.HomeTeamId != m.AwayTeamId);
+        Group!.Matches.ShouldAllBe(m => m.HomeTeam != m.AwayTeam);
     }
 
     [Test]

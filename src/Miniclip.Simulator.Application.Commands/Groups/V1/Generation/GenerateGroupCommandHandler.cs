@@ -2,6 +2,7 @@ using Mediator;
 using Miniclip.Core.Domain;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Entities;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Services.Fixtures;
+using Miniclip.Simulator.Domain.Aggregates.Groups.ValueObjects;
 using Miniclip.Simulator.Domain.Aggregates.Teams.Entities;
 
 namespace Miniclip.Simulator.Application.Commands.Groups.V1.Generation;
@@ -24,7 +25,7 @@ public class GenerateGroupCommandHandler(
     }
 
     private static Result<Group> AddTeams(Group group, IEnumerable<Team> teams)
-        => teams.Traverse(group.AddTeam)
+        => teams.Traverse(team => group.AddTeam(TeamInfo.FromTeam(team)))
             .Map(() => group);
 
     public async Task<IEnumerable<Team>> GetRandomTeams(int count, CancellationToken cancellationToken)

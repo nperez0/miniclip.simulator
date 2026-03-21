@@ -39,13 +39,20 @@ The solution follows **Clean Architecture** combined with **CQRS**, **DDD**, and
 └─────────┬──────────┘  └───────────┬────────────────┘
           │ Domain Events            │ INotificationHandler<MatchPlayed>
 ┌─────────▼──────────┐  ┌───────────▼────────────────┐
-│  Infrastructure     │  │  Infrastructure             │
-│  .Write (EF, UoW)   │  │  .Read  (EF, read repos)   │
+│  EventStoreDB       │  │  Infrastructure             │
+│  (event streams)    │  │  .Read  (EF, read repos)   │
 └────────────────────┘  └────────────────────────────┘
 ```
 
-The **Write** side persists aggregate state via EF Core.
-The **Read** side is populated exclusively through **domain event projections** (`MatchPlayed`).
+The **Write** side persists domain events to **EventStoreDB** (replaced EF Core in Phase 2).
+The **Read** side is still on MySQL, populated through `MatchPlayed` domain event projections.
+
+### Write-Side Pipeline (Mediator)
+
+Registration order (first = outermost):
+1. `ReadModelUnitOfWorkBehavior` — wraps the full pipeline; saves the read model (MySQL) on success
+2. `DomainEventPublisherBehavior` — publishes committed events after EventStoreDB commit
+3. `EventStoreCommandBehavior` — innermost; calls `IEventStoreSession.CommitAsync()` after the handler succeeds
 
 ---
 
@@ -54,18 +61,19 @@ The **Read** side is populated exclusively through **domain event projections** 
 | Project | Layer | Responsibility |
 |---|---|---|
 | `Miniclip.Core` | Shared Kernel | `Result<T>`, `ExceptionBase`, string/enumerable extensions |
-| `Miniclip.Core.Domain` | Domain Abstractions | `AggregateRoot`, `IRepository<T>`, `IUnitOfWork`, `IDomainEvent` |
+| `Miniclip.Core.Domain` | Domain Abstractions | `AggregateRoot`, `IRepository<T>`, `IDomainEvent` |
 | `Miniclip.Core.Application` | Application Abstractions | Mediator pipeline wiring, shared handler contracts |
 | `Miniclip.Core.ReadModels` | Read Abstractions | Read model base types and repository interfaces |
 | `Miniclip.Core.ReadModels.Projections` | Projection Infrastructure | `[HandlerPriority]` attribute, ordered projection execution |
 | `Miniclip.Core.EF` | EF Infrastructure | Generic EF Core base context and repository |
-| `Miniclip.Core.ServiceDefaults` | Aspire Defaults | Shared .NET Aspire service defaults |
+| `Miniclip.Core.EventSourcing` | Event Sourcing Abstractions | `IEventStore<T>`, `IEventStoreSession`, `IEventSerializer`, `EventEnvelope`, `EventSourcedRepository<T>` |
+| `Miniclip.Core.EventSourcing.EventStoreDB` | Event Sourcing Infrastructure | EventStoreDB client, `EventStoreDbEventStore<T>`, `EventStoreSession`, `SystemTextJsonEventSerializer` |
 | `Miniclip.Simulator.Domain` | Domain | `Group`, `Team`, `Match` aggregates, fixture scheduling, match simulation |
 | `Miniclip.Simulator.Application.Commands` | Application – Write | `GenerateGroupCommand`, `SimulateGroupCommand` handlers |
 | `Miniclip.Simulator.Application.Queries` | Application – Read | `GroupStandingsQuery` handler |
 | `Miniclip.Simulator.ReadModels` | Read Models | `GroupStandingsModel`, `MatchResultModel` |
 | `Miniclip.Simulator.ReadModels.Projections` | Projections | `GroupStandingsProjection`, `MatchResultProjection` |
-| `Miniclip.Simulator.Infrastructure.Write` | Infrastructure – Write | `SimulatorWriteDbContext`, `GroupsRepository`, `SimulatorUnitOfWork` |
+| `Miniclip.Simulator.Infrastructure.Write` | Infrastructure – Write | `SimulatorWriteDbContext` (Team reference data only), `TeamConfiguration` |
 | `Miniclip.Simulator.Infrastructure.Read` | Infrastructure – Read | `SimulatorReadDbContext`, read/write repos for read models |
 | `Miniclip.Simulator.Api` | API | `GroupsController`, configuration wiring, `Startup` |
 | `Miniclip.Simulator.AppHost` | Orchestration | .NET Aspire AppHost, MySQL provisioning |
@@ -74,12 +82,13 @@ The **Read** side is populated exclusively through **domain event projections** 
 
 ## Key Domain Concepts
 
-- **Group** – The core aggregate. Holds a list of `Team`s and `Match`es. Capacity is 2–6 teams. A group must be fully generated before it can be simulated.
-- **Team** – An aggregate with a `Strength` value (0–100) that influences match outcomes.
-- **Match** – An entity owned by `Group`. Has `HomeTeam`, `AwayTeam`, `Round`, and scores. Can only be simulated once (`IsPlayed`).
-- **Fixture Scheduling** – Uses a **Round Robin** algorithm. Odd team counts add a `Team.Dummy` bye slot. Home/away balance is tracked via counters.
+- **Group** – The core write-side aggregate. Stored as an **event stream** in EventStoreDB. Holds a list of `TeamInfo` value object snapshots and `Match` entities. Capacity is 2–6 teams. A group must be fully generated before it can be simulated. Emits four events: `GroupCreated`, `TeamAdded`, `MatchScheduled`, `MatchPlayed`.
+- **TeamInfo** – A value object snapshot `(Guid Id, string Name, int Strength)` captured at group creation time. `Group` and `Match` use `TeamInfo` instead of `Team` entity references to respect aggregate boundaries.
+- **Team** – An aggregate with a `Strength` value (0–100) that influences match outcomes. Used as reference data at group creation; converted to `TeamInfo` snapshots immediately.
+- **Match** – An entity owned by `Group`. Has `TeamInfo HomeTeam`, `TeamInfo AwayTeam`, `Round`, and scores. Can only be simulated once (`IsPlayed`).
+- **Fixture Scheduling** – Uses a **Round Robin** algorithm. Odd team counts add a `TeamInfo.Dummy` bye slot. Home/away balance is tracked via counters.
 - **Match Simulation** – Uses a **Poisson distribution** based on each team's `Strength`. Home team gets a `1.1x` advantage multiplier.
-- **MatchPlayed** – The only domain event. Fired after each match is simulated. Drives all read model updates.
+- **MatchPlayed** – The domain event fired after each match is simulated. Drives all read model updates.
 - **GroupStandings** – A read model that tracks Points, Wins, Draws, Losses, Goals For/Against, Goal Difference, and Position per team. Position is recalculated after each `MatchPlayed` event.
 
 ---
@@ -116,8 +125,8 @@ API is versioned with `Asp.Versioning`. All routes follow `api/v{version}/[contr
 The `ResultExtensions.ToActionResult()` extension in the API layer maps `Result` failures to the appropriate HTTP status codes (400 / 404 / 204).
 
 ### EF Core
-- Two separate `DbContext`s: `SimulatorWriteDbContext` (write) and `SimulatorReadDbContext` (read).
-- Both are migrated and seeded at startup via `app.InitializeDatabases()`.
+- `SimulatorWriteDbContext` is kept only for **Team** reference data (read at group creation time).
+- `SimulatorReadDbContext` holds all read models. Both contexts are migrated at startup via `app.InitializeDatabases()`.
 - Entity configurations live in `Persistence/Configurations/`.
 
 ---
@@ -158,13 +167,13 @@ It provisions a MySQL container and starts the API via .NET Aspire.
 
 The project is currently undergoing an **Event Sourcing migration** using EventStoreDB and Kafka.
 
-**Current Phase:** `1 — EventStoreDB: Core Abstractions` ✅
+**Current Phase:** `2 — EventStoreDB: Write Side Migration` ✅
 
 | # | Phase | Status |
 |---|---|---|
 | 0 | Planning & Documentation | ✅ Done |
 | 1 | EventStoreDB — Core Abstractions | ✅ Done |
-| 2 | EventStoreDB — Write Side Migration | ⬜ Pending |
+| 2 | EventStoreDB — Write Side Migration | ✅ Done |
 | 3 | Kafka — Event Bus | ⬜ Pending |
 | 4 | Kafka — Read Side Consumers | ⬜ Pending |
 | 5 | Testing & Hardening | ⬜ Pending |

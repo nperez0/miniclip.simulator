@@ -77,7 +77,7 @@ The **Read** side is populated exclusively through **domain event projections** 
 - **Match** – An entity owned by `Group`. Has `HomeTeam`, `AwayTeam`, `Round`, and scores. Can only be simulated once (`IsPlayed`).
 - **Fixture Scheduling** – Uses a **Round Robin** algorithm. Odd team counts add a `Team.Dummy` bye slot. Home/away balance is tracked via counters.
 - **Match Simulation** – Uses a **Poisson distribution** based on each team's `Strength`. Home team gets a `1.1x` advantage multiplier.
-- **MatchPlayed** – The only domain event. Fired after each match is simulated. Drives all read model updates.
+- **MatchPlayed** – The domain event fired after each match is simulated. Drives all read model updates.
 - **GroupStandings** – A read model that tracks Points, Wins, Draws, Losses, Goals For/Against, Goal Difference, and Position per team. Position is recalculated after each `MatchPlayed` event.
 
 ---
@@ -154,7 +154,7 @@ The project is currently undergoing an **Event Sourcing migration** using EventS
 |---|---|---|
 | 0 | Planning & Documentation | ✅ Done |
 | 1 | EventStoreDB — Core Abstractions | ✅ Done |
-| 2 | EventStoreDB — Write Side Migration | ⬜ Pending |
+| 2 | EventStoreDB — Write Side Migration | ✅ Done |
 | 3 | Kafka — Event Bus | ⬜ Pending |
 | 4 | Kafka — Read Side Consumers | ⬜ Pending |
 | 5 | Testing & Hardening | ⬜ Pending |

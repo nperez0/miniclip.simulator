@@ -1,5 +1,5 @@
-using Shouldly;
 using NUnit.Framework;
+using Shouldly;
 
 namespace Miniclip.Simulator.Domain.UnitTests.Aggregates.Groups.Entities.WhenCreatingMatch;
 
@@ -8,8 +8,8 @@ public class AndParametersAreValid : WhenCreatingMatch
     protected override void Given()
     {
         Id = Guid.NewGuid();
-        HomeTeam = TeamMother.Default();
-        AwayTeam = TeamMother.Default();
+        HomeTeam = TeamInfoMother.Default();
+        AwayTeam = TeamInfoMother.Default();
         Round = 1;
     }
 
