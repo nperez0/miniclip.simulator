@@ -6,7 +6,7 @@ using Miniclip.Simulator.ReadModels.Repositories.Read;
 namespace Miniclip.Simulator.Infrastructure.Read.Persistence.Repositories.Read;
 
 public class GroupStandingsRepository(SimulatorReadDbContext context) 
-    : ReadModelRepository<GroupStandingsModel>(context), IGroupStandingsRepository
+    : ReadOnlyRepository<GroupStandingsModel>(context), IGroupStandingsRepository
 {
     public async Task<IEnumerable<GroupStandingsModel>> GetStandingsByGroupIdAsync(
         Guid groupId, 

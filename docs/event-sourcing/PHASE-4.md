@@ -1,6 +1,6 @@
 # Phase 4 — Kafka: Read Side Consumers
 
-> **Status:** ⬜ Pending
+> **Status:** ✅ Complete
 > **Branch:** `feat/phase-4-kafka-read`
 > **Depends on:** Phase 3 complete ✅
 > **Must not break:** all existing API behaviour and tests must remain green during the transition
@@ -10,8 +10,8 @@
 ## Goal
 
 Replace the temporary `MatchPlayedKafkaRelayService` (Kafka→Mediator bridge) with a proper
-`MatchPlayedProjectionsConsumer` that directly manages the `IReadModelUnitOfWork` transaction
-and adds idempotency tracking via a `ProcessedEvents` MySQL table.
+generic `ProjectionsConsumerService<TEvent>` that directly manages the `IReadModelUnitOfWork`
+transaction and adds idempotency tracking via a `ProcessedEvents` MySQL table.
 
 ---
 
@@ -38,7 +38,7 @@ After Phase 4:
 
 ```
 Kafka consumer (BackgroundService)
-  └─ MatchPlayedProjectionsConsumer
+  └─ ProjectionsConsumerService<MatchPlayed>
        ├─ Idempotency check (ProcessedEvents table) — skip if already processed
        ├─ uow.BeginTransactionAsync()
        ├─ publisher.Publish(MatchPlayed) via Mediator
@@ -83,7 +83,7 @@ Flow:
 ### 3. One consumer class, one consumer group
 
 All projection handlers for `MatchPlayed` are dispatched by a single
-`MatchPlayedProjectionsConsumer` under consumer group `simulator-projections`. This
+`ProjectionsConsumerService<MatchPlayed>` under consumer group `simulator-projections`. This
 preserves partition ordering (all events for the same `GroupId` are processed sequentially)
 without requiring separate consumer groups per handler.
 
@@ -104,22 +104,58 @@ services share the same `SimulatorReadDbContext` instance:
 the interface and model in `Miniclip.Simulator.ReadModels`, the EF implementation and
 configuration in `Miniclip.Simulator.Infrastructure.Read`.
 
+### 6. Generic `ProjectionsConsumerService<TEvent>` — one class, any event type
+
+`TEvent` has a single responsibility: deriving the Kafka topic at construction time via
+`TopicNaming.ForType<TEvent>()`. Everything else — deserialization, Mediator dispatch,
+UoW management — works against `IDomainEvent` and is therefore event-type-agnostic.
+
+Because `IPublisher.Publish(IDomainEvent)` dispatches by the **actual runtime type**
+returned from `IEventSerializer.Deserialize`, the correct `INotificationHandler<T>`
+implementations are invoked for every event type. Registering a consumer for a new event
+type in Phase 5+ is a single DI call:
+
+```csharp
+services.AddHostedService<ProjectionsConsumerService<GroupCreated>>();
+```
+
+No additional code is needed — only the projection handler and the DI registration.
+
+`ProjectionsConsumerService<TEvent>` lives in `Miniclip.Simulator.ReadModels.Projections`
+because it depends on simulator-specific `IProcessedEventsRepository`. `IReadModelUnitOfWork`
+is already reachable transitively through:
+`ReadModels.Projections` → `Core.Kafka` → `Core.Application` → `Core.ReadModels`
+
 ---
 
 ## Projects Affected
 
 | Project | Change |
 |---|---|
+| `Miniclip.Core.Kafka` | Add `TopicNaming.ForType<TEvent>()` |
 | `Miniclip.Simulator.ReadModels` | Add `ProcessedEventModel`; add `IProcessedEventsRepository` |
 | `Miniclip.Simulator.Infrastructure.Read` | Add `ProcessedEventsConfiguration`; add `ProcessedEventsRepository`; add EF migration |
-| `Miniclip.Simulator.ReadModels.Projections` | Remove `MatchPlayedKafkaRelayService`; add `MatchPlayedProjectionsConsumer` |
+| `Miniclip.Simulator.ReadModels.Projections` | Remove `MatchPlayedKafkaRelayService`; add `ProjectionsConsumerService<TEvent>` |
 | `Miniclip.Simulator.Api` | Register `IProcessedEventsRepository`; swap `AddHostedService` registration |
 
 ---
 
 ## Implementation Steps
 
-### Step 1 — Add `ProcessedEventModel` to `Miniclip.Simulator.ReadModels`
+### Step 1 — Add `TopicNaming.ForType<TEvent>()` to `Miniclip.Core.Kafka`
+
+Add a type-parameter overload alongside the existing instance overload:
+
+```csharp
+// TopicNaming.cs
+public static string ForType<TEvent>() where TEvent : IDomainEvent
+    => $"simulator.{PascalCasePattern.Replace(typeof(TEvent).Name, "-$1").ToLowerInvariant()}";
+```
+
+The two overloads are consistent — `TopicNaming.For(new MatchPlayed(...))` and
+`TopicNaming.ForType<MatchPlayed>()` return the same string.
+
+### Step 2 — Add `ProcessedEventModel` to `Miniclip.Simulator.ReadModels`
 
 ```csharp
 // Models/ProcessedEventModel.cs
@@ -133,7 +169,7 @@ public class ProcessedEventModel
 }
 ```
 
-### Step 2 — Add `IProcessedEventsRepository` to `Miniclip.Simulator.ReadModels`
+### Step 3 — Add `IProcessedEventsRepository` to `Miniclip.Simulator.ReadModels`
 
 ```csharp
 // Repositories/Write/IProcessedEventsRepository.cs
@@ -149,7 +185,7 @@ public interface IProcessedEventsRepository
 Note: `Add` is intentionally synchronous — it only queues the entity in the EF change
 tracker; the actual INSERT happens when `IReadModelUnitOfWork.SaveChangesAsync` is called.
 
-### Step 3 — EF configuration in `Miniclip.Simulator.Infrastructure.Read`
+### Step 4 — EF configuration in `Miniclip.Simulator.Infrastructure.Read`
 
 ```csharp
 // Persistence/Configurations/ProcessedEventsConfiguration.cs
@@ -186,7 +222,7 @@ public class ProcessedEventsRepository(SimulatorReadDbContext context) : IProces
 `SimulatorReadDbContext` picks up `ProcessedEventsConfiguration` automatically via
 `ApplyConfigurationsFromAssembly` — no changes to the context class are required.
 
-### Step 4 — Add EF Core migration
+### Step 5 — Add EF Core migration
 
 ```powershell
 dotnet ef migrations add AddProcessedEvents `
@@ -196,16 +232,17 @@ dotnet ef migrations add AddProcessedEvents `
 
 Verify the generated migration creates the `ProcessedEvents` table with the composite PK.
 
-### Step 5 — Add `MatchPlayedProjectionsConsumer` to `Miniclip.Simulator.ReadModels.Projections`
+### Step 6 — Add `ProjectionsConsumerService<TEvent>` to `Miniclip.Simulator.ReadModels.Projections`
 
 ```csharp
-// MatchPlayedProjectionsConsumer.cs
-public class MatchPlayedProjectionsConsumer(
+// ProjectionsConsumerService.cs
+public class ProjectionsConsumerService<TEvent>(
     IEventSerializer serializer,
     IServiceScopeFactory scopeFactory,
     IConfiguration configuration,
-    ILogger<MatchPlayedProjectionsConsumer> logger)
-    : KafkaConsumerService(["simulator.match-played"], configuration, logger)
+    ILogger<ProjectionsConsumerService<TEvent>> logger)
+    : KafkaConsumerService([TopicNaming.ForType<TEvent>()], configuration, logger)
+    where TEvent : IDomainEvent
 {
     protected override string ConsumerGroupId => "simulator-projections";
 
@@ -244,15 +281,15 @@ public class MatchPlayedProjectionsConsumer(
 }
 ```
 
-`IReadModelUnitOfWork` must be added to `ReadModels.Projections.csproj` project references
-if not already transitively available. Check `Miniclip.Core.ReadModels` is already
-referenced (it is, via `Miniclip.Core.ReadModels.Projections`).
+`TEvent` is used only to compute the topic string at construction time.
+Everything inside `HandleAsync` operates on `IDomainEvent` — adding a consumer for
+`GroupCreated` in Phase 5 requires no changes to this class.
 
-### Step 6 — Remove `MatchPlayedKafkaRelayService`
+### Step 7 — Remove `MatchPlayedKafkaRelayService`
 
 Delete `Miniclip.Simulator.ReadModels.Projections/MatchPlayedKafkaRelayService.cs`.
 
-### Step 7 — Update DI in `DatabaseConfiguration`
+### Step 8 — Update DI in `DatabaseConfiguration`
 
 Register `IProcessedEventsRepository` alongside the other write repositories, and swap the
 hosted service:
@@ -260,7 +297,7 @@ hosted service:
 ```csharp
 // Kafka
 services.AddKafkaEventBus(kafkaBootstrapServers);
-services.AddHostedService<MatchPlayedProjectionsConsumer>();  // replaces MatchPlayedKafkaRelayService
+services.AddHostedService<ProjectionsConsumerService<MatchPlayed>>();  // replaces MatchPlayedKafkaRelayService
 
 // Read model repositories (Write)
 // ... existing registrations ...
@@ -268,15 +305,21 @@ services.AddScoped<IProcessedEventsRepository>(sp =>
     new ProcessedEventsRepository(sp.GetRequiredService<SimulatorReadDbContext>()));
 ```
 
-Remove the `using` for `MatchPlayedKafkaRelayService` from the file; add usings for
-`MatchPlayedProjectionsConsumer` and `IProcessedEventsRepository` / `ProcessedEventsRepository`.
+When a new event type gains projection handlers in Phase 5+, adding its consumer is one line:
 
-### Step 8 — Update unit tests
+```csharp
+services.AddHostedService<ProjectionsConsumerService<GroupCreated>>();
+```
+
+Remove the `using` for `MatchPlayedKafkaRelayService` from the file; add usings for
+`ProjectionsConsumerService` and `IProcessedEventsRepository` / `ProcessedEventsRepository`.
+
+### Step 9 — Update unit tests
 
 The existing projection unit tests (`WhenProjectingGroupStandings`, `WhenProjectingMatchResults`,
 `WhenRecalculatingPosition`) test handlers directly and are **unaffected** by this change.
 
-Add unit tests for `MatchPlayedProjectionsConsumer` covering:
+Add unit tests for `ProjectionsConsumerService<MatchPlayed>` covering:
 
 | Test case | Expected behaviour |
 |---|---|
@@ -302,17 +345,21 @@ All EF operations within the scope share the same `SimulatorReadDbContext` insta
 `SaveChangesAsync` flushes projections + `ProcessedEvents` insert in one atomic write,
 wrapped in a single MySQL transaction.
 
+`ProjectionsConsumerService<GroupCreated>` would use an identical scope — the only
+difference is the topic it subscribes to and which `INotificationHandler<GroupCreated>`
+implementations Mediator dispatches to.
+
 ---
 
 ## Definition of Done
 
-- [ ] `ProcessedEvents` table exists in MySQL (via EF migration)
-- [ ] `MatchPlayedProjectionsConsumer` replaces `MatchPlayedKafkaRelayService`
-- [ ] Projection writes are flushed to MySQL inside a `IReadModelUnitOfWork` transaction
-- [ ] A re-delivered Kafka message (same `event-id`) is skipped without side effects
-- [ ] `MatchPlayedKafkaRelayService.cs` is deleted
-- [ ] All existing unit tests pass
-- [ ] Build is green
+- [x] `ProcessedEvents` table exists in MySQL (via EF migration)
+- [x] `ProjectionsConsumerService<TEvent>` compiles and is registered as `ProjectionsConsumerService<MatchPlayed>`
+- [x] `MatchPlayedKafkaRelayService.cs` is deleted
+- [x] Projection writes are flushed to MySQL inside a `IReadModelUnitOfWork` transaction
+- [x] A re-delivered Kafka message (same `event-id`) is skipped without side effects
+- [x] All existing unit tests pass
+- [x] Build is green
 
 ---
 

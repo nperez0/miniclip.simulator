@@ -36,7 +36,7 @@ This enables full event history, read model rebuilding from scratch, and ordered
 | 1 | EventStoreDB — Core Abstractions | ✅ Done | `feat/phase-1-esdb-abstractions` | [`PHASE-1.md`](PHASE-1.md) |
 | 2 | EventStoreDB — Write Side Migration | ✅ Done | `feat/phase-2-esdb-write` | [`PHASE-2.md`](PHASE-2.md) |
 | 3 | Kafka — Event Bus | ✅ Done | `feat/phase-3-kafka-bus` | [`PHASE-3.md`](PHASE-3.md) |
-| 4 | Kafka — Read Side Consumers | ⬜ Pending | `feat/phase-4-kafka-read` | [`PHASE-4.md`](PHASE-4.md) |
+| 4 | Kafka — Read Side Consumers | ✅ Done | `feat/phase-4-kafka-read` | [`PHASE-4.md`](PHASE-4.md) |
 | 5 | Testing & Hardening | ⬜ Pending | `feat/phase-5-hardening` | `PHASE-5.md` *(created before Phase 5 starts)* |
 
 ---

@@ -4,7 +4,7 @@ using System.Linq.Expressions;
 
 namespace Miniclip.Core.EF;
 
-public class ReadModelRepository<T>(DbContext context) 
+public class ReadOnlyRepository<T>(DbContext context) 
     : IReadOnlyRepository<T> where T : class
 {
     protected DbContext Context => context;

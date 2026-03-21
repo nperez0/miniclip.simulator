@@ -6,7 +6,7 @@ using Miniclip.Simulator.ReadModels.Repositories.Read;
 namespace Miniclip.Simulator.Infrastructure.Read.Persistence.Repositories.Read;
 
 public class MatchResultsRepository(SimulatorReadDbContext context) 
-    : ReadModelRepository<MatchResultModel>(context), IMatchResultsRepository
+    : ReadOnlyRepository<MatchResultModel>(context), IMatchResultsRepository
 {
     public async Task<IEnumerable<MatchResultModel>> GetMatchResultsByGroupIdAsync(
         Guid groupId, 

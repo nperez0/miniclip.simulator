@@ -114,7 +114,7 @@ throw new Exception("Invalid capacity");
 ### Domain Events
 - Aggregates enqueue events via `Enqueue(IDomainEvent)` (inherited from `AggregateRoot`).
 - Events are committed to **EventStoreDB** first, then forwarded to **Kafka** via `IEventBus` by `DomainEventPublisherBehavior`.
-- A `MatchPlayedKafkaRelayService` (`BackgroundService`) consumes `simulator.match-played` from Kafka and re-publishes via Mediator so existing projection handlers work unchanged (temporary bridge, removed in Phase 4).
+- A generic `ProjectionsConsumerService<TEvent>` (`BackgroundService`) consumes each event topic and re-publishes via a scoped `IPublisher`. It wraps the dispatch in a `IReadModelUnitOfWork` transaction and checks the `ProcessedEvents` table for idempotency (at-least-once delivery safety).
 - Projections implement `INotificationHandler<TEvent>` and are decorated with `[HandlerPriority(n)]` to control execution order.
 
 ### Mediator

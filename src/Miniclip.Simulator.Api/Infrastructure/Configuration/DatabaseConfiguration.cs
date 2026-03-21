@@ -6,6 +6,7 @@ using Miniclip.Core.EventSourcing.EventStoreDB;
 using Miniclip.Core.Kafka;
 using Miniclip.Core.ReadModels;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Entities;
+using Miniclip.Simulator.Domain.Aggregates.Groups.Events;
 using Miniclip.Simulator.Domain.Aggregates.Teams.Entities;
 using Miniclip.Simulator.Infrastructure.Read.Persistence;
 using Miniclip.Simulator.Infrastructure.Write.Persistence;
@@ -45,7 +46,7 @@ public static class DatabaseConfiguration
 
         // Kafka
         services.AddKafkaEventBus(kafkaBootstrapServers);
-        services.AddHostedService<MatchPlayedKafkaRelayService>();
+        services.AddHostedService<ProjectionsConsumerService<MatchPlayed>>();
 
         // Read models repositories - Group Standings
         services.AddScoped<Read.IGroupStandingsRepository, ReadRepo.GroupStandingsRepository>();
@@ -54,6 +55,9 @@ public static class DatabaseConfiguration
         // Read models repositories - Match Results
         services.AddScoped<Read.IMatchResultsRepository, ReadRepo.MatchResultsRepository>();
         services.AddScoped<Write.IMatchResultsRepository, WriteRepo.MatchResultsRepository>();
+
+        // Idempotency
+        services.AddScoped<Write.IProcessedEventsRepository, WriteRepo.ProcessedEventsRepository>();
 
         return services;
     }

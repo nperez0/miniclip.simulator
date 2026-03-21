@@ -9,4 +9,7 @@ public static class TopicNaming
 
     public static string For(IDomainEvent @event)
         => $"simulator.{PascalCasePattern.Replace(@event.GetType().Name, "-$1").ToLowerInvariant()}";
+
+    public static string ForType<TEvent>() where TEvent : IDomainEvent
+        => $"simulator.{PascalCasePattern.Replace(typeof(TEvent).Name, "-$1").ToLowerInvariant()}";
 }

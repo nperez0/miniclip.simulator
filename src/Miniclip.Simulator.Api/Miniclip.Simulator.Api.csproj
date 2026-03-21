@@ -16,6 +16,10 @@
     <PackageReference Include="Scalar.AspNetCore" />
     <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="Mediator.SourceGenerator" />
     <PackageReference Include="Scriban" PrivateAssets="all" />
   </ItemGroup>
