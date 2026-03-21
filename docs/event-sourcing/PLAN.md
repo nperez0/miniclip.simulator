@@ -35,7 +35,7 @@ This enables full event history, read model rebuilding from scratch, and ordered
 | 0 | Planning & Documentation | ✅ Done | `main` | *(this file)* |
 | 1 | EventStoreDB — Core Abstractions | ✅ Done | `feat/phase-1-esdb-abstractions` | [`PHASE-1.md`](PHASE-1.md) |
 | 2 | EventStoreDB — Write Side Migration | ✅ Done | `feat/phase-2-esdb-write` | [`PHASE-2.md`](PHASE-2.md) |
-| 3 | Kafka — Event Bus | ⬜ Pending | `feat/phase-3-kafka-bus` | `PHASE-3.md` *(created before Phase 3 starts)* |
+| 3 | Kafka — Event Bus | ⬜ Pending | `feat/phase-3-kafka-bus` | [`PHASE-3.md`](PHASE-3.md) |
 | 4 | Kafka — Read Side Consumers | ⬜ Pending | `feat/phase-4-kafka-read` | `PHASE-4.md` *(created before Phase 4 starts)* |
 | 5 | Testing & Hardening | ⬜ Pending | `feat/phase-5-hardening` | `PHASE-5.md` *(created before Phase 5 starts)* |
 
@@ -116,8 +116,8 @@ This enables full event history, read model rebuilding from scratch, and ordered
 ### Definition of Done
 - [ ] Kafka and Kafka UI containers visible and healthy in Aspire dashboard
 - [ ] `MatchPlayed` events visible in `simulator.match-played` topic after simulation
-- [ ] `DomainEventPublisherBehavior` publishes to Kafka (in-process Mediator publish removed)
-- [ ] Projections temporarily re-subscribe via Kafka consumer to maintain existing read model functionality
+- [ ] `DomainEventPublisherBehavior` publishes to Kafka via `IEventBus` (`IPublisher` direct call removed)
+- [ ] Projections continue to work via `MatchPlayedKafkaRelayService` (Kafka→Mediator bridge)
 - [ ] All existing API behaviour unchanged (end-to-end)
 
 ---

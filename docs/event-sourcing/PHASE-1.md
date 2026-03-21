@@ -593,12 +593,12 @@ Both must succeed with zero errors and all existing tests passing.
 
 ## Definition of Done
 
-- [ ] `dotnet build` succeeds with zero errors  
-- [ ] `dotnet test` passes — all existing tests green, none removed  
-- [ ] `Miniclip.Core.EventSourcing` project exists with `IEventStore`, `IEventSerializer`, `EventEnvelope`  
-- [ ] `Miniclip.Core.EventSourcing.EventStoreDB` project exists and compiles against `EventStore.Client.Grpc.Streams`  
-- [ ] `AggregateRoot` has `Version`, `Apply`, `ReplayEvent`, and type-safe `IDomainEvent` queue  
-- [ ] EventStoreDB container defined in AppHost (visible in Aspire dashboard when running)  
+- [x] `dotnet build` succeeds with zero errors  
+- [x] `dotnet test` passes — all existing tests green, none removed  
+- [x] `Miniclip.Core.EventSourcing` project exists with `IEventStore`, `IEventSerializer`, `EventEnvelope`  
+- [x] `Miniclip.Core.EventSourcing.EventStoreDB` project exists and compiles against `EventStore.Client.Grpc.Streams`  
+- [x] `AggregateRoot` has `Version`, `Apply`, `ReplayEvent`, and type-safe `IDomainEvent` queue  
+- [x] EventStoreDB container defined in AppHost (visible in Aspire dashboard when running)  
 
 ---
 
