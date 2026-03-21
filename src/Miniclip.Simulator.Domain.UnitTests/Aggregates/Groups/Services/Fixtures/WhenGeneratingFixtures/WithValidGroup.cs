@@ -56,7 +56,7 @@ public class WithValidGroup() : WhenGeneratingFixtures
     public void ShouldAddAllMatchesToGroup()
     {
         var expectedMatchCount = mockSchedule.Count;
-        Group!.Matches.Count().ShouldBe(expectedMatchCount);
+        Group!.Matches.Count.ShouldBe(expectedMatchCount);
     }
 
     [Test]

@@ -8,7 +8,7 @@ builder.AddServiceDefaults();
 
 var app = builder.Build();
 
-startup.Configure(app, app.Environment);
+startup.Configure(app);
 app.MapDefaultEndpoints();
 
 app.Run();

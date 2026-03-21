@@ -1,4 +1,4 @@
-﻿namespace Miniclip.Core.Domain;
+﻿namespace Miniclip.Core.ReadModels;
 
 public interface IRepository<T> where T : class
 {

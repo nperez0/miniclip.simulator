@@ -33,7 +33,7 @@ public class WithDuplicateTeam : WhenAddingTeam
     [Test]
     public void ShouldNotDuplicateTeam()
     {
-        Group!.Teams.Count().ShouldBe(1);
+        Group!.Teams.Count.ShouldBe(1);
     }
 
     [Test]

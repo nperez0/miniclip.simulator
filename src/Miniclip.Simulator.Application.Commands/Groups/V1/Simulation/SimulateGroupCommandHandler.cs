@@ -6,7 +6,7 @@ using Miniclip.Simulator.Domain.Aggregates.Groups.Services.Simulator;
 namespace Miniclip.Simulator.Application.Commands.Groups.V1.Simulation;
 
 public class SimulateGroupCommandHandler(
-    IRepository<Group> repository,
+    IAggregateRepository<Group> repository,
     IGroupSimulator groupSimulator) 
     : IRequestHandler<SimulateGroupCommand, Result>
 {

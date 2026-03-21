@@ -1,22 +1,22 @@
-# ADR-003 - Domain events dispatched post-commit via IUnitOfWork
+# ADR-003 - Domain events dispatched post-commit
 
-Status: Accepted | Date: 2026-02
+Status: **Superseded by EventStoreDB + Kafka (Phase 3/4)** | Date: 2026-02
 
-## Context
+## Original Decision
 
-Domain events must only be dispatched after the write transaction has committed. Dispatching before commit risks projections processing phantom events.
+`IUnitOfWork.CommitAsync()` committed EF Core changes and then dispatched domain events in-process as `INotification` through Mediator. Projections ran synchronously in the same HTTP request.
 
-## Decision
+## How this changed
 
-IUnitOfWork.CommitAsync() is responsible for:
-1. Saving all EF Core changes to the write DB.
-2. Collecting uncommitted events via AggregateRoot.DequeueUncommittedEvents().
-3. Dispatching each event as an INotification through the Mediator pipeline.
+`IUnitOfWork` and `ReadModelUnitOfWorkBehavior` were removed in Phases 2–4. The post-commit guarantee is now provided by the EventStoreDB + Kafka pipeline:
 
-Projections (INotificationHandler<MatchPlayed>) run in priority order via [HandlerPriority] within the same request.
+1. `EventStoreCommandBehavior` calls `IEventStoreSession.CommitAsync()` — appends events to EventStoreDB atomically.
+2. `DomainEventPublisherBehavior` publishes committed events to Kafka **only after** the ESDB append succeeds.
+3. `ProjectionsConsumerService<TEvent>` consumes each event from Kafka and updates the read DB in a separate transaction, with idempotency via the `ProcessedEvents` table.
 
 ## Consequences
 
-- Projections always see committed write data.
-- [HandlerPriority(1)] (MatchResultProjection) runs before [HandlerPriority(2)] (GroupStandingsProjection).
-- If a projection fails after commit, compensating logic or a retry must be added if eventual consistency is not acceptable.
+- Projections are now **eventually consistent** (asynchronous Kafka consumer) instead of synchronous.
+- At-least-once delivery is safe because of the idempotency check.
+- `[HandlerPriority]` ordering is still respected within a single consumed message.
+- If the Kafka consumer is down, the read DB temporarily lags but self-heals on recovery.

@@ -1,0 +1,102 @@
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Miniclip.Simulator.Domain.Aggregates.Groups.Events;
+using Miniclip.Simulator.Infrastructure.Read.Persistence;
+using Miniclip.Simulator.ReadModels.Models;
+using NUnit.Framework;
+using Shouldly;
+
+namespace Miniclip.Simulator.ReadModels.Projections.IntegrationTests.WhenAMatchIsPlayed;
+
+[TestFixture]
+public class WithFirstMatchInGroup : WhenAMatchIsPlayed
+{
+    private readonly Guid _groupId = Guid.NewGuid();
+    private readonly Guid _homeTeamId = Guid.NewGuid();
+    private readonly Guid _awayTeamId = Guid.NewGuid();
+
+    protected override IReadOnlyList<MatchPlayed> Events =>
+    [
+        new MatchPlayed(
+            GroupId: _groupId,
+            GroupName: "Group A",
+            MatchId: Guid.NewGuid(),
+            HomeTeamId: _homeTeamId,
+            HomeTeamName: "Team A",
+            HomeTeamStrength: 80,
+            HomeScore: 2,
+            AwayTeamId: _awayTeamId,
+            AwayTeamName: "Team B",
+            AwayTeamStrength: 70,
+            AwayScore: 1,
+            Round: 1)
+    ];
+
+    [Test]
+    public async Task ShouldCreateMatchResultRow()
+    {
+        using var scope = Services.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<SimulatorReadDbContext>();
+        var result = await context.Set<MatchResultModel>()
+            .FirstOrDefaultAsync(m => m.GroupId == _groupId);
+
+        result.ShouldNotBeNull();
+        result.HomeTeamId.ShouldBe(_homeTeamId);
+        result.AwayTeamId.ShouldBe(_awayTeamId);
+        result.HomeScore.ShouldBe(2);
+        result.AwayScore.ShouldBe(1);
+    }
+
+    [Test]
+    public async Task ShouldCreateStandingsForBothTeams()
+    {
+        using var scope = Services.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<SimulatorReadDbContext>();
+        var standings = await context.Set<GroupStandingsModel>()
+            .Where(s => s.GroupId == _groupId)
+            .ToListAsync();
+
+        standings.Count.ShouldBe(2);
+    }
+
+    [Test]
+    public async Task ShouldRecordHomeTeamWin()
+    {
+        using var scope = Services.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<SimulatorReadDbContext>();
+        var standing = await context.Set<GroupStandingsModel>()
+            .FirstAsync(s => s.TeamId == _homeTeamId);
+
+        standing.Wins.ShouldBe(1);
+        standing.Losses.ShouldBe(0);
+        standing.GoalsFor.ShouldBe(2);
+        standing.GoalsAgainst.ShouldBe(1);
+        standing.Points.ShouldBe(3);
+    }
+
+    [Test]
+    public async Task ShouldRecordAwayTeamLoss()
+    {
+        using var scope = Services.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<SimulatorReadDbContext>();
+        var standing = await context.Set<GroupStandingsModel>()
+            .FirstAsync(s => s.TeamId == _awayTeamId);
+
+        standing.Wins.ShouldBe(0);
+        standing.Losses.ShouldBe(1);
+        standing.GoalsFor.ShouldBe(1);
+        standing.GoalsAgainst.ShouldBe(2);
+        standing.Points.ShouldBe(0);
+    }
+
+    [Test]
+    public async Task ShouldAssignHomeTeamFirstPosition()
+    {
+        using var scope = Services.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<SimulatorReadDbContext>();
+        var standing = await context.Set<GroupStandingsModel>()
+            .FirstAsync(s => s.TeamId == _homeTeamId);
+
+        standing.Position.ShouldBe(1);
+    }
+}

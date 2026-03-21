@@ -1,6 +1,5 @@
-using System.Text.Json;
 using Miniclip.Core.Domain;
-using Miniclip.Core.EventSourcing;
+using System.Text.Json;
 
 namespace Miniclip.Core.EventSourcing.EventStoreDB;
 

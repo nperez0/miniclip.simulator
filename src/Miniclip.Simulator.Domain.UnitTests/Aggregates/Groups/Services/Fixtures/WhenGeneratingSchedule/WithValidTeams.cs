@@ -58,19 +58,19 @@ public class WithValidTeams(int capacity) : WhenGeneratingSchedule
     {
         var teamPairings = new HashSet<string>();
 
-        foreach (var match in Schedule!)
+        foreach (var (HomeTeam, AwayTeam, _) in Schedule!)
         {
             // Create a sorted pairing key to avoid duplicates (1-2 is same as 2-1)
-            var pair = match.HomeTeam.Id < match.AwayTeam.Id
-                ? $"{match.HomeTeam.Id}-{match.AwayTeam.Id}"
-                : $"{match.AwayTeam.Id}-{match.HomeTeam.Id}";
+            var pair = HomeTeam.Id < AwayTeam.Id
+                ? $"{HomeTeam.Id}-{AwayTeam.Id}"
+                : $"{AwayTeam.Id}-{HomeTeam.Id}";
 
             teamPairings.Add(pair);
         }
 
         // Each unique pairing should appear exactly once
         var expectedPairings = Capacity * (Capacity - 1) / 2;
-        teamPairings.Count().ShouldBe(expectedPairings);
+        teamPairings.Count.ShouldBe(expectedPairings);
     }
 
     [Test]

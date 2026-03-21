@@ -11,16 +11,16 @@ namespace Miniclip.Simulator.Application.Commands.UnitTests.Groups.V1.WhenGenera
 
 public abstract class WhenGeneratingGroups : AsyncTestBase<GenerateGroupCommandHandler>
 {
-    protected IRepository<Group> GroupRepository { get; private set; } = null!;
-    protected IRepository<Team> TeamRepository { get; private set; } = null!;
+    protected IAggregateRepository<Group> GroupRepository { get; private set; } = null!;
+    protected IAggregateRepository<Team> TeamRepository { get; private set; } = null!;
     protected IFixtureSchedulerService FixtureSchedulerService { get; private set; } = null!;
     protected GenerateGroupCommand Command { get; set; } = null!;
     protected Result<Guid> Result { get; set; } = null!;
 
     protected override void Given()
     {
-        GroupRepository = Fixture.Freeze<IRepository<Group>>();
-        TeamRepository = Fixture.Freeze<IRepository<Team>>();
+        GroupRepository = Fixture.Freeze<IAggregateRepository<Group>>();
+        TeamRepository = Fixture.Freeze<IAggregateRepository<Team>>();
         FixtureSchedulerService = Fixture.Freeze<IFixtureSchedulerService>();
     }
 

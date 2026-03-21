@@ -1,11 +1,9 @@
-using Shouldly;
-using Mediator;
 using Microsoft.AspNetCore.Mvc;
 using Miniclip.Core;
 using Miniclip.Simulator.Application.Commands.Groups.V1.Simulation;
 using NSubstitute;
 using NUnit.Framework;
-using System.Reflection;
+using Shouldly;
 
 namespace Miniclip.Simulator.Api.UnitTests.Controllers.V1.WhenSimulatingGroups;
 
@@ -36,7 +34,7 @@ public class WithNonExistentGroup : WhenSimulatingGroups
         
         var errorProperty = notFoundResult.Value!.GetType().GetProperty("error");
         var errorMessage = errorProperty!.GetValue(notFoundResult.Value) as string;
-        errorMessage.ShouldContain("not found");
+        errorMessage!.ShouldContain("not found");
     }
 
     [Test]

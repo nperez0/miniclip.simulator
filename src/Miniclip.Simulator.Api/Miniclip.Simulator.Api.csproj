@@ -30,7 +30,6 @@
     <ProjectReference Include="..\Miniclip.Core.Kafka\Miniclip.Core.Kafka.csproj" />
     <ProjectReference Include="..\Miniclip.Simulator.Application.Commands\Miniclip.Simulator.Application.Commands.csproj" />
     <ProjectReference Include="..\Miniclip.Simulator.Application.Queries\Miniclip.Simulator.Application.Queries.csproj" />
-    <ProjectReference Include="..\Miniclip.Simulator.Infrastructure.Write\Miniclip.Simulator.Infrastructure.Write.csproj" />
     <ProjectReference Include="..\Miniclip.Simulator.Infrastructure.Read\Miniclip.Simulator.Infrastructure.Read.csproj" />
     <ProjectReference Include="..\Miniclip.Simulator.ReadModels\Miniclip.Simulator.ReadModels.csproj" />
     <ProjectReference Include="..\Miniclip.Simulator.ReadModels.Projections\Miniclip.Simulator.ReadModels.Projections.csproj" />

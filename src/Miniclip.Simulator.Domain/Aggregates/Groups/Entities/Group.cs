@@ -7,8 +7,8 @@ namespace Miniclip.Simulator.Domain.Aggregates.Groups.Entities;
 
 public class Group : AggregateRoot
 {
-    private List<TeamInfo> teams = [];
-    private List<Match> matches = [];
+    private readonly List<TeamInfo> teams = [];
+    private readonly List<Match> matches = [];
 
     private const int MinCapacity = 2;
     private const int MaxCapacity = 6;

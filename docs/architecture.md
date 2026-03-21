@@ -17,10 +17,9 @@ These projects have zero dependencies on any simulator-specific logic.
 |---|---|
 | `Result<T>` | Discriminated union for success/failure. Replaces exceptions for business rule violations. |
 | `ExceptionBase` | Base type for all typed exceptions across the solution. |
-| `AggregateRoot` | Base class for all DDD aggregates. Owns the domain event queue (`Enqueue` / `DequeueUncommittedEvents`). |
+| `AggregateRoot` | Base class for all DDD aggregates. Owns the event queue (`Enqueue`), version tracking, and replay (`ReplayEvent` / `Apply`). |
 | `IDomainEvent` | Marker interface implemented by all domain events. |
-| `IRepository<T>` | Generic write-side repository interface. |
-| `IUnitOfWork` | Abstracts transaction commit + domain event dispatching. |
+| `IAggregateRepository<T>` | Generic write-side repository interface. Implemented by `AggregateRepository<T>` backed by `IEventStore<T>`. |
 
 ### Domain — `Miniclip.Simulator.Domain`
 
@@ -30,13 +29,15 @@ Pure business logic. No dependencies on ASP.NET Core, EF Core, or any infrastruc
 Aggregates/
 ├── Groups/
 │   ├── Entities/         Group.cs, Match.cs
-│   ├── Events/           MatchPlayed.cs
+│   ├── Events/           GroupCreated.cs, TeamAdded.cs, MatchScheduled.cs, MatchPlayed.cs
 │   ├── Exceptions/       GroupCreationException, GroupAddTeamException, ...
+│   ├── ValueObjects/     TeamInfo.cs  (Id, Name, Strength snapshot)
 │   └── Services/
 │       ├── Fixtures/     IFixtureScheduler, RoundRobinScheduler, FixtureSchedulerService
 │       └── Simulator/    IMatchSimulator, MatchSimulator, GroupSimulator
 └── Teams/
     ├── Entities/         Team.cs
+    ├── Events/           TeamRegistered.cs
     └── Exceptions/       TeamCreationException.cs
 ```
 
@@ -45,9 +46,9 @@ Aggregates/
 Split into two projects to enforce CQRS.
 
 **`Miniclip.Simulator.Application.Commands`** (write side)
-- Depends on `Miniclip.Simulator.Domain` and `IRepository<T>`.
+- Depends on `Miniclip.Simulator.Domain` and `IAggregateRepository<T>`.
 - Handlers: `GenerateGroupCommandHandler`, `SimulateGroupCommandHandler`.
-- Uses `IUnitOfWork` via the infrastructure layer to commit + dispatch events.
+- `GenerateGroupCommandHandler` loads all teams from EventStoreDB via `IAggregateRepository<Team>.GetAllAsync()`, picks a random subset, and creates a `Group`.
 
 **`Miniclip.Simulator.Application.Queries`** (read side)
 - Depends only on read model repository interfaces (`IGroupStandingsRepository`, `IMatchResultsRepository`).
@@ -56,8 +57,9 @@ Split into two projects to enforce CQRS.
 
 ### Read Models & Projections
 
-**`Miniclip.Simulator.ReadModels`** — POCO read model definitions (`GroupStandingsModel`, `MatchResultModel`).  
-**`Miniclip.Simulator.ReadModels.Projections`** — `INotificationHandler<MatchPlayed>` implementations.
+**`Miniclip.Simulator.ReadModels`** — POCO read model definitions (`GroupStandingsModel`, `MatchResultModel`) and repository interfaces.
+
+**`Miniclip.Simulator.ReadModels.Projections`** — `ProjectionsConsumerService<TEvent>` (Kafka consumer) and `INotificationHandler<TEvent>` projection handlers dispatched in priority order via Mediator.
 
 Projections are the **only** writers to the read database. They run in priority order via `[HandlerPriority(n)]`:
 
@@ -68,12 +70,14 @@ Projections are the **only** writers to the read database. They run in priority 
 
 ### Infrastructure — Write & Read
 
-Two separate `DbContext`s, each with their own MySQL connection:
+The **write side** is EventStoreDB. `SimulatorWriteDbContext` has an empty EF model and exists only to run the migration that dropped all legacy aggregate tables.
+
+`SimulatorReadDbContext` holds all read models and exposes both read and write repositories:
 
 | Context | Project | Tracks |
 |---|---|---|
-| `SimulatorWriteDbContext` | `Infrastructure.Write` | `Group`, `Team`, `Match` aggregates |
-| `SimulatorReadDbContext` | `Infrastructure.Read` | `GroupStandingsModel`, `MatchResultModel` |
+| `SimulatorWriteDbContext` | `Infrastructure.Write` | Nothing (empty model; migrations only) |
+| `SimulatorReadDbContext` | `Infrastructure.Read` | `GroupStandingsModel`, `MatchResultModel`, `ProcessedEventsModel` |
 
 The read DB context exposes both read (query) and write (projection) repositories under `Persistence/Repositories/Read/` and `Persistence/Repositories/Write/`.
 
@@ -85,9 +89,10 @@ ASP.NET Core Web API. Versioned using `Asp.Versioning`.
 Controllers/V1/    GroupsController
 Extensions/        ResultExtensions  (Result<T> → IActionResult mapping)
 Infrastructure/
-  Configuration/   DatabaseConfiguration, DomainConfiguration,
-                   MediatorConfiguration, ProjectionsConfiguration,
-                   ApiVersioningConfiguration
+  Configuration/   EventStoreDbConfiguration, ReadModelsConfiguration,
+                   KafkaConfiguration, MediatorConfiguration,
+                   DomainConfiguration, ApiVersioningConfiguration
+  Seeding/         TeamDataSeeder  (seeds 10 teams to EventStoreDB on startup)
 Startup.cs         ConfigureServices + Configure
 Program.cs         Host builder entry point
 ```
@@ -95,7 +100,9 @@ Program.cs         Host builder entry point
 ### Orchestration — `Miniclip.Simulator.AppHost`
 
 .NET Aspire AppHost. Provisions:
-- A **MySQL** container.
+- A **MySQL** container (write migrations DB + read model DB).
+- An **EventStoreDB** container (with `$by_category` and standard projections enabled).
+- A **Kafka** container with **Kafka UI**.
 - The **API** project as a service.
 
 Entry point for local development.
@@ -111,14 +118,24 @@ POST /api/v1/groups
         │
         ▼
 GenerateGroupCommandHandler
-  ├── Group.Create(id, name, capacity)          → validates and creates aggregate
-  ├── GetRandomTeams(capacity)                  → fetches random teams from write DB
-  ├── group.AddTeam(team) × N                   → business rule: max capacity, no duplicates
-  ├── fixtureSchedulerService.GenerateFixtures  → Round Robin scheduling, adds Matches to Group
-  └── groupsRepository.Add(group)
+  ├── teamsRepository.GetAllAsync()              → loads all Team aggregates from EventStoreDB
+  ├── random subset of size capacity selected
+  ├── Group.Create(id, name, capacity)           → validates; enqueues GroupCreated
+  ├── group.AddTeam(TeamInfo.FromTeam(t)) x N   → enqueues TeamAdded per team
+  ├── fixtureScheduler.GenerateFixtures(group)  → Round Robin; enqueues MatchScheduled per match
+  └── groupsRepository.Add(group)               → tracks aggregate in IEventStoreSession
         │
         ▼
-IUnitOfWork.CommitAsync()
+EventStoreCommandBehavior → IEventStoreSession.CommitAsync()
+  └── appends GroupCreated + TeamAdded(N) + MatchScheduled(N) to ESDB stream group-{id}
+        │
+        ▼
+DomainEventPublisherBehavior → IEventBus.PublishAsync() per committed event
+  └── only MatchPlayed is consumed by projections; Group creation events are ESDB-only
+        │
+        ▼
+Returns Result<Guid> (GroupId) → 200 OK
+```IUnitOfWork.CommitAsync()
   ├── Saves Group + Teams + Matches to write DB
   └── DequeueUncommittedEvents() → dispatches nothing yet (no match played)
         │
@@ -133,23 +150,29 @@ POST /api/v1/groups/{id}/simulate
         │
         ▼
 SimulateGroupCommandHandler
-  ├── repository.FindAsync(groupId)              → loads Group aggregate
+  ├── repository.FindAsync(groupId)              → replays group-{id} stream from EventStoreDB
   └── groupSimulator.SimulateAllMatches(group)
         ├── For each unplayed Match:
-        │     ├── matchSimulator.SimulateMatch(homeStrength, awayStrength)   ← Poisson
+        │     ├── matchSimulator.SimulateMatch(home, away)  ← Poisson distribution
         │     └── group.SimulateMatch(matchId, homeScore, awayScore)
         │           └── match.SimulateResult(...)
         │                 └── Enqueue(new MatchPlayed(...))
         │
         ▼
-IUnitOfWork.CommitAsync()
-  ├── Saves updated Match scores to write DB
-  └── DequeueUncommittedEvents()
-        └── For each MatchPlayed event → dispatched as INotification
-              ├── MatchResultProjection.Handle(...)     [priority 1]
-              └── GroupStandingsProjection.Handle(...)  [priority 2]
-                    ├── Updates stats (W/D/L, GF/GA, Points)
-                    └── RecalculatePositionService.RecalculatePositionsAsync(...)
+EventStoreCommandBehavior → IEventStoreSession.CommitAsync()
+  └── appends MatchPlayed events to ESDB stream group-{id}
+        │
+        ▼
+DomainEventPublisherBehavior → IEventBus.PublishAsync() per MatchPlayed
+  └── publishes to simulator.match-played Kafka topic
+        │
+        ▼
+ProjectionsConsumerService<MatchPlayed>  (background service)
+  ├── Deduplication: ProcessedEvents table checked before processing
+  ├── IPublisher.Publish(matchPlayed) dispatches to ordered handlers:
+  │     ├── MatchResultProjection      [priority 1] → inserts MatchResultModel row
+  │     └── GroupStandingsProjection   [priority 2] → updates stats + recalculates positions
+  └── ProcessedEvents row written; transaction committed
 ```
 
 ### Read — Get Standings
@@ -180,8 +203,10 @@ Api
  ├── ReadModels.Projections
  │    ├── Simulator.Domain (MatchPlayed event)
  │    └── Simulator.ReadModels
- ├── Infrastructure.Write
- │    └── Core.EF
+ ├── Core.EventSourcing.EventStoreDB
+ │    └── Core.EventSourcing
+ ├── Core.Kafka
+ │    └── Core.Application
  └── Infrastructure.Read
       └── Core.EF
 ```

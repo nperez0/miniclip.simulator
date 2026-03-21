@@ -33,4 +33,8 @@ public class AndMessageAlreadyProcessed : WhenConsumingEvents
     [Test]
     public async Task ShouldNotSaveChanges()
         => await Uow.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
+
+    [Test]
+    public void ShouldNotDeserializePayload()
+        => Serializer.DidNotReceive().Deserialize(Arg.Any<string>(), Arg.Any<byte[]>());
 }

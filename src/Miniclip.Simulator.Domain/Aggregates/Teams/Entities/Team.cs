@@ -1,15 +1,17 @@
-﻿using Miniclip.Core;
-using Miniclip.Core.Domain;
+﻿using Miniclip.Core.Domain;
+using Miniclip.Simulator.Domain.Aggregates.Teams.Events;
 using Miniclip.Simulator.Domain.Aggregates.Teams.Exceptions;
 
 namespace Miniclip.Simulator.Domain.Aggregates.Teams.Entities;
 
 public class Team : AggregateRoot
 {
-    public static Team Dummy { get; } = new(new Guid(), "Dummy", 1);
+    public string Name { get; private set; } = null!;
+    public int Strength { get; private set; } // 0-100: influences match outcomes
 
-    public string Name { get; }
-    public int Strength { get; } // 0-100: influences match outcomes
+    private Team()
+    {
+    }
 
     private Team(Guid id, string name, int strength)
     {
@@ -25,6 +27,18 @@ public class Team : AggregateRoot
         if (strength < 0 || strength > 100)
             return Result.Failure<Team>(TeamCreationException.InvalidStrength(strength));
 
-        return new Team(id, name, strength);
+        var team = new Team(id, name, strength);
+        team.Enqueue(new TeamRegistered(id, name, strength));
+        return team;
+    }
+
+    protected override void Apply(IDomainEvent @event)
+    {
+        if (@event is TeamRegistered e)
+        {
+            Id = e.TeamId;
+            Name = e.Name;
+            Strength = e.Strength;
+        }
     }
 }

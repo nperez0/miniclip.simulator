@@ -1,4 +1,4 @@
-﻿using Miniclip.Core.Domain;
+﻿using Miniclip.Core.ReadModels;
 using Miniclip.Simulator.ReadModels.Models;
 
 namespace Miniclip.Simulator.ReadModels.Repositories.Write;

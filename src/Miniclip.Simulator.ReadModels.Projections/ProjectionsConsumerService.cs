@@ -15,41 +15,44 @@ public class ProjectionsConsumerService<TEvent>(
     IEventSerializer serializer,
     IServiceScopeFactory scopeFactory,
     IConfiguration configuration,
-    ILogger<ProjectionsConsumerService<TEvent>> logger)
-    : KafkaConsumerService([TopicNaming.ForType<TEvent>()], configuration, logger)
+    ILogger<ProjectionsConsumerService<TEvent>> logger,
+    IConsumerRetryPolicy retryPolicy)
+    : KafkaConsumerService([TopicNaming.ForType<TEvent>()], configuration, logger, retryPolicy)
     where TEvent : IDomainEvent
 {
-    protected override string ConsumerGroupId => "simulator-projections";
+    protected override string ConsumerGroupId
+        => $"simulator-projections-{TopicNaming.ForType<TEvent>().Replace("simulator.", string.Empty)}";
 
     protected override async Task HandleAsync(
         ConsumeResult<string, byte[]> result,
         CancellationToken cancellationToken)
     {
         var eventId = result.GetHeader("event-id");
+
+        using var scope = scopeFactory.CreateScope();
+        var processedEventsRepository = scope.ServiceProvider.GetRequiredService<IProcessedEventsRepository>();
+
+        if (await processedEventsRepository.ContainsAsync(eventId, ConsumerGroupId, cancellationToken))
+            return;
+
         var eventType = result.GetHeader("event-type");
         var domainEvent = serializer.Deserialize(eventType, result.Message.Value);
 
-        using var scope = scopeFactory.CreateScope();
-        var sp = scope.ServiceProvider;
+        var unitOfWork = scope.ServiceProvider.GetRequiredService<IReadModelUnitOfWork>();
+        var publisher = scope.ServiceProvider.GetRequiredService<IPublisher>();
 
-        var processedEvents = sp.GetRequiredService<IProcessedEventsRepository>();
-        if (await processedEvents.ContainsAsync(eventId, ConsumerGroupId, cancellationToken))
-            return;
+        await unitOfWork.BeginTransactionAsync(cancellationToken);
 
-        var uow = sp.GetRequiredService<IReadModelUnitOfWork>();
-        var publisher = sp.GetRequiredService<IPublisher>();
-
-        await uow.BeginTransactionAsync(cancellationToken);
         try
         {
             await publisher.Publish(domainEvent, cancellationToken);
-            processedEvents.Add(eventId, ConsumerGroupId);
-            await uow.SaveChangesAsync(cancellationToken);
-            await uow.CommitAsync(cancellationToken);
+            processedEventsRepository.Add(eventId, ConsumerGroupId);
+            await unitOfWork.SaveChangesAsync(cancellationToken);
+            await unitOfWork.CommitAsync(cancellationToken);
         }
         catch
         {
-            await uow.RollbackAsync(cancellationToken);
+            await unitOfWork.RollbackAsync(cancellationToken);
             throw;
         }
     }

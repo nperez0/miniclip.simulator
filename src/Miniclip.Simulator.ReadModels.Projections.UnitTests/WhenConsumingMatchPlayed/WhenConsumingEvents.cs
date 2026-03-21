@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Miniclip.Core.EventSourcing;
+using Miniclip.Core.Kafka;
 using Miniclip.Core.ReadModels;
 using Miniclip.Core.Tests;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Events;
@@ -29,6 +30,7 @@ public abstract class WhenConsumingEvents : AsyncTestBase<TestableConsumer>
         ProcessedEvents = Fixture.Freeze<IProcessedEventsRepository>();
         Uow = Fixture.Freeze<IReadModelUnitOfWork>();
         Publisher = Fixture.Freeze<IPublisher>();
+        Fixture.Freeze<IConsumerRetryPolicy>();
 
         var sp = Substitute.For<IServiceProvider>();
         sp.GetService(typeof(IProcessedEventsRepository)).Returns(ProcessedEvents);
@@ -42,7 +44,7 @@ public abstract class WhenConsumingEvents : AsyncTestBase<TestableConsumer>
         ScopeFactory.CreateScope().Returns(scope);
 
         Fixture.Freeze<IConfiguration>();
-        Fixture.Freeze< ILogger<ProjectionsConsumerService<MatchPlayed>>>();
+        Fixture.Freeze<ILogger<ProjectionsConsumerService<MatchPlayed>>>();
     }
 
     protected override ValueTask WhenAsync()
@@ -68,3 +70,4 @@ public abstract class WhenConsumingEvents : AsyncTestBase<TestableConsumer>
         };
     }
 }
+

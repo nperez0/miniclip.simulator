@@ -7,4 +7,6 @@ public interface IEventStore<T> where T : AggregateRoot
     void Track(T aggregate);
 
     Task<T?> LoadAsync(Guid aggregateId, CancellationToken cancellationToken = default);
+
+    Task<IEnumerable<T>> GetAllAsync(CancellationToken cancellationToken = default);
 }

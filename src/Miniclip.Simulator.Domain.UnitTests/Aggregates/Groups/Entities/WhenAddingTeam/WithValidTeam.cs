@@ -28,6 +28,6 @@ public class WithValidTeam : WhenAddingTeam
     [Test]
     public void ShouldIncreaseTeamCount()
     {
-        Group!.Teams.Count().ShouldBe(1);
+        Group!.Teams.Count.ShouldBe(1);
     }
 }

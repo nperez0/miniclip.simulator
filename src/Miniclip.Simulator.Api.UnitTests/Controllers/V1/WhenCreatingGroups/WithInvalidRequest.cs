@@ -36,7 +36,7 @@ public class WithInvalidRequest : WhenCreatingGroups
         
         var errorProperty = badRequestResult.Value!.GetType().GetProperty("error");
         var errorMessage = errorProperty!.GetValue(badRequestResult.Value) as string;
-        errorMessage.ShouldContain("capacity");
+        errorMessage!.ShouldContain("capacity");
     }
 
     [Test]

@@ -11,7 +11,7 @@ The central aggregate of the simulator. Owns the full lifecycle of a football gr
 | `Id` | `Guid` | Assigned at creation |
 | `Name` | `string` | Must not be null or whitespace |
 | `Capacity` | `int` | 2–6 teams |
-| `Teams` | `IReadOnlyCollection<Team>` | Cannot exceed `Capacity`; no duplicate IDs |
+| `Teams` | `IReadOnlyCollection<TeamInfo>` | Cannot exceed `Capacity`; no duplicate IDs |
 | `Matches` | `IReadOnlyCollection<Match>` | Populated by fixture scheduling; owned by `Group` |
 
 **Business rules enforced by `Group`:**
@@ -24,7 +24,7 @@ The central aggregate of the simulator. Owns the full lifecycle of a football gr
 
 ### `Team` (Aggregate Root)
 
-Represents a football team. Referenced by `Match`, but not owned by `Group`.
+Represents a football team. Stored as an event stream in EventStoreDB (`team-{id}`). A fixed squad of 10 teams is seeded at startup by `TeamDataSeeder`.
 
 | Property | Type | Rule |
 |---|---|---|
@@ -32,7 +32,7 @@ Represents a football team. Referenced by `Match`, but not owned by `Group`.
 | `Name` | `string` | Must not be null or whitespace |
 | `Strength` | `int` | 0–100; directly influences Poisson expected goals |
 
-**Special value:** `Team.Dummy` is a static singleton used as a bye slot in Round Robin scheduling when the team count is odd. Matches involving the dummy are skipped.
+Emits `TeamRegistered` on creation. `Team` instances are converted to `TeamInfo` snapshots when added to a `Group` to respect aggregate boundaries.
 
 ---
 
@@ -43,7 +43,7 @@ Represents a single fixture inside a group.
 | Property | Type | Rule |
 |---|---|---|
 | `Id` | `Guid` | Assigned at creation |
-| `HomeTeam` / `AwayTeam` | `Team` | Must be different teams |
+| `HomeTeam` / `AwayTeam` | `TeamInfo` | Must be different teams |
 | `HomeScore` / `AwayScore` | `int` | Set only during simulation; must be ≥ 0 |
 | `Round` | `int` | The round in which this fixture is played |
 | `IsPlayed` | `bool` | Once `true`, the match cannot be simulated again |
@@ -52,21 +52,19 @@ Represents a single fixture inside a group.
 
 ## Domain Events
 
-### `MatchPlayed`
+All domain events implement `IDomainEvent` and carry an `AggregateId`.
 
-The **only** domain event in the system. Raised inside `Group.SimulateMatch` after a match result is set.
+| Event | Aggregate | Stream | Published to Kafka |
+|---|---|---|---|
+| `TeamRegistered` | `Team` | `team-{id}` | No (seeder only) |
+| `GroupCreated` | `Group` | `group-{id}` | No |
+| `TeamAdded` | `Group` | `group-{id}` | No |
+| `MatchScheduled` | `Group` | `group-{id}` | No |
+| `MatchPlayed` | `Group` | `group-{id}` | **Yes** — drives `GroupStandingsProjection` + `MatchResultProjection` |
 
-```csharp
-public record MatchPlayed(
-    Guid GroupId, string GroupName,
-    Guid MatchId,
-    Guid HomeTeamId, string HomeTeamName, int HomeTeamStrength, int HomeScore,
-    Guid AwayTeamId, string AwayTeamName, int AwayTeamStrength, int AwayScore,
-    int Round
-) : IDomainEvent;
-```
+Events are **enqueued** inside the aggregate via `AggregateRoot.Enqueue` during `Create`/command processing. `Apply(IDomainEvent)` is called only during stream **replay** from EventStoreDB — it is not invoked during normal command processing.
 
-Events are **enqueued** inside the aggregate (`AggregateRoot.Enqueue`) and only **dispatched** after the write transaction is committed by `IUnitOfWork`.
+After a command completes, `EventStoreCommandBehavior` commits the session (appends events to EventStoreDB), then `DomainEventPublisherBehavior` publishes committed events to Kafka.
 
 ---
 
@@ -80,10 +78,10 @@ Orchestrates scheduling for a `Group`. Uses a factory (`IFixtureSchedulerFactory
 
 **`RoundRobinScheduler`** — core algorithm:
 
-1. If team count is **odd**, inserts `Team.Dummy` to make it even.
+1. If team count is **odd**, inserts `TeamInfo.Dummy` (a static `(Guid.Empty, "Dummy", 0)` value object) to make it even.
 2. Total rounds = `capacity - 1` (even) or `capacity` (odd).
 3. In each round, pairs teams by index from both ends of a rotated list.
-4. Matches involving `Team.Dummy` are **skipped** (bye round for that real team).
+4. Matches involving `TeamInfo.Dummy` are **skipped** (bye round for that real team).
 5. Home/away assignment is balanced using per-team counters (`homeCounter`, `awayCounter`).
 
 > **Example:** 4 teams → 3 rounds × 2 matches = 6 total matches.  

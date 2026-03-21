@@ -14,7 +14,9 @@ public class SimulatorReadDbContext(DbContextOptions<SimulatorReadDbContext> opt
     {
         public SimulatorReadDbContext CreateDbContext(string[] args)
         {
-            var connectionString = "Server=localhost;Port=3306;Database=MiniclipSimulator_Read;User=root;Password=root;";
+            var connectionString = Environment.GetEnvironmentVariable("SimulatorRead") 
+                ?? "Server=localhost;Port=3306;Database=MiniclipSimulator_Read;User=root;Password=root;";
+
             var serverVersion = ServerVersion.AutoDetect(connectionString);
             var optionsBuilder = new DbContextOptionsBuilder<SimulatorReadDbContext>()
                 .UseMySql(connectionString, serverVersion);

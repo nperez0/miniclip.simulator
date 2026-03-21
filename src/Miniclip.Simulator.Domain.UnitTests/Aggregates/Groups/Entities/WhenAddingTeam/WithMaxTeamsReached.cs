@@ -44,6 +44,6 @@ public class WithMaxTeamsReached : WhenAddingTeam
     [Test]
     public void ShouldMaintainTeamCount()
     {
-        Group!.Teams.Count().ShouldBe(2);
+        Group!.Teams.Count.ShouldBe(2);
     }
 }

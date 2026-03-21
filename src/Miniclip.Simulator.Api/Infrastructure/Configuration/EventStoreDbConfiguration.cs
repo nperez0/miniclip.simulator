@@ -1,0 +1,32 @@
+﻿using EventStore.Client;
+using Miniclip.Core.Domain;
+using Miniclip.Core.EventSourcing;
+using Miniclip.Core.EventSourcing.EventStoreDB;
+using Miniclip.Simulator.Api.Infrastructure.Seeding;
+using Miniclip.Simulator.Domain.Aggregates.Groups.Entities;
+using Miniclip.Simulator.Domain.Aggregates.Teams.Entities;
+
+namespace Miniclip.Simulator.Api.Infrastructure.Configuration;
+
+public static class EventStoreDbConfiguration
+{
+    public static IServiceCollection AddEventStoreDbDependencies(
+        this IServiceCollection services,
+        IConfiguration configuration)
+    {
+        var connectionString = configuration.GetConnectionString("EventStore")!;
+        var settings = EventStoreClientSettings.Create(connectionString);
+
+        services.AddSingleton(_ => new EventStoreClient(settings));
+        services.AddSingleton<IEventSerializer, SystemTextJsonEventSerializer>();
+        services.AddScoped<IEventStoreSession, EventStoreSession>();
+        services.AddScoped(typeof(IEventStore<>), typeof(EventStoreDbEventStore<>));
+        
+        services.AddScoped<IAggregateRepository<Group>, AggregateRepository<Group>>();
+        services.AddScoped<IAggregateRepository<Team>, AggregateRepository<Team>>();
+
+        services.AddHostedService<TeamDataSeeder>();
+
+        return services;
+    }
+}

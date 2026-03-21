@@ -1,5 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Miniclip.Core.Domain;
+using Miniclip.Core.ReadModels;
 
 namespace Miniclip.Core.EF;
 
@@ -9,7 +9,7 @@ public class Repository<T>(DbContext context) : IRepository<T>
     public virtual async Task<IEnumerable<T>> GetAllAsync(CancellationToken cancellationToken)
         => await context
             .Set<T>()
-            .ToListAsync(cancellationToken);
+            .ToArrayAsync(cancellationToken);
 
     public virtual Task<T?> FindAsync(Guid id, CancellationToken cancellationToken)
         => context

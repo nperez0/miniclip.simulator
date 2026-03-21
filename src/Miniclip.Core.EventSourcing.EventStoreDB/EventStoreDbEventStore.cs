@@ -41,6 +41,45 @@ public sealed class EventStoreDbEventStore<T>(
         return aggregate;
     }
 
+    public async Task<IEnumerable<T>> GetAllAsync(CancellationToken cancellationToken = default)
+    {
+        var categoryStream = $"$ce-{typeof(T).Name.ToLowerInvariant()}";
+        var prefix = $"{typeof(T).Name.ToLowerInvariant()}-";
+
+        var result = client.ReadStreamAsync(
+            Direction.Forwards,
+            categoryStream,
+            StreamPosition.Start,
+            resolveLinkTos: true,
+            cancellationToken: cancellationToken);
+
+        if (await result.ReadState == ReadState.StreamNotFound)
+            return [];
+
+        var aggregates = new Dictionary<Guid, T>();
+
+        await foreach (var resolvedEvent in result)
+        {
+            var streamId = resolvedEvent.Event.EventStreamId;
+            var id = Guid.Parse(streamId[prefix.Length..]);
+
+            if (!aggregates.TryGetValue(id, out var aggregate))
+            {
+                aggregate = (T)Activator.CreateInstance(typeof(T), nonPublic: true)!;
+                aggregates[id] = aggregate;
+            }
+
+            var domainEvent = serializer.Deserialize(
+                resolvedEvent.Event.EventType,
+                resolvedEvent.Event.Data.ToArray());
+
+            var version = (long)resolvedEvent.Event.EventNumber.ToUInt64();
+            aggregate.ReplayEvent(domainEvent, version);
+        }
+
+        return aggregates.Values;
+    }
+
     private async Task<IDomainEvent[]> AppendAsync(T aggregate, CancellationToken cancellationToken)
     {
         var events = aggregate.DequeueUncommittedEvents();

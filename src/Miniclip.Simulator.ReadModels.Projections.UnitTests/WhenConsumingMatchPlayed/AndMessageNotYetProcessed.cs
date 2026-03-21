@@ -37,7 +37,7 @@ public class AndMessageNotYetProcessed : WhenConsumingEvents
 
     [Test]
     public void ShouldRecordEventAsProcessed()
-        => ProcessedEvents.Received(1).Add(eventId, "simulator-projections");
+        => ProcessedEvents.Received(1).Add(eventId, "simulator-projections-match-played");
 
     [Test]
     public async Task ShouldSaveChanges()

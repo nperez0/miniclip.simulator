@@ -8,8 +8,8 @@ using Miniclip.Simulator.Domain.Aggregates.Teams.Entities;
 namespace Miniclip.Simulator.Application.Commands.Groups.V1.Generation;
 
 public class GenerateGroupCommandHandler(
-    IRepository<Group> groupsRepository,
-    IRepository<Team> teamsRepository,
+    IAggregateRepository<Group> groupsRepository,
+    IAggregateRepository<Team> teamsRepository,
     IFixtureSchedulerService fixtureSchedulerService)
     : IRequestHandler<GenerateGroupCommand, Result<Guid>>
 {

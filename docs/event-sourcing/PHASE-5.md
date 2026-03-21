@@ -1,9 +1,8 @@
 # Phase 5 — Testing & Hardening
 
-> **Status:** ⬜ Pending
+> **Status:** ✅ Done
 > **Branch:** `feat/phase-5-hardening`
 > **Depends on:** Phase 4 complete ✅
-> **Must not break:** all existing API behaviour and tests must remain green during the transition
 
 ---
 
@@ -15,10 +14,9 @@ persisted read model rows — without requiring a running Kafka broker.
 
 ---
 
-## Current State (after Phase 4)
+## Issues Addressed
 
-`ProjectionsConsumerService<MatchPlayed>` consumes events, checks idempotency, and dispatches
-via Mediator. Four correctness issues exist:
+`ProjectionsConsumerService<MatchPlayed>` had four correctness issues that were fixed in this phase:
 
 1. **No retry logic** — a transient failure (e.g. DB timeout) causes the message offset to
    not be committed. The consumer logs and continues, leaving the message to be re-read on
@@ -41,7 +39,7 @@ via Mediator. Four correctness issues exist:
 
 ---
 
-## Workstream A — Consumer Resilience (`Miniclip.Core.Kafka`)
+## Workstream A — Consumer Resilience (`Miniclip.Core.Kafka`) ✅
 
 ### Problem
 
@@ -120,17 +118,17 @@ that need to write to a dead-letter Kafka topic can override it.
 
 ### Definition of Done
 
-- [ ] Transient failure retried up to `MaxAttempts` with `policy.Delay(attempt)` backoff
-- [ ] After all retries exhausted, `OnDeadLetterAsync` is called and the offset is committed
-- [ ] `OperationCanceledException` is never retried — still breaks the loop immediately
-- [ ] Default policy is `ExponentialBackoffRetryPolicy(maxAttempts: 3, baseDelay: 1 s)`
-- [ ] Unit tests cover: success on first try, success on retry N, exhausted retries, cancellation
+- [x] Transient failure retried up to `MaxAttempts` with `policy.Delay(attempt)` backoff
+- [x] After all retries exhausted, `OnDeadLetterAsync` is called and the offset is committed
+- [x] `OperationCanceledException` is never retried — still breaks the loop immediately
+- [x] Default policy is `ExponentialBackoffRetryPolicy(maxAttempts: 3, baseDelay: 1 s)`
+- [x] Unit tests cover: success on first try, success on retry N, exhausted retries, cancellation
 
 ---
 
-## Workstream B — Consumer Correctness (`Miniclip.Simulator.ReadModels.Projections`)
+## Workstream B — Consumer Correctness (`Miniclip.Simulator.ReadModels.Projections`) ✅
 
-### Problem 1: Deserialisation before idempotency check
+### Problem 1:
 
 ```csharp
 // Current
@@ -182,14 +180,14 @@ public void ShouldNotDeserializePayload()
 
 ### Definition of Done
 
-- [ ] `processedEvents.ContainsAsync` is called before `serializer.Deserialize`
-- [ ] `ConsumerGroupId` returns `"simulator-projections-match-played"` for `TEvent = MatchPlayed`
-- [ ] `AndMessageAlreadyProcessed.ShouldNotDeserializePayload` test exists and passes
-- [ ] All 14 consumer unit tests green
+- [x] `processedEvents.ContainsAsync` is called before `serializer.Deserialize`
+- [x] `ConsumerGroupId` returns `"simulator-projections-match-played"` for `TEvent = MatchPlayed`
+- [x] `AndMessageAlreadyProcessed.ShouldNotDeserializePayload` test exists and passes
+- [x] All 14 consumer unit tests green
 
 ---
 
-## Workstream C — Write-Pipeline Cleanup (`Miniclip.Simulator.Api`)
+## Workstream C — Write-Pipeline Cleanup (`Miniclip.Simulator.Api`) ✅
 
 ### Problem
 
@@ -224,12 +222,12 @@ test changes are needed.
 
 ### Definition of Done
 
-- [ ] `ReadModelUnitOfWorkBehavior<,>` not registered in `MediatorConfiguration`
-- [ ] All existing command handler tests pass
+- [x] `ReadModelUnitOfWorkBehavior<,>` not registered in `MediatorConfiguration`
+- [x] All existing command handler tests pass
 
 ---
 
-## Workstream D — Projection Integration Tests (new project)
+## Workstream D — Projection Integration Tests ✅
 
 ### Problem
 
@@ -304,9 +302,43 @@ protected override async ValueTask WhenAsync()
 
 ### Definition of Done
 
-- [ ] `WithFirstMatchInGroup` — one `MatchResultModel` row with correct team IDs and scores
-- [ ] `WithFirstMatchInGroup` — two `GroupStandingsModel` rows with correct W/D/L/GF/GA
-- [ ] `WithSubsequentMatchSameGroup` — positions recalculated correctly after two matches
+- [x] `WithFirstMatchInGroup` — one `MatchResultModel` row with correct team IDs and scores
+- [x] `WithFirstMatchInGroup` — two `GroupStandingsModel` rows with correct W/D/L/GF/GA
+- [x] `WithSubsequentMatchSameGroup` — positions recalculated correctly after two matches
+
+---
+
+## Additional Deliverables (Beyond Original Scope)
+
+These items were implemented as part of Phase 5 but were not in the original workstream spec.
+
+### `KafkaConsumerService` Refactor
+
+`KafkaConsumerService` was made abstract; `IConsumer<string,byte[]>` is now built internally
+via `BuildConsumer(ConsumerConfig)` (abstract) and `ConsumerGroupId` (abstract property).
+`IConfiguration` is injected to build the consumer config at startup. This eliminates the
+factory lambda in `AddHostedService` that previously required scoped services to be resolved
+from the root provider.
+
+### Configuration Split
+
+`DatabaseConfiguration` was decomposed into three focused extension methods:
+
+| Class | Concern |
+|---|---|
+| `ReadModelsConfiguration` | `SimulatorReadDbContext`, read/write repositories, `IReadModelUnitOfWork` |
+| `EventStoreDbConfiguration` | EventStoreDB client, `IAggregateRepository<T>`, `TeamDataSeeder` |
+| `KafkaConfiguration` | `KafkaEventBus`, `ProjectionsConsumerService<MatchPlayed>` |
+
+### Team → EventStoreDB Migration
+
+`Team` aggregate moved from MySQL to EventStoreDB:
+
+- `TeamRegistered` domain event introduced
+- `Team.cs` updated with private parameterless constructor, `Apply(IDomainEvent)`, and `Create` that sets state directly and enqueues `TeamRegistered`
+- `GetAllAsync` implemented across the full abstraction stack using the `$ce-team` category stream
+- `TeamDataSeeder` (`IHostedService`) seeds 10 fixed-GUID teams on startup; idempotent via `FindAsync`
+- EF migration `20260322000000_DropLegacyTables.cs` drops all legacy write-side tables (Groups, GroupTeams, Matches, Teams)
 
 ---
 
@@ -325,9 +357,11 @@ protected override async ValueTask WhenAsync()
 
 | Project | Workstream | Change |
 |---|---|---|
-| `Miniclip.Core.Kafka` | A | `IConsumerRetryPolicy`, `ExponentialBackoffRetryPolicy`, updated `KafkaConsumerService` |
-| `Miniclip.Core.Kafka.UnitTests` *(new)* | A | Retry loop unit tests |
-| `Miniclip.Simulator.ReadModels.Projections` | B | Reorder `HandleAsync`; update `ConsumerGroupId` |
-| `Miniclip.Simulator.ReadModels.Projections.UnitTests` | B | New assertion in `AndMessageAlreadyProcessed` |
-| `Miniclip.Simulator.Api` | C | Remove `ReadModelUnitOfWorkBehavior` registration |
-| `Miniclip.Simulator.ReadModels.Projections.IntegrationTests` *(new)* | D | New project |
+| `Miniclip.Core.Kafka` | A + Extra | `IConsumerRetryPolicy`, `ExponentialBackoffRetryPolicy`; abstract `BuildConsumer`/`ConsumerGroupId`; retry loop with `OnDeadLetterAsync` |
+| `Miniclip.Core.Kafka.UnitTests` | A | Retry loop unit tests |
+| `Miniclip.Simulator.ReadModels.Projections` | B + Extra | Reordered `HandleAsync`; per-type `ConsumerGroupId`; `IServiceScopeFactory` per-message scoping |
+| `Miniclip.Simulator.ReadModels.Projections.UnitTests` | B | `ShouldNotDeserializePayload` assertion added to `AndMessageAlreadyProcessed` |
+| `Miniclip.Simulator.Api` | C + Extra | Removed `ReadModelUnitOfWorkBehavior` registration; config split into `ReadModelsConfiguration`, `EventStoreDbConfiguration`, `KafkaConfiguration` |
+| `Miniclip.Simulator.ReadModels.Projections.IntegrationTests` | D | New integration test project |
+| `Miniclip.Simulator.Domain` | Extra | `TeamRegistered` event; `Team.cs` made event-sourced |
+| `Miniclip.Simulator.Infrastructure.Write` | Extra | EF migration dropping all legacy write-side aggregate tables |

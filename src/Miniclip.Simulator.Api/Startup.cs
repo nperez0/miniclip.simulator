@@ -11,13 +11,15 @@ public class Startup(IConfiguration configuration)
         services.AddApiVersioningConfiguration();
         services.AddVersionedOpenApi();
 
-        services.AddMediatorServices();
-        services.AddDatabaseDependencies(configuration);
+        services.AddKafkaDependencies(configuration);
+        services.AddMediatorDependencies();
+        services.AddEventStoreDbDependencies(configuration);
+        services.AddReadModelsDbDependencies(configuration);
         services.AddDomainDependencies();
         services.AddProjectionsDependencies();
     }
 
-    public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+    public void Configure(IApplicationBuilder app)
     {
         app.InitializeDatabases();
 
