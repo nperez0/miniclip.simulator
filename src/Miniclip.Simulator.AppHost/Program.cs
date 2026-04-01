@@ -9,7 +9,7 @@ var writeDb = mysql.AddDatabase("SimulatorWrite", "MiniclipSimulator_Write");
 var readDb = mysql.AddDatabase("SimulatorRead", "MiniclipSimulator_Read");
 
 builder.AddContainer("eventstoredb", "eventstore/eventstore")
-    .WithImageTag("24.10-bookworm-slim")
+    .WithImageTag("latest")
     .WithEnvironment("EVENTSTORE_CLUSTER_SIZE", "1")
     .WithEnvironment("EVENTSTORE_RUN_PROJECTIONS", "All")
     .WithEnvironment("EVENTSTORE_START_STANDARD_PROJECTIONS", "true")

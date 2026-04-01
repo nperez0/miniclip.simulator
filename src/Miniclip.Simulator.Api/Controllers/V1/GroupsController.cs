@@ -53,15 +53,15 @@ public class GroupsController(IMediator mediator) : ControllerBase
     /// <summary>
     /// Gets the standings (rankings) for a specific group.
     /// </summary>
-    /// <param name="id">The unique identifier of the group.</param>
+    /// <param name="groupId">The unique identifier of the group.</param>
     /// <returns>A list of team standings for the specified group.</returns>
-    [HttpGet("{id}/standings")]
+    [HttpGet("{groupId}/standings")]
     [ProducesResponseType(typeof(IEnumerable<GroupStandingsDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetStandings(
-        Guid id,
+        Guid groupId,
         CancellationToken cancellationToken)
     {
-        var query = new GroupStandingsQuery(id);
+        var query = new GroupStandingsQuery(groupId);
         var result = await mediator.Send(query, cancellationToken);
 
         return result.ToActionResult();

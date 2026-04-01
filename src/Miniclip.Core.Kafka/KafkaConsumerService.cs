@@ -34,9 +34,16 @@ public abstract class KafkaConsumerService(
                 result = consumer.Consume(stoppingToken);
             }
             catch (OperationCanceledException) { break; }
+            catch (ConsumeException ex) when (ex.Error.Code == ErrorCode.UnknownTopicOrPart)
+            {
+                logger.LogWarning("Topic not yet available: {Topics}. Retrying in 5s", topics);
+                await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
+                continue;
+            }
             catch (Exception ex)
             {
                 logger.LogError(ex, "Error consuming from {Topics}", topics);
+                await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
                 continue;
             }
 
