@@ -6,16 +6,14 @@ namespace Miniclip.Core.Kafka.UnitTests.WhenExecutingConsumer;
 [TestFixture]
 public class AndHandlerFailsThenSucceeds : WhenExecuting
 {
-    protected override void Given()
+    protected override async Task GivenAsync()
     {
-        base.Given();
+        await base.GivenAsync();
 
         var callCount = 0;
-        HandleAction = () =>
-        {
-            if (++callCount == 1) throw new InvalidOperationException("Transient failure");
-            return Task.CompletedTask;
-        };
+        HandleAction = () => ++callCount == 1 
+            ? throw new InvalidOperationException("Transient failure") 
+            : Task.CompletedTask;
     }
 
     [Test]

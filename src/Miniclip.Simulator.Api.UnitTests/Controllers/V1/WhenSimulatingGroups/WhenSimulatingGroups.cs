@@ -3,7 +3,6 @@ using Mediator;
 using Microsoft.AspNetCore.Mvc;
 using Miniclip.Core.Tests;
 using Miniclip.Simulator.Api.Controllers.V1;
-using Miniclip.Simulator.Application.Commands.Groups.V1.Simulation;
 
 namespace Miniclip.Simulator.Api.UnitTests.Controllers.V1.WhenSimulatingGroups;
 
@@ -13,9 +12,11 @@ public abstract class WhenSimulatingGroups : AsyncTestBase<GroupsController>
     protected Guid GroupId { get; set; }
     protected IActionResult ActionResult { get; set; } = null!;
 
-    protected override void Given()
+    protected override Task GivenAsync()
     {
         Mediator = Fixture.Freeze<IMediator>();
+
+        return Task.CompletedTask;
     }
 
     protected override GroupsController CreateSystemUnderTest()
@@ -23,7 +24,7 @@ public abstract class WhenSimulatingGroups : AsyncTestBase<GroupsController>
         return new GroupsController(Mediator);
     }
 
-    protected override async ValueTask WhenAsync()
+    protected override async Task WhenAsync()
     {
         ActionResult = await Sut!.SimulateGroup(GroupId, CancellationToken.None).ConfigureAwait(false);
     }

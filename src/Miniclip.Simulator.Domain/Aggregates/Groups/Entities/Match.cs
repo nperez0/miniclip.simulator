@@ -31,7 +31,7 @@ public class Match
     public static Result<Match> Create(Guid id, TeamInfo homeTeam, TeamInfo awayTeam, int round)
     {
         if (homeTeam == awayTeam)
-            return Result.Failure<Match>(GroupGenerateFixturesException.SameTeam());
+            return Result.Failure<Match>(GroupGenerateFixturesErrors.SameTeam());
 
         return new Match(id, homeTeam, awayTeam, round);
     }
@@ -42,10 +42,10 @@ public class Match
     public Result SimulateResult(int homeScore, int awayScore)
     {
         if (homeScore < 0 || awayScore < 0)
-            return Result.Failure(GroupSimulationException.NegativeScore());
+            return Result.Failure(GroupSimulationErrors.NegativeScore());
 
         if (IsPlayed)
-            return Result.Failure(GroupSimulationException.AlreadyPlayed(Id));
+            return Result.Failure(GroupSimulationErrors.AlreadyPlayed(Id));
 
         HomeScore = homeScore;
         AwayScore = awayScore;

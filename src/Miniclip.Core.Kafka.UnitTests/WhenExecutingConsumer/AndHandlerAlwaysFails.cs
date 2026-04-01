@@ -7,9 +7,9 @@ namespace Miniclip.Core.Kafka.UnitTests.WhenExecutingConsumer;
 [TestFixture]
 public class AndHandlerAlwaysFails : WhenExecuting
 {
-    protected override void Given()
+    protected override async Task GivenAsync()
     {
-        base.Given();
+        await base.GivenAsync();
         HandleAction = () => throw new InvalidOperationException("Permanent failure");
     }
 

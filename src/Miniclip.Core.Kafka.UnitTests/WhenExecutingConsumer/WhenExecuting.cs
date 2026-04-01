@@ -10,7 +10,7 @@ public abstract class WhenExecuting : AsyncTestBase<TestableKafkaConsumer>
     protected ConsumeResult<string, byte[]> TheResult { get; private set; } = null!;
     protected Func<Task> HandleAction { get; set; } = () => Task.CompletedTask;
 
-    protected override void Given()
+    protected override Task GivenAsync()
     {
         MockConsumer = Substitute.For<IConsumer<string, byte[]>>();
         TheResult = new ConsumeResult<string, byte[]>
@@ -21,6 +21,8 @@ public abstract class WhenExecuting : AsyncTestBase<TestableKafkaConsumer>
         var consumeCount = 0;
         MockConsumer.Consume(Arg.Any<CancellationToken>())
             .Returns(_ => consumeCount++ == 0 ? TheResult : throw new OperationCanceledException());
+
+        return Task.CompletedTask;
     }
 
     protected override TestableKafkaConsumer CreateSystemUnderTest()
@@ -29,5 +31,5 @@ public abstract class WhenExecuting : AsyncTestBase<TestableKafkaConsumer>
             HandleAction = HandleAction
         };
 
-    protected override ValueTask WhenAsync() => new(Sut!.RunAsync(CancellationToken.None));
+    protected override Task WhenAsync() => Sut!.RunAsync(CancellationToken.None);
 }

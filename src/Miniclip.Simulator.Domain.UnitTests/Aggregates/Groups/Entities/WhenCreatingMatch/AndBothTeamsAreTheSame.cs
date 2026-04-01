@@ -16,12 +16,12 @@ public class AndBothTeamsAreTheSame : WhenCreatingMatch
     }
 
     [Test]
-    public void ShouldReturnAnException()
+    public void ShouldReturnAnError()
     {
         Result.ShouldNotBeNull();
         Result!.IsFailure.ShouldBeTrue();
         Result.Value.ShouldBeNull();
-        Result.Exception.ShouldBeOfType<GroupGenerateFixturesException>();
-        Result.Exception.Message.ShouldContain("cannot play against itself");
+        Result.Error.Code.ShouldBe("GROUP_SAME_TEAM");
+        Result.Error.Message.ShouldBe(GroupGenerateFixturesErrors.SameTeam().Message);
     }
 }

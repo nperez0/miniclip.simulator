@@ -22,7 +22,7 @@ public class GroupSimulator : IGroupSimulator
             .ToArray();
 
         if (matchesNotPlayed.Length == 0)
-            return Result.Failure(GroupSimulationException.AllMatchesPlayed());
+            return Result.Failure(GroupSimulationErrors.AllMatchesPlayed());
 
         return matchesNotPlayed
             .Traverse(match => SimulateMatch(group, match, matchSimulator));

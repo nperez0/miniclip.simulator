@@ -29,10 +29,10 @@ public class WithMaxTeamsReached : WhenAddingTeam
     }
 
     [Test]
-    public void ShouldReturnMaxTeamsReachedException()
+    public void ShouldReturnMaxTeamsReachedError()
     {
-        Result!.Exception.ShouldBeOfType<GroupAddTeamException>();
-        Result!.Exception.Message.ShouldContain("maximum");
+        Result!.Error.Code.ShouldBe("GROUP_MAX_TEAMS_REACHED");
+        Result!.Error.Message.ShouldBe(GroupAddTeamErrors.MaxTeamsReached(Group!.Capacity).Message);
     }
 
     [Test]

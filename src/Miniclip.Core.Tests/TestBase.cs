@@ -7,20 +7,13 @@ namespace Miniclip.Core.Tests;
 public abstract class TestBase<TSut>
     where TSut : class
 {
-    private bool recordException;
+    private bool recordException = false;
 
     protected TSut? Sut { get; private set; }
 
-    protected IFixture Fixture { get; private set; }
+    protected IFixture Fixture { get; private set; } = new Fixture().Customize(new AutoNSubstituteCustomization());
 
     protected Exception? ThrownException { get; private set; }
-
-    protected TestBase()
-    {
-        recordException = false;
-
-        Fixture = new Fixture().Customize(new AutoNSubstituteCustomization());
-    }
 
     [OneTimeSetUp]
     protected virtual void SetUp()

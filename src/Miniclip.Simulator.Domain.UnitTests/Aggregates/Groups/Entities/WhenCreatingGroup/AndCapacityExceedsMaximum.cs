@@ -24,9 +24,9 @@ public class AndCapacityExceedsMaximum(int capacity) : WhenCreatingGroup
     }
 
     [Test]
-    public void ShouldReturnInvalidCapacityException()
+    public void ShouldReturnInvalidCapacityError()
     {
-        Result!.Exception.ShouldBeOfType<GroupCreationException>();
-        Result.Exception!.Message.ShouldContain("between 2 and 6");
+        Result!.Error.Code.ShouldBe("GROUP_CAPACITY_INVALID");
+        Result.Error.Message.ShouldBe(GroupCreationErrors.InvalidCapacity(Capacity, 2, 6).Message);
     }
 }

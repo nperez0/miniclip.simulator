@@ -1,19 +1,19 @@
 ﻿namespace Miniclip.Core;
 
-public class Result(bool isSuccess, ExceptionBase exception)
+public class Result(bool isSuccess, Error error)
 {
     public bool IsSuccess { get; } = isSuccess;
     public bool IsFailure => !IsSuccess;
-    public ExceptionBase Exception { get; } = exception;
+    public Error Error { get; } = error;
 
-    public static Result Success() => new(true, EmptyException.Instance);
-    public static Result Failure(ExceptionBase exception) => new(false, exception);
+    public static Result Success() => new(true, Error.None);
+    public static Result Failure(Error error) => new(false, error);
 
-    public static Result<T> Success<T>(T value) => new(value, true, EmptyException.Instance);
-    public static Result<T> Failure<T>(ExceptionBase exception) => new(default, false, exception);
+    public static Result<T> Success<T>(T value) => new(value, true, Error.None);
+    public static Result<T> Failure<T>(Error error) => new(default, false, error);
 }
 
-public class Result<T>(T? value, bool isSuccess, ExceptionBase exception) : Result(isSuccess, exception)
+public class Result<T>(T? value, bool isSuccess, Error error) : Result(isSuccess, error)
 {
     public T? Value { get; } = value;
 

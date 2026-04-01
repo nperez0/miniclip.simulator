@@ -7,9 +7,9 @@ namespace Miniclip.Simulator.ReadModels.Projections.UnitTests.WhenConsumingMatch
 [TestFixture]
 public class AndMessageAlreadyProcessed : WhenConsumingEvents
 {
-    protected override void Given()
+    protected override async Task GivenAsync()
     {
-        base.Given();
+        await base.GivenAsync();
 
         ConsumeResult = BuildConsumeResult(Guid.NewGuid().ToString(), "MatchPlayed");
 

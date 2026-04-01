@@ -17,14 +17,16 @@ public abstract class WhenGeneratingGroups : AsyncTestBase<GenerateGroupCommandH
     protected GenerateGroupCommand Command { get; set; } = null!;
     protected Result<Guid> Result { get; set; } = null!;
 
-    protected override void Given()
+    protected override Task GivenAsync()
     {
         GroupRepository = Fixture.Freeze<IAggregateRepository<Group>>();
         TeamRepository = Fixture.Freeze<IAggregateRepository<Team>>();
         FixtureSchedulerService = Fixture.Freeze<IFixtureSchedulerService>();
+
+        return Task.CompletedTask;
     }
 
-    protected override async ValueTask WhenAsync()
+    protected override async Task WhenAsync()
     {
         Result = await Sut!.Handle(Command, CancellationToken.None).ConfigureAwait(false);
     }

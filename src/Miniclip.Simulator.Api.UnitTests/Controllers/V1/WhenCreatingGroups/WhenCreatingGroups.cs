@@ -13,9 +13,11 @@ public abstract class WhenCreatingGroups : AsyncTestBase<GroupsController>
     protected GenerateGroupRequest Request { get; set; } = null!;
     protected IActionResult ActionResult { get; set; } = null!;
 
-    protected override void Given()
+    protected override Task GivenAsync()
     {
         Mediator = Fixture.Freeze<IMediator>();
+
+        return Task.CompletedTask;
     }
 
     protected override GroupsController CreateSystemUnderTest()
@@ -23,7 +25,7 @@ public abstract class WhenCreatingGroups : AsyncTestBase<GroupsController>
         return new GroupsController(Mediator);
     }
 
-    protected override async ValueTask WhenAsync()
+    protected override async Task WhenAsync()
     {
         ActionResult = await Sut!.CreateGroup(Request, CancellationToken.None).ConfigureAwait(false);
     }

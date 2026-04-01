@@ -24,10 +24,10 @@ public class WithDuplicateTeam : WhenAddingTeam
     }
 
     [Test]
-    public void ShouldReturnTeamAlreadyExistsException()
+    public void ShouldReturnTeamAlreadyExistsError()
     {
-        Result!.Exception.ShouldBeOfType<GroupAddTeamException>();
-        Result!.Exception.Message.ShouldContain("already exists");
+        Result!.Error.Code.ShouldBe("GROUP_TEAM_ALREADY_EXISTS");
+        Result!.Error.Message.ShouldBe(GroupAddTeamErrors.TeamAlreadyExists(Team!.Id).Message);
     }
 
     [Test]

@@ -15,13 +15,15 @@ public abstract class WhenSimulatingGroups : AsyncTestBase<SimulateGroupCommandH
     protected SimulateGroupCommand Command { get; set; } = null!;
     protected Result Result { get; set; } = null!;
 
-    protected override void Given()
+    protected override Task GivenAsync()
     {
         GroupRepository = Fixture.Freeze<IAggregateRepository<Group>>();
         GroupSimulator = Fixture.Freeze<IGroupSimulator>();
+
+        return Task.CompletedTask;
     }
 
-    protected override async ValueTask WhenAsync()
+    protected override async Task WhenAsync()
     {
         Result = await Sut!.Handle(Command, CancellationToken.None).ConfigureAwait(false);
     }

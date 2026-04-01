@@ -33,10 +33,10 @@ public class Group : AggregateRoot
     public static Result<Group> Create(Guid id, string? name, int capacity)
     {
         if (name.IsNullOrWhiteSpace())
-            return Result.Failure<Group>(GroupCreationException.EmptyName(name));
+            return Result.Failure<Group>(GroupCreationErrors.EmptyName(name));
 
         if (capacity < MinCapacity || capacity > MaxCapacity)
-            return Result.Failure<Group>(GroupCreationException.InvalidCapacity(capacity, MinCapacity, MaxCapacity));
+            return Result.Failure<Group>(GroupCreationErrors.InvalidCapacity(capacity, MinCapacity, MaxCapacity));
 
         var group = new Group(id, name, capacity);
         group.Enqueue(new GroupCreated(id, name, capacity));
@@ -47,10 +47,10 @@ public class Group : AggregateRoot
     public Result AddTeam(TeamInfo teamInfo)
     {
         if (teams.Count >= Capacity)
-            return Result.Failure(GroupAddTeamException.MaxTeamsReached(Capacity));
+            return Result.Failure(GroupAddTeamErrors.MaxTeamsReached(Capacity));
 
         if (teams.Any(x => x.Id == teamInfo.Id))
-            return Result.Failure(GroupAddTeamException.TeamAlreadyExists(teamInfo.Id));
+            return Result.Failure(GroupAddTeamErrors.TeamAlreadyExists(teamInfo.Id));
 
         teams.Add(teamInfo);
         Enqueue(new TeamAdded(Id, teamInfo.Id, teamInfo.Name, teamInfo.Strength));
@@ -71,7 +71,7 @@ public class Group : AggregateRoot
         var match = matches.FirstOrDefault(m => m.Id == matchId);
 
         if (match == null)
-            return Result.Failure(GroupSimulationException.MatchNotFound(matchId));
+            return Result.Failure(GroupSimulationErrors.MatchNotFound(matchId));
 
         return match.SimulateResult(homeScore, awayScore)
             .Tap(() =>

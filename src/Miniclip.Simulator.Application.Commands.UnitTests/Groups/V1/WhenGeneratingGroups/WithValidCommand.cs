@@ -10,9 +10,9 @@ namespace Miniclip.Simulator.Application.Commands.UnitTests.Groups.V1.WhenGenera
 
 public class WithValidCommand : WhenGeneratingGroups
 {
-    protected override void Given()
+    protected override async Task GivenAsync()
     {
-        base.Given();
+        await base.GivenAsync();
 
         Command = new GenerateGroupCommand("Group A", 4);
 
@@ -26,7 +26,7 @@ public class WithValidCommand : WhenGeneratingGroups
             Team.Create(Guid.NewGuid(), "Team 6", 55).Value!
         };
 
-        TeamRepository.GetAllAsync(default)
+        TeamRepository.GetAllAsync(CancellationToken.None)
             .ReturnsForAnyArgs(Task.FromResult<IEnumerable<Team>>(availableTeams));
 
         FixtureSchedulerService.GenerateFixtures(Arg.Any<Group>())

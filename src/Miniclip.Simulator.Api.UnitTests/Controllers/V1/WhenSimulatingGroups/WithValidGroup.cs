@@ -10,9 +10,9 @@ namespace Miniclip.Simulator.Api.UnitTests.Controllers.V1.WhenSimulatingGroups;
 
 public class WithValidGroup : WhenSimulatingGroups
 {
-    protected override void Given()
+    protected override async Task GivenAsync()
     {
-        base.Given();
+        await base.GivenAsync();
 
         GroupId = Guid.NewGuid();
 

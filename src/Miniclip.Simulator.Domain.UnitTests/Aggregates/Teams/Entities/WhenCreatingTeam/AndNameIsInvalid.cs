@@ -1,5 +1,4 @@
 using Shouldly;
-using Miniclip.Simulator.Domain.Aggregates.Teams.Exceptions;
 using NUnit.Framework;
 
 namespace Miniclip.Simulator.Domain.UnitTests.Aggregates.Teams.Entities.WhenCreatingTeam;
@@ -17,12 +16,12 @@ public class AndNameIsInvalid(string name) : WhenCreatingTeam
     }
 
     [Test]
-    public void ShouldReturnAnException()
+    public void ShouldReturnAnError()
     {
         Result.ShouldNotBeNull();
         Result.IsFailure.ShouldBeTrue();
         Result.Value.ShouldBeNull();
-        Result.Exception.ShouldBeOfType<TeamCreationException>();
-        Result.Exception.Message.ShouldBe($"Team name '{name}' cannot be empty.");
+        Result.Error.Code.ShouldBe("TEAM_NAME_EMPTY");
+        Result.Error.Message.ShouldBe($"Team name '{name}' cannot be empty.");
     }
 }

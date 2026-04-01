@@ -16,7 +16,7 @@ public class FixtureSchedulerService : IFixtureSchedulerService
     public Result GenerateFixtures(Group group)
     {
         if (group.Teams.Count < group.Capacity)
-            return Result.Failure(GroupGenerateFixturesException.InvalidTeamCount(group.Capacity, group.Teams.Count));
+            return Result.Failure(GroupGenerateFixturesErrors.InvalidTeamCount(group.Capacity, group.Teams.Count));
 
         var fixtureScheduler = fixtureSchedulerFactory.Create(group);
 

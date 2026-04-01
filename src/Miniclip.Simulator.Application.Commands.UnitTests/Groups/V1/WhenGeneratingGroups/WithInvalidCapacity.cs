@@ -10,9 +10,9 @@ namespace Miniclip.Simulator.Application.Commands.UnitTests.Groups.V1.WhenGenera
 
 public class WithInvalidCapacity : WhenGeneratingGroups
 {
-    protected override void Given()
+    protected override async Task GivenAsync()
     {
-        base.Given();
+        await base.GivenAsync();
 
         Command = new GenerateGroupCommand("Group A", 10);
 
@@ -22,7 +22,7 @@ public class WithInvalidCapacity : WhenGeneratingGroups
             Team.Create(Guid.NewGuid(), "Team 2", 75).Value!
         };
 
-        TeamRepository.GetAllAsync(default)
+        TeamRepository.GetAllAsync(CancellationToken.None)
             .ReturnsForAnyArgs(Task.FromResult<IEnumerable<Team>>(availableTeams));
     }
 

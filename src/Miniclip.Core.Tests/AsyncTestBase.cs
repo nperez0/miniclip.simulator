@@ -11,23 +11,16 @@ public abstract class AsyncTestBase<TSut>
 
     protected TSut? Sut { get; private set; }
 
-    protected IFixture Fixture { get; private set; }
+    protected IFixture Fixture { get; } = new Fixture().Customize(new AutoNSubstituteCustomization());
 
     protected Exception? ThrownException { get; private set; }
-
-    protected AsyncTestBase()
-    {
-        recordException = false;
-
-        Fixture = new Fixture().Customize(new AutoNSubstituteCustomization());
-    }
 
     [OneTimeSetUp]
     protected virtual async Task SetUp()
     {
         try
         {
-            Given();
+            await GivenAsync().ConfigureAwait(false);
 
             Sut = CreateSystemUnderTest();
 
@@ -45,10 +38,11 @@ public abstract class AsyncTestBase<TSut>
     protected virtual TSut CreateSystemUnderTest()
         => Fixture.Create<TSut>();
 
-    protected virtual void Given() { }
+    protected virtual Task GivenAsync()
+        => Task.CompletedTask;
 
-    protected virtual ValueTask WhenAsync()
-        => ValueTask.CompletedTask;
+    protected virtual Task WhenAsync()
+        => Task.CompletedTask;
 
     protected void RecordAnyExceptionsThrown()
     {

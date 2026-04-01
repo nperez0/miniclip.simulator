@@ -1,5 +1,4 @@
 using Shouldly;
-using Miniclip.Simulator.Domain.Aggregates.Groups.Exceptions;
 using NSubstitute;
 using NUnit.Framework;
 
@@ -26,9 +25,9 @@ public class WithAllMatchesPlayed : WhenSimulatingGroup
     }
 
     [Test]
-    public void ShouldReturnAllMatchesPlayedException()
+    public void ShouldReturnAllMatchesPlayedError()
     {
-        Result!.Exception.ShouldBeOfType<GroupSimulationException>();
+        Result!.Error.Code.ShouldBe("GROUP_ALL_MATCHES_PLAYED");
     }
 
     [Test]

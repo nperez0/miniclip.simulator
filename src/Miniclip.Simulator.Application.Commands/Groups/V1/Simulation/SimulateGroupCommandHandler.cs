@@ -15,7 +15,7 @@ public class SimulateGroupCommandHandler(
         var group = await repository.FindAsync(command.GroupId, cancellationToken);
         
         if (group == null)
-            return Result.Failure(SimulateGroupException.GroupNotFound(command.GroupId));
+            return Result.Failure(SimulateGroupErrors.GroupNotFound(command.GroupId));
 
         return groupSimulator.SimulateAllMatches(group);
     }

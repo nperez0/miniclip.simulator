@@ -18,12 +18,12 @@ public class AndNameIsInvalid(string? name) : WhenCreatingGroup
     }
 
     [Test]
-    public void ShouldReturnAnException()
+    public void ShouldReturnAnError()
     {
         Result.ShouldNotBeNull();
         Result!.IsFailure.ShouldBeTrue();
         Result.Value.ShouldBeNull();
-        Result.Exception.ShouldBeOfType<GroupCreationException>();
-        Result.Exception.Message.ShouldContain("cannot be empty");
+        Result.Error.Code.ShouldBe("GROUP_NAME_EMPTY");
+        Result.Error.Message.ShouldBe(GroupCreationErrors.EmptyName(Name).Message);
     }
 }

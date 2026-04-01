@@ -24,7 +24,7 @@ public abstract class WhenConsumingEvents : AsyncTestBase<TestableConsumer>
     protected IPublisher Publisher { get; private set; } = null!;
     protected ConsumeResult<string, byte[]>? ConsumeResult { get; set; }
 
-    protected override void Given()
+    protected override Task GivenAsync()
     {
         Serializer = Fixture.Freeze<IEventSerializer>();
         ProcessedEvents = Fixture.Freeze<IProcessedEventsRepository>();
@@ -45,10 +45,12 @@ public abstract class WhenConsumingEvents : AsyncTestBase<TestableConsumer>
 
         Fixture.Freeze<IConfiguration>();
         Fixture.Freeze<ILogger<ProjectionsConsumerService<MatchPlayed>>>();
+
+        return Task.CompletedTask;
     }
 
-    protected override ValueTask WhenAsync()
-        => new(Sut!.InvokeHandleAsync(ConsumeResult!, CancellationToken.None));
+    protected override Task WhenAsync()
+        => Sut!.InvokeHandleAsync(ConsumeResult!, CancellationToken.None);
 
     protected static ConsumeResult<string, byte[]> BuildConsumeResult(string eventId, string eventType)
     {

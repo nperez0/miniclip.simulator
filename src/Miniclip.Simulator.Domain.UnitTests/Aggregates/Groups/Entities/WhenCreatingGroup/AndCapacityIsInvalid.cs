@@ -18,12 +18,12 @@ public class AndCapacityIsInvalid(int capacity) : WhenCreatingGroup
     }
 
     [Test]
-    public void ShouldReturnAnException()
+    public void ShouldReturnAnError()
     {
         Result.ShouldNotBeNull();
         Result!.IsFailure.ShouldBeTrue();
         Result.Value.ShouldBeNull();
-        Result.Exception.ShouldBeOfType<GroupCreationException>();
-        Result.Exception.Message.ShouldContain("between 2 and 6");
+        Result.Error.Code.ShouldBe("GROUP_CAPACITY_INVALID");
+        Result.Error.Message.ShouldBe(GroupCreationErrors.InvalidCapacity(Capacity, 2, 6).Message);
     }
 }

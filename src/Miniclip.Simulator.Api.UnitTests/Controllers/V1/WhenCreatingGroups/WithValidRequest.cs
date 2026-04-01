@@ -12,9 +12,9 @@ public class WithValidRequest : WhenCreatingGroups
 {
     private Guid groupId;
 
-    protected override void Given()
+    protected override async Task GivenAsync()
     {
-        base.Given();
+        await base.GivenAsync();
 
         Request = new GenerateGroupRequest("Group A", 4);
         groupId = Guid.NewGuid();

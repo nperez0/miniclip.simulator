@@ -8,19 +8,19 @@ public static class ResultExtensions
     public static IActionResult ToActionResult(this Result result)
         => result.IsSuccess
             ? new NoContentResult()
-            : ProcessFailedResult(result.Exception);
+            : ProcessFailedResult(result.Error);
 
     public static IActionResult ToActionResult<T>(this Result<T> result)
         => result.IsSuccess
             ? new OkObjectResult(result.Value)
-            : ProcessFailedResult(result.Exception);
+            : ProcessFailedResult(result.Error);
 
-    private static IActionResult ProcessFailedResult(ExceptionBase ex)
+    private static IActionResult ProcessFailedResult(Error error)
     {
-        return ex.Type switch
+        return error.Type switch
         {
-            ExceptionType.NotFound => new NotFoundObjectResult(new { error = ex.Message }),
-            _ => new BadRequestObjectResult(new { error = ex.Message })
+            ErrorType.NotFound => new NotFoundObjectResult(new { error = error.Message }),
+            _ => new BadRequestObjectResult(new { error = error.Message })
         };
     }
 }

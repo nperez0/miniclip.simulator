@@ -10,9 +10,9 @@ public class WithExistingStandings : WhenGettingGroupStandings
 {
     private Guid groupId;
 
-    protected override void Given()
+    protected override async Task GivenAsync()
     {
-        base.Given();
+        await base.GivenAsync();
 
         groupId = Guid.NewGuid();
         Query = new GroupStandingsQuery(groupId);
@@ -103,10 +103,10 @@ public class WithExistingStandings : WhenGettingGroupStandings
             }
         };
 
-        StandingsRepository.GetStandingsByGroupIdAsync(groupId, default)
+        StandingsRepository.GetStandingsByGroupIdAsync(groupId, CancellationToken.None)
             .ReturnsForAnyArgs(standings);
 
-        MatchResultsRepository.GetMatchResultsByGroupIdAsync(groupId, default)
+        MatchResultsRepository.GetMatchResultsByGroupIdAsync(groupId, CancellationToken.None)
             .ReturnsForAnyArgs(matchResults);
     }
 

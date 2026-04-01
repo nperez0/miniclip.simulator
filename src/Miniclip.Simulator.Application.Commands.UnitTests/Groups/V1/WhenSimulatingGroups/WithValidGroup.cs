@@ -12,9 +12,9 @@ public class WithValidGroup : WhenSimulatingGroups
     private Guid groupId;
     private Group group = null!;
 
-    protected override void Given()
+    protected override async Task GivenAsync()
     {
-        base.Given();
+        await base.GivenAsync();
 
         groupId = Guid.NewGuid();
         Command = new SimulateGroupCommand(groupId);
@@ -25,7 +25,7 @@ public class WithValidGroup : WhenSimulatingGroups
         group.AddMatch(Guid.NewGuid(), teams[0], teams[1], 1);
         group.AddMatch(Guid.NewGuid(), teams[2], teams[3], 1);
 
-        GroupRepository.FindAsync(groupId, default)
+        GroupRepository.FindAsync(groupId, CancellationToken.None)
             .ReturnsForAnyArgs(group);
 
         GroupSimulator.SimulateAllMatches(group)

@@ -10,17 +10,17 @@ public class WithNoStandings : WhenGettingGroupStandings
 {
     private Guid groupId;
 
-    protected override void Given()
+    protected override async Task GivenAsync()
     {
-        base.Given();
+        await base.GivenAsync();
 
         groupId = Guid.NewGuid();
         Query = new GroupStandingsQuery(groupId);
 
-        StandingsRepository.GetStandingsByGroupIdAsync(groupId, default)
+        StandingsRepository.GetStandingsByGroupIdAsync(groupId, CancellationToken.None)
             .ReturnsForAnyArgs([]);
 
-        MatchResultsRepository.GetMatchResultsByGroupIdAsync(groupId, default)
+        MatchResultsRepository.GetMatchResultsByGroupIdAsync(groupId, CancellationToken.None)
             .ReturnsForAnyArgs([]);
     }
 
@@ -45,7 +45,7 @@ public class WithNoStandings : WhenGettingGroupStandings
     [Test]
     public void ShouldReturnDefaultStandings()
     {
-        Result.Value!.Standings.Count().ShouldBe(1);
+        Result.Value!.Standings.Length.ShouldBe(1);
         Result.Value!.Standings[0].TeamId.ShouldBe(Guid.Empty);
     }
 

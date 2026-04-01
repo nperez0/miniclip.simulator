@@ -10,14 +10,14 @@ public class WithNonExistentGroup : WhenSimulatingGroups
 {
     private Guid groupId;
 
-    protected override void Given()
+    protected override async Task GivenAsync()
     {
-        base.Given();
+        await base.GivenAsync();
 
         groupId = Guid.NewGuid();
         Command = new SimulateGroupCommand(groupId);
 
-        GroupRepository.FindAsync(groupId, default)
+        GroupRepository.FindAsync(groupId, CancellationToken.None)
             .ReturnsForAnyArgs((Group?)null);
     }
 
@@ -34,8 +34,8 @@ public class WithNonExistentGroup : WhenSimulatingGroups
     }
 
     [Test]
-    public void ShouldReturnGroupNotFoundException()
+    public void ShouldReturnGroupNotFoundError()
     {
-        Result.Exception.ShouldBeOfType<SimulateGroupException>();
+        Result.Error.Code.ShouldBe("GROUP_NOT_FOUND");
     }
 }

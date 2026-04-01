@@ -12,9 +12,9 @@ public class WithExistingStandings : WhenGettingStandings
 {
     private GroupStandingsDto standingsDto = null!;
 
-    protected override void Given()
+    protected override async Task GivenAsync()
     {
-        base.Given();
+        await base.GivenAsync();
 
         GroupId = Guid.NewGuid();
 

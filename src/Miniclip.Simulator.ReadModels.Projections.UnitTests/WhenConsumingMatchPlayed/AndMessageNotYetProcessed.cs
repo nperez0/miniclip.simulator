@@ -10,9 +10,9 @@ public class AndMessageNotYetProcessed : WhenConsumingEvents
     private IDomainEvent domainEvent = null!;
     private string eventId = null!;
 
-    protected override void Given()
+    protected override async Task GivenAsync()
     {
-        base.Given();
+        await base.GivenAsync();
 
         eventId = Guid.NewGuid().ToString();
         domainEvent = Substitute.For<IDomainEvent>();

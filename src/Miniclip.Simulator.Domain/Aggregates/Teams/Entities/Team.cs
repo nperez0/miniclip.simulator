@@ -23,9 +23,9 @@ public class Team : AggregateRoot
     public static Result<Team> Create(Guid id, string? name, int strength)
     {
         if (name.IsNullOrWhiteSpace())
-            return Result.Failure<Team>(TeamCreationException.EmptyName(name));
+            return Result.Failure<Team>(TeamCreationErrors.EmptyName(name));
         if (strength < 0 || strength > 100)
-            return Result.Failure<Team>(TeamCreationException.InvalidStrength(strength));
+            return Result.Failure<Team>(TeamCreationErrors.InvalidStrength(strength));
 
         var team = new Team(id, name, strength);
         team.Enqueue(new TeamRegistered(id, name, strength));

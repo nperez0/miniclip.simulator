@@ -10,16 +10,17 @@ namespace Miniclip.Simulator.Api.UnitTests.Controllers.V1.WhenCreatingGroups;
 
 public class WithInvalidRequest : WhenCreatingGroups
 {
-    protected override void Given()
+    protected override async Task GivenAsync()
     {
-        base.Given();
+        await base.GivenAsync();
 
         Request = new GenerateGroupRequest("Group A", 10);
 
-        var exception = GroupCreationException.InvalidCapacity(10, 2, 6);
+        var error = GroupCreationErrors.InvalidCapacity(10, 2, 6);
 
-        Mediator.Send(Arg.Any<GenerateGroupCommand>(), Arg.Any<CancellationToken>())
-            .Returns(ValueTask.FromResult(Result.Failure<Guid>(exception)));
+        Mediator
+            .Send(Arg.Any<GenerateGroupCommand>(), Arg.Any<CancellationToken>())
+            .Returns(ValueTask.FromResult(Result.Failure<Guid>(error)));
     }
 
     [Test]
@@ -36,13 +37,13 @@ public class WithInvalidRequest : WhenCreatingGroups
         
         var errorProperty = badRequestResult.Value!.GetType().GetProperty("error");
         var errorMessage = errorProperty!.GetValue(badRequestResult.Value) as string;
-        errorMessage!.ShouldContain("capacity");
+        errorMessage!.ShouldBe("Group capacity must be between 2 and 6, but was 10.");
     }
 
     [Test]
-    public void ShouldSendCommandToMediator()
+    public async Task ShouldSendCommandToMediator()
     {
-        Mediator.Received(1).Send(
+        await Mediator.Received(1).Send(
             Arg.Any<GenerateGroupCommand>(),
             Arg.Any<CancellationToken>());
     }

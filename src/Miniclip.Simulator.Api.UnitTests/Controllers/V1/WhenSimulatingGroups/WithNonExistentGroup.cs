@@ -9,15 +9,15 @@ namespace Miniclip.Simulator.Api.UnitTests.Controllers.V1.WhenSimulatingGroups;
 
 public class WithNonExistentGroup : WhenSimulatingGroups
 {
-    protected override void Given()
+    protected override async Task GivenAsync()
     {
-        base.Given();
+        await base.GivenAsync();
 
         GroupId = Guid.NewGuid();
 
-        var exception = SimulateGroupException.GroupNotFound(GroupId);
+        var error = SimulateGroupErrors.GroupNotFound(GroupId);
         Mediator.Send(Arg.Any<SimulateGroupCommand>(), Arg.Any<CancellationToken>())
-            .Returns(ValueTask.FromResult(Result.Failure(exception)));
+            .Returns(ValueTask.FromResult(Result.Failure(error)));
     }
 
     [Test]
@@ -34,7 +34,7 @@ public class WithNonExistentGroup : WhenSimulatingGroups
         
         var errorProperty = notFoundResult.Value!.GetType().GetProperty("error");
         var errorMessage = errorProperty!.GetValue(notFoundResult.Value) as string;
-        errorMessage!.ShouldContain("not found");
+        errorMessage.ShouldBe(SimulateGroupErrors.GroupNotFound(GroupId).Message);
     }
 
     [Test]

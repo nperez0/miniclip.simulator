@@ -3,7 +3,6 @@ using Mediator;
 using Microsoft.AspNetCore.Mvc;
 using Miniclip.Core.Tests;
 using Miniclip.Simulator.Api.Controllers.V1;
-using Miniclip.Simulator.Application.Queries.Groups.V1.Standings;
 
 namespace Miniclip.Simulator.Api.UnitTests.Controllers.V1.WhenGettingStandings;
 
@@ -13,9 +12,11 @@ public abstract class WhenGettingStandings : AsyncTestBase<GroupsController>
     protected Guid GroupId { get; set; }
     protected IActionResult ActionResult { get; set; } = null!;
 
-    protected override void Given()
+    protected override Task GivenAsync()
     {
         Mediator = Fixture.Freeze<IMediator>();
+
+        return Task.CompletedTask;
     }
 
     protected override GroupsController CreateSystemUnderTest()
@@ -23,7 +24,7 @@ public abstract class WhenGettingStandings : AsyncTestBase<GroupsController>
         return new GroupsController(Mediator);
     }
 
-    protected override async ValueTask WhenAsync()
+    protected override async Task WhenAsync()
     {
         ActionResult = await Sut!.GetStandings(GroupId, CancellationToken.None).ConfigureAwait(false);
     }

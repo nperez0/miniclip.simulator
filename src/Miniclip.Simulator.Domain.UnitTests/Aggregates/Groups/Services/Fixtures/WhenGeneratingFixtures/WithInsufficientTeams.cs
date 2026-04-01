@@ -39,9 +39,8 @@ public class WithInsufficientTeams : WhenGeneratingFixtures
     [Test]
     public void ShouldIndicateExpectedAndActualTeamCount()
     {
-        Result!.Exception.ShouldBeOfType<GroupGenerateFixturesException>();
-        Result!.Exception.Message.ShouldContain("4");
-        Result!.Exception.Message.ShouldContain("2");
+        Result!.Error.Code.ShouldBe("GROUP_INVALID_TEAM_COUNT");
+        Result!.Error.Message.ShouldBe(GroupGenerateFixturesErrors.InvalidTeamCount(Capacity, Group!.Teams.Count).Message);
     }
 
     [Test]

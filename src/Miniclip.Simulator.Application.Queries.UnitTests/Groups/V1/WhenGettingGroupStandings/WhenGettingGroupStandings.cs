@@ -13,13 +13,15 @@ public abstract class WhenGettingGroupStandings : AsyncTestBase<GroupStandingsQu
     protected GroupStandingsQuery Query { get; set; } = null!;
     protected Result<GroupStandingsDto> Result { get; set; } = null!;
 
-    protected override void Given()
+    protected override Task GivenAsync()
     {
         StandingsRepository = Fixture.Freeze<IGroupStandingsRepository>();
         MatchResultsRepository = Fixture.Freeze<IMatchResultsRepository>();
+
+        return Task.CompletedTask;
     }
 
-    protected override async ValueTask WhenAsync()
+    protected override async Task WhenAsync()
     {
         Result = await Sut!.Handle(Query, CancellationToken.None).ConfigureAwait(false);
     }
