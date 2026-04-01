@@ -11,7 +11,6 @@ public static class MediatorConfiguration
 
         services.AddMediator(options => options.ServiceLifetime = ServiceLifetime.Scoped);
 
-        services.AddScoped(typeof(IPipelineBehavior<,>), typeof(DomainEventPublisherBehavior<,>));
         services.AddScoped(typeof(IPipelineBehavior<,>), typeof(EventStoreCommandBehavior<,>));
 
         return services;

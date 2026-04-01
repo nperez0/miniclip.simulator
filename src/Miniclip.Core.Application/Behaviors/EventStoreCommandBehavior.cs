@@ -4,7 +4,7 @@ using Miniclip.Core.EventSourcing;
 
 namespace Miniclip.Core.Application.Behaviors;
 
-public class EventStoreCommandBehavior<TRequest, TResponse>(IEventStoreSession session)
+public class EventStoreCommandBehavior<TRequest, TResponse>(IEventBus eventBus, IEventStoreSession session)
     : IPipelineBehavior<TRequest, TResponse>
     where TRequest : IRequest<TResponse>
 {
@@ -19,6 +19,9 @@ public class EventStoreCommandBehavior<TRequest, TResponse>(IEventStoreSession s
             return response;
 
         await session.CommitAsync(cancellationToken);
+
+        foreach (var @event in session.GetCommittedEvents())
+            await eventBus.PublishAsync(@event, cancellationToken);
 
         return response;
     }

@@ -11,39 +11,44 @@ namespace Miniclip.Simulator.Api.Infrastructure.Configuration;
 
 public static class KafkaConfiguration
 {
-    public static IServiceCollection AddKafkaDependencies(
-        this IServiceCollection services,
-        IConfiguration configuration)
+    extension(IServiceCollection services)
     {
-        services.AddEventBus(configuration);
+        public IServiceCollection AddKafkaDependencies(
+        IConfiguration configuration)
+        {
+            services.AddEventBus(configuration);
 
-        services.AddSingleton<IConsumerRetryPolicy, ExponentialBackoffRetryPolicy>();
-        services.AddScoped<IProcessedEventsRepository, ProcessedEventsRepository>();
+            services.AddSingleton<IConsumerRetryPolicy, ExponentialBackoffRetryPolicy>();
+            services.AddScoped<IProcessedEventsRepository, ProcessedEventsRepository>();
 
-        services.AddProjectionsConsumers();
+            services.AddProjectionsConsumers();
 
-        return services;
+            return services;
+        }
+
+        private IServiceCollection AddEventBus(
+            IConfiguration configuration)
+        {
+            var config = new ProducerConfig
+            {
+                BootstrapServers = configuration.GetConnectionString("kafka")!
+            };
+
+            services.AddSingleton<IProducer<string, byte[]>>(_ =>
+                new ProducerBuilder<string, byte[]>(config).Build());
+
+            services.AddSingleton<IEventBus, KafkaEventBus>();
+
+            return services;
+        }
     }
 
-    private static IServiceCollection AddEventBus(
-        this IServiceCollection services,
-        IConfiguration configuration)
+    extension(IServiceCollection services)
     {
-        var config = new ProducerConfig { 
-            BootstrapServers = configuration.GetConnectionString("kafka")!
-        };
-
-        services.AddSingleton<IProducer<string, byte[]>>(_ =>
-            new ProducerBuilder<string, byte[]>(config).Build());
-
-        services.AddSingleton<IEventBus, KafkaEventBus>();
-
-        return services;
-    }
-
-    private static IServiceCollection AddProjectionsConsumers(this IServiceCollection services)
-    {
-        return services
-            .AddHostedService<ProjectionsConsumerService<MatchPlayed>>();
+        private IServiceCollection AddProjectionsConsumers()
+        {
+            return services
+                .AddHostedService<ProjectionsConsumerService<MatchPlayed>>();
+        }
     }
 }
