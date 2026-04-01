@@ -1,6 +1,6 @@
 ﻿using Miniclip.Core.Domain;
 using Miniclip.Simulator.Domain.Aggregates.Teams.Events;
-using Miniclip.Simulator.Domain.Aggregates.Teams.Exceptions;
+using Miniclip.Simulator.Domain.Aggregates.Teams.Validations;
 
 namespace Miniclip.Simulator.Domain.Aggregates.Teams.Entities;
 
@@ -21,24 +21,24 @@ public class Team : AggregateRoot
     }
 
     public static Result<Team> Create(Guid id, string? name, int strength)
-    {
-        if (name.IsNullOrWhiteSpace())
-            return Result.Failure<Team>(TeamCreationErrors.EmptyName(name));
-        if (strength < 0 || strength > 100)
-            return Result.Failure<Team>(TeamCreationErrors.InvalidStrength(strength));
-
-        var team = new Team(id, name, strength);
-        team.Enqueue(new TeamRegistered(id, name, strength));
-        return team;
-    }
+        => Validation.For<Team>()
+            .HasValidName(name)
+            .HasValidStrength(strength)
+            .Validate()
+            .Map(() =>
+            {
+                var team = new Team(id, name!, strength);
+                team.Enqueue(new TeamRegistered(id, name!, strength));
+                return team;
+            });
 
     protected override void Apply(IDomainEvent @event)
     {
-        if (@event is TeamRegistered e)
-        {
-            Id = e.TeamId;
-            Name = e.Name;
-            Strength = e.Strength;
-        }
+        if (@event is not TeamRegistered e) 
+            return;
+
+        Id = e.TeamId;
+        Name = e.Name;
+        Strength = e.Strength;
     }
 }

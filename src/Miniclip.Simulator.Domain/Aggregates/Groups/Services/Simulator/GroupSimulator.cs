@@ -1,6 +1,6 @@
 ﻿using Miniclip.Core;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Entities;
-using Miniclip.Simulator.Domain.Aggregates.Groups.Exceptions;
+using Miniclip.Simulator.Domain.Aggregates.Groups.Errors;
 
 namespace Miniclip.Simulator.Domain.Aggregates.Groups.Services.Simulator;
 
@@ -22,7 +22,7 @@ public class GroupSimulator : IGroupSimulator
             .ToArray();
 
         if (matchesNotPlayed.Length == 0)
-            return Result.Failure(GroupSimulationErrors.AllMatchesPlayed());
+            return Result.Failure(GroupSimulationErrors.AllMatchesPlayed(group.Id));
 
         return matchesNotPlayed
             .Traverse(match => SimulateMatch(group, match, matchSimulator));

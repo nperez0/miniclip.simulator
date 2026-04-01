@@ -1,6 +1,7 @@
 ﻿using Miniclip.Core.Domain;
+using Miniclip.Simulator.Domain.Aggregates.Groups.Errors;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Events;
-using Miniclip.Simulator.Domain.Aggregates.Groups.Exceptions;
+using Miniclip.Simulator.Domain.Aggregates.Groups.Validations;
 using Miniclip.Simulator.Domain.Aggregates.Groups.ValueObjects;
 
 namespace Miniclip.Simulator.Domain.Aggregates.Groups.Entities;
@@ -31,18 +32,16 @@ public class Group : AggregateRoot
     }
 
     public static Result<Group> Create(Guid id, string? name, int capacity)
-    {
-        if (name.IsNullOrWhiteSpace())
-            return Result.Failure<Group>(GroupCreationErrors.EmptyName(name));
-
-        if (capacity < MinCapacity || capacity > MaxCapacity)
-            return Result.Failure<Group>(GroupCreationErrors.InvalidCapacity(capacity, MinCapacity, MaxCapacity));
-
-        var group = new Group(id, name, capacity);
-        group.Enqueue(new GroupCreated(id, name, capacity));
-
-        return group;
-    }
+        => Validation.For<Group>()
+            .HasValidName(name)
+            .HasValidCapacity(capacity, MinCapacity, MaxCapacity)
+            .Validate()
+            .Map(() =>
+            {
+                var group = new Group(id, name!, capacity);
+                group.Enqueue(new GroupCreated(id, name!, capacity));
+                return group;
+            });
 
     public Result AddTeam(TeamInfo teamInfo)
     {
@@ -53,6 +52,7 @@ public class Group : AggregateRoot
             return Result.Failure(GroupAddTeamErrors.TeamAlreadyExists(teamInfo.Id));
 
         teams.Add(teamInfo);
+
         Enqueue(new TeamAdded(Id, teamInfo.Id, teamInfo.Name, teamInfo.Strength));
 
         return Result.Success();
@@ -63,6 +63,7 @@ public class Group : AggregateRoot
             .Tap(match =>
             {
                 matches.Add(match);
+
                 Enqueue(new MatchScheduled(Id, id, homeTeam.Id, awayTeam.Id, round));
             });
 
@@ -104,23 +105,23 @@ public class Group : AggregateRoot
         }
     }
 
-    private void Apply(GroupCreated e)
+    private void Apply(GroupCreated @event)
     {
-        Id = e.GroupId;
-        Name = e.Name;
-        Capacity = e.Capacity;
+        Id = @event.GroupId;
+        Name = @event.Name;
+        Capacity = @event.Capacity;
     }
 
-    private void Apply(TeamAdded e)
-        => teams.Add(new TeamInfo(e.TeamId, e.Name, e.Strength));
+    private void Apply(TeamAdded @event)
+        => teams.Add(new TeamInfo(@event.TeamId, @event.Name, @event.Strength));
 
-    private void Apply(MatchScheduled e)
+    private void Apply(MatchScheduled @event)
     {
-        var homeTeam = teams.First(t => t.Id == e.HomeTeamId);
-        var awayTeam = teams.First(t => t.Id == e.AwayTeamId);
-        matches.Add(Match.Restore(e.MatchId, homeTeam, awayTeam, e.Round));
+        var homeTeam = teams.First(t => t.Id == @event.HomeTeamId);
+        var awayTeam = teams.First(t => t.Id == @event.AwayTeamId);
+        matches.Add(Match.Restore(@event.MatchId, homeTeam, awayTeam, @event.Round));
     }
 
-    private void Apply(MatchPlayed e)
-        => matches.First(m => m.Id == e.MatchId).ApplyResult(e.HomeScore, e.AwayScore);
+    private void Apply(MatchPlayed @event)
+        => matches.First(m => m.Id == @event.MatchId).ApplyResult(@event.HomeScore, @event.AwayScore);
 }

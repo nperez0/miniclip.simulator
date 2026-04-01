@@ -1,6 +1,8 @@
-using Shouldly;
+using Miniclip.Core;
 using NSubstitute;
 using NUnit.Framework;
+using Shouldly;
+using Miniclip.Simulator.Domain.Aggregates.Groups.Errors;
 
 namespace Miniclip.Simulator.Domain.UnitTests.Aggregates.Groups.Services.Simulator.WhenSimulatingGroup;
 
@@ -27,7 +29,9 @@ public class WithAllMatchesPlayed : WhenSimulatingGroup
     [Test]
     public void ShouldReturnAllMatchesPlayedError()
     {
-        Result!.Error.Code.ShouldBe("GROUP_ALL_MATCHES_PLAYED");
+        Result!.Error.Type.ShouldBe(ErrorType.Conflict);
+        Result!.Error.Code.ShouldBe(GroupSimulationErrors.AllMatchesPlayedCode);
+        Result!.Error.Messages[0].ShouldBe($"All matches for group '{Group!.Id}' have already been played.");
     }
 
     [Test]

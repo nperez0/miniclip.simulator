@@ -1,5 +1,7 @@
-using Shouldly;
+using Miniclip.Core;
 using NUnit.Framework;
+using Shouldly;
+using Miniclip.Simulator.Domain.Aggregates.Groups.Errors;
 
 namespace Miniclip.Simulator.Domain.UnitTests.Aggregates.Groups.Entities.WhenSimulatingResult;
 
@@ -27,8 +29,9 @@ public class WithAlreadyPlayedMatch : WhenSimulatingResult
     [Test]
     public void ShouldReturnAlreadyPlayedError()
     {
-        Result!.Error.Code.ShouldBe("GROUP_MATCH_ALREADY_PLAYED");
-        Result!.Error.Message.ShouldBe($"Match '{Match!.Id}' has already been played.");
+        Result!.Error.Type.ShouldBe(ErrorType.Conflict);
+        Result!.Error.Code.ShouldBe(GroupSimulationErrors.AlreadyPlayedCode);
+        Result!.Error.Messages[0].ShouldBe($"Match '{Match!.Id}' has already been played.");
     }
 
     [Test]

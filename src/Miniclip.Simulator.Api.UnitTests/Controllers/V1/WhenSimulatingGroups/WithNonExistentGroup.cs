@@ -31,10 +31,10 @@ public class WithNonExistentGroup : WhenSimulatingGroups
     {
         var notFoundResult = ActionResult as NotFoundObjectResult;
         notFoundResult!.Value.ShouldNotBeNull();
-        
+
         var errorProperty = notFoundResult.Value!.GetType().GetProperty("error");
         var errorMessage = errorProperty!.GetValue(notFoundResult.Value) as string;
-        errorMessage.ShouldBe(SimulateGroupErrors.GroupNotFound(GroupId).Message);
+        errorMessage.ShouldBe($"Group {GroupId} not found");
     }
 
     [Test]

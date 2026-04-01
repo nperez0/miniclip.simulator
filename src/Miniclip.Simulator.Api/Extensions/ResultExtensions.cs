@@ -16,11 +16,14 @@ public static class ResultExtensions
             : ProcessFailedResult(result.Error);
 
     private static IActionResult ProcessFailedResult(Error error)
-    {
-        return error.Type switch
+        => error.Type switch
         {
-            ErrorType.NotFound => new NotFoundObjectResult(new { error = error.Message }),
-            _ => new BadRequestObjectResult(new { error = error.Message })
+            ErrorType.Validation 
+                => new BadRequestObjectResult(new { errors = error.Messages }),
+
+            ErrorType.NotFound
+                => new NotFoundObjectResult(new { error = error.Messages[0] }),
+
+            _ => new BadRequestObjectResult(new { error = error.Messages[0] })
         };
-    }
 }

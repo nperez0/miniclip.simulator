@@ -1,6 +1,6 @@
 ﻿using Miniclip.Core;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Entities;
-using Miniclip.Simulator.Domain.Aggregates.Groups.Exceptions;
+using Miniclip.Simulator.Domain.Aggregates.Groups.Errors;
 
 namespace Miniclip.Simulator.Domain.Aggregates.Groups.Services.Fixtures;
 

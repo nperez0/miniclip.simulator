@@ -1,5 +1,5 @@
-using Miniclip.Simulator.Domain.Aggregates.Groups.Exceptions;
-using Miniclip.Simulator.Domain.Aggregates.Groups.ValueObjects;
+using Miniclip.Core;
+using Miniclip.Simulator.Domain.Aggregates.Groups.Errors;
 using NUnit.Framework;
 using Shouldly;
 
@@ -20,14 +20,15 @@ public class WithDuplicateTeam : WhenAddingTeam
     public void ShouldReturnFailure()
     {
         Result.ShouldNotBeNull();
-        Result!.IsFailure.ShouldBeTrue();
+        Result.IsFailure.ShouldBeTrue();
     }
 
     [Test]
     public void ShouldReturnTeamAlreadyExistsError()
     {
-        Result!.Error.Code.ShouldBe("GROUP_TEAM_ALREADY_EXISTS");
-        Result!.Error.Message.ShouldBe(GroupAddTeamErrors.TeamAlreadyExists(Team!.Id).Message);
+        Result!.Error.Type.ShouldBe(ErrorType.Conflict);
+        Result!.Error.Code.ShouldBe(GroupAddTeamErrors.TeamAlreadyExistsCode);
+        Result!.Error.Messages[0].ShouldBe(GroupAddTeamErrors.TeamAlreadyExists(Team!.Id).Messages[0]);
     }
 
     [Test]

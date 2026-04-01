@@ -1,5 +1,7 @@
-using Shouldly;
+using Miniclip.Core;
 using NUnit.Framework;
+using Shouldly;
+using Miniclip.Simulator.Domain.Aggregates.Groups.Errors;
 
 namespace Miniclip.Simulator.Domain.UnitTests.Aggregates.Groups.Entities.WhenSimulatingResult;
 
@@ -23,8 +25,9 @@ public class WithNegativeScores : WhenSimulatingResult
     [Test]
     public void ShouldReturnNegativeScoreError()
     {
-        Result!.Error.Code.ShouldBe("GROUP_NEGATIVE_SCORE");
-        Result!.Error.Message.ShouldBe("Scores cannot be negative.");
+        Result!.Error.Type.ShouldBe(ErrorType.Conflict);
+        Result!.Error.Code.ShouldBe(GroupSimulationErrors.NegativeScoreCode);
+        Result!.Error.Messages[0].ShouldBe($"Scores for match '{Match!.Id}' cannot be negative.");
     }
 
     [Test]

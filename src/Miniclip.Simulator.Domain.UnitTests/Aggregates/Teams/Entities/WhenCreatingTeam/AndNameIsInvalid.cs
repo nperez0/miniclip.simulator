@@ -1,5 +1,6 @@
-using Shouldly;
+using Miniclip.Core;
 using NUnit.Framework;
+using Shouldly;
 
 namespace Miniclip.Simulator.Domain.UnitTests.Aggregates.Teams.Entities.WhenCreatingTeam;
 
@@ -21,7 +22,8 @@ public class AndNameIsInvalid(string name) : WhenCreatingTeam
         Result.ShouldNotBeNull();
         Result.IsFailure.ShouldBeTrue();
         Result.Value.ShouldBeNull();
-        Result.Error.Code.ShouldBe("TEAM_NAME_EMPTY");
-        Result.Error.Message.ShouldBe($"Team name '{name}' cannot be empty.");
+        Result.Error.Type.ShouldBe(ErrorType.Validation);
+        Result.Error.Code.ShouldBe("TEAM_VALIDATION_FAILED");
+        Result.Error.Messages.ShouldBe([$"Team name '{Name}' cannot be empty."]);
     }
 }

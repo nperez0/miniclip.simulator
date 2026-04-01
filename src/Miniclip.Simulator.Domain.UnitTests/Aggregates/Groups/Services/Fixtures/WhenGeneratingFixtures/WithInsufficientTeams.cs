@@ -1,8 +1,9 @@
-using Shouldly;
+using Miniclip.Core;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Entities;
-using Miniclip.Simulator.Domain.Aggregates.Groups.Exceptions;
+using Miniclip.Simulator.Domain.Aggregates.Groups.Errors;
 using NSubstitute;
 using NUnit.Framework;
+using Shouldly;
 
 namespace Miniclip.Simulator.Domain.UnitTests.Aggregates.Groups.Services.Fixtures.WhenGeneratingFixtures;
 
@@ -39,8 +40,9 @@ public class WithInsufficientTeams : WhenGeneratingFixtures
     [Test]
     public void ShouldIndicateExpectedAndActualTeamCount()
     {
-        Result!.Error.Code.ShouldBe("GROUP_INVALID_TEAM_COUNT");
-        Result!.Error.Message.ShouldBe(GroupGenerateFixturesErrors.InvalidTeamCount(Capacity, Group!.Teams.Count).Message);
+        Result!.Error.Type.ShouldBe(ErrorType.Conflict);
+        Result!.Error.Code.ShouldBe(GroupGenerateFixturesErrors.InvalidTeamCountCode);
+        Result!.Error.Messages[0].ShouldBe($"Group must have exactly {Capacity} teams to generate fixtures. Current count: {Group!.Teams.Count}.");
     }
 
     [Test]

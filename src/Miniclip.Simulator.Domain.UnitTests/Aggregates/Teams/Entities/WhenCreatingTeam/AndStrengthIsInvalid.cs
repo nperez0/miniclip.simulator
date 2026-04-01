@@ -1,5 +1,6 @@
-using Shouldly;
+using Miniclip.Core;
 using NUnit.Framework;
+using Shouldly;
 
 namespace Miniclip.Simulator.Domain.UnitTests.Aggregates.Teams.Entities.WhenCreatingTeam;
 
@@ -22,7 +23,8 @@ public class AndStrengthIsInvalid(int strength) : WhenCreatingTeam
         Result.ShouldNotBeNull();
         Result.IsFailure.ShouldBeTrue();
         Result.Value.ShouldBeNull();
-        Result.Error.Code.ShouldBe("TEAM_STRENGTH_INVALID");
-        Result.Error.Message.ShouldBe($"Strength '{strength}' must be between 0 and 100.");
+        Result.Error.Type.ShouldBe(ErrorType.Validation);
+        Result.Error.Code.ShouldBe("TEAM_VALIDATION_FAILED");
+        Result.Error.Messages.ShouldBe([$"Strength '{Strength}' must be between 0 and 100."]);
     }
 }

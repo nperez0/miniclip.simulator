@@ -2,7 +2,6 @@ using Shouldly;
 using Microsoft.AspNetCore.Mvc;
 using Miniclip.Core;
 using Miniclip.Simulator.Application.Commands.Groups.V1.Generation;
-using Miniclip.Simulator.Domain.Aggregates.Groups.Exceptions;
 using NSubstitute;
 using NUnit.Framework;
 
@@ -16,7 +15,8 @@ public class WithInvalidRequest : WhenCreatingGroups
 
         Request = new GenerateGroupRequest("Group A", 10);
 
-        var error = GroupCreationErrors.InvalidCapacity(10, 2, 6);
+        var error = Error.Validation("GROUP_VALIDATION_FAILED", ["Group capacity must be between 2 and 6, but was 10."])
+            with { Messages = ["Group capacity must be between 2 and 6, but was 10."] };
 
         Mediator
             .Send(Arg.Any<GenerateGroupCommand>(), Arg.Any<CancellationToken>())
@@ -34,10 +34,10 @@ public class WithInvalidRequest : WhenCreatingGroups
     {
         var badRequestResult = ActionResult as BadRequestObjectResult;
         badRequestResult!.Value.ShouldNotBeNull();
-        
-        var errorProperty = badRequestResult.Value!.GetType().GetProperty("error");
-        var errorMessage = errorProperty!.GetValue(badRequestResult.Value) as string;
-        errorMessage!.ShouldBe("Group capacity must be between 2 and 6, but was 10.");
+
+        var errorsProperty = badRequestResult.Value!.GetType().GetProperty("errors");
+        var errors = errorsProperty!.GetValue(badRequestResult.Value) as string[];
+        errors![0].ShouldBe("Group capacity must be between 2 and 6, but was 10.");
     }
 
     [Test]

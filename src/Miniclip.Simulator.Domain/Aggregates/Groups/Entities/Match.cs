@@ -1,4 +1,4 @@
-﻿using Miniclip.Simulator.Domain.Aggregates.Groups.Exceptions;
+﻿using Miniclip.Simulator.Domain.Aggregates.Groups.Errors;
 using Miniclip.Simulator.Domain.Aggregates.Groups.ValueObjects;
 
 namespace Miniclip.Simulator.Domain.Aggregates.Groups.Entities;
@@ -29,12 +29,9 @@ public class Match
     }
 
     public static Result<Match> Create(Guid id, TeamInfo homeTeam, TeamInfo awayTeam, int round)
-    {
-        if (homeTeam == awayTeam)
-            return Result.Failure<Match>(GroupGenerateFixturesErrors.SameTeam());
-
-        return new Match(id, homeTeam, awayTeam, round);
-    }
+        => homeTeam == awayTeam
+            ? Result.Failure<Match>(GroupGenerateFixturesErrors.SameTeam(homeTeam.Id))
+            : new Match(id, homeTeam, awayTeam, round);
 
     internal static Match Restore(Guid id, TeamInfo homeTeam, TeamInfo awayTeam, int round)
         => new(id, homeTeam, awayTeam, round);
@@ -42,7 +39,7 @@ public class Match
     public Result SimulateResult(int homeScore, int awayScore)
     {
         if (homeScore < 0 || awayScore < 0)
-            return Result.Failure(GroupSimulationErrors.NegativeScore());
+            return Result.Failure(GroupSimulationErrors.NegativeScore(Id));
 
         if (IsPlayed)
             return Result.Failure(GroupSimulationErrors.AlreadyPlayed(Id));

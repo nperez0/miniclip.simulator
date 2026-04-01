@@ -1,4 +1,5 @@
-using Miniclip.Simulator.Domain.Aggregates.Groups.Exceptions;
+using Miniclip.Core;
+using Miniclip.Simulator.Domain.Aggregates.Groups.Errors;
 using Miniclip.Simulator.Domain.Aggregates.Groups.ValueObjects;
 using NUnit.Framework;
 using Shouldly;
@@ -7,14 +8,14 @@ namespace Miniclip.Simulator.Domain.UnitTests.Aggregates.Groups.Entities.WhenAdd
 
 public class WithMaxTeamsReached : WhenAddingTeam
 {
+    private const int Capacity = 2;
+
     protected override void Given()
     {
-        const int capacity = 2;
-
-        Group = GroupMother.Default(capacity);
+        Group = GroupMother.Default(Capacity);
 
         // Fill the group to capacity
-        foreach (var team in TeamInfoMother.Many(capacity))
+        foreach (var team in TeamInfoMother.Many(Capacity))
             Group!.AddTeam(team);
 
         // Try to add one more team
@@ -31,8 +32,9 @@ public class WithMaxTeamsReached : WhenAddingTeam
     [Test]
     public void ShouldReturnMaxTeamsReachedError()
     {
-        Result!.Error.Code.ShouldBe("GROUP_MAX_TEAMS_REACHED");
-        Result!.Error.Message.ShouldBe(GroupAddTeamErrors.MaxTeamsReached(Group!.Capacity).Message);
+        Result!.Error.Type.ShouldBe(ErrorType.Conflict);
+        Result!.Error.Code.ShouldBe(GroupAddTeamErrors.MaxTeamsReachedCode);
+        Result!.Error.Messages[0].ShouldBe($"Has reached the maximum number of teams: {Capacity}.");
     }
 
     [Test]

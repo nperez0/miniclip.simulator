@@ -17,6 +17,7 @@
 - [ ] How it works a migration using EventStoreDB?
 - [ ] How can I rebuild read models replayng events from the beginning?
 - [ ] Create a separate project to manage teams
+- [ ] Check anti patterns
 
 ## In Progress
 - [ ] In the result maybe I should not use exceptions, maybe is better to use text or some validation result

@@ -1,6 +1,6 @@
-using Shouldly;
-using Miniclip.Simulator.Domain.Aggregates.Groups.Exceptions;
+using Miniclip.Core;
 using NUnit.Framework;
+using Shouldly;
 
 namespace Miniclip.Simulator.Domain.UnitTests.Aggregates.Groups.Entities.WhenCreatingGroup;
 
@@ -26,7 +26,8 @@ public class AndCapacityExceedsMaximum(int capacity) : WhenCreatingGroup
     [Test]
     public void ShouldReturnInvalidCapacityError()
     {
-        Result!.Error.Code.ShouldBe("GROUP_CAPACITY_INVALID");
-        Result.Error.Message.ShouldBe(GroupCreationErrors.InvalidCapacity(Capacity, 2, 6).Message);
+        Result!.Error.Type.ShouldBe(ErrorType.Validation);
+        Result!.Error.Code.ShouldBe("GROUP_VALIDATION_FAILED");
+        Result!.Error.Messages.ShouldBe([$"Group capacity must be between 2 and 6, but was {Capacity}."]);
     }
 }

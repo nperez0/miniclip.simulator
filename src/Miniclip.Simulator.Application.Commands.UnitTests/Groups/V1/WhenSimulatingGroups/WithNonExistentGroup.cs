@@ -1,3 +1,4 @@
+using Miniclip.Core;
 using Shouldly;
 using Miniclip.Simulator.Application.Commands.Groups.V1.Simulation;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Entities;
@@ -36,6 +37,7 @@ public class WithNonExistentGroup : WhenSimulatingGroups
     [Test]
     public void ShouldReturnGroupNotFoundError()
     {
-        Result.Error.Code.ShouldBe("GROUP_NOT_FOUND");
+        Result.Error.Type.ShouldBe(ErrorType.NotFound);
+        Result.Error.Code.ShouldBe(SimulateGroupErrors.GroupNotFoundCode);
     }
 }

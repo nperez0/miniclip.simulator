@@ -1,5 +1,7 @@
-using Miniclip.Simulator.Domain.Aggregates.Groups.Exceptions;
+using Miniclip.Core;
+using Miniclip.Simulator.Domain.Aggregates.Groups.Errors;
 using Miniclip.Simulator.Domain.Aggregates.Groups.ValueObjects;
+using Miniclip.Simulator.Domain.Aggregates.Teams.Entities;
 using NUnit.Framework;
 using Shouldly;
 
@@ -19,9 +21,10 @@ public class AndBothTeamsAreTheSame : WhenCreatingMatch
     public void ShouldReturnAnError()
     {
         Result.ShouldNotBeNull();
-        Result!.IsFailure.ShouldBeTrue();
+        Result.IsFailure.ShouldBeTrue();
         Result.Value.ShouldBeNull();
-        Result.Error.Code.ShouldBe("GROUP_SAME_TEAM");
-        Result.Error.Message.ShouldBe(GroupGenerateFixturesErrors.SameTeam().Message);
+        Result.Error.Type.ShouldBe(ErrorType.Conflict);
+        Result.Error.Code.ShouldBe(GroupGenerateFixturesErrors.SameTeamCode);
+        Result.Error.Messages[0].ShouldBe($"A team cannot play against itself. Team ID: {HomeTeam!.Id}");
     }
 }

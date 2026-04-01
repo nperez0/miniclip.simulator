@@ -1,6 +1,6 @@
-using Shouldly;
-using Miniclip.Simulator.Domain.Aggregates.Groups.Exceptions;
+using Miniclip.Core;
 using NUnit.Framework;
+using Shouldly;
 
 namespace Miniclip.Simulator.Domain.UnitTests.Aggregates.Groups.Entities.WhenCreatingGroup;
 
@@ -21,9 +21,10 @@ public class AndNameIsInvalid(string? name) : WhenCreatingGroup
     public void ShouldReturnAnError()
     {
         Result.ShouldNotBeNull();
-        Result!.IsFailure.ShouldBeTrue();
+        Result.IsFailure.ShouldBeTrue();
         Result.Value.ShouldBeNull();
-        Result.Error.Code.ShouldBe("GROUP_NAME_EMPTY");
-        Result.Error.Message.ShouldBe(GroupCreationErrors.EmptyName(Name).Message);
+        Result.Error.Type.ShouldBe(ErrorType.Validation);
+        Result.Error.Code.ShouldBe("GROUP_VALIDATION_FAILED");
+        Result.Error.Messages.ShouldBe([$"Group name '{Name}' cannot be empty."]);
     }
 }
