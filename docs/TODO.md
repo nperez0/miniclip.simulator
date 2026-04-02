@@ -9,7 +9,6 @@
 - [ ] Implement a health check endpoint
 - [ ] Implement a caching strategy, just to show how it works, maybe I can use redis or something like that using a decorator pattern
 - [ ] I want to add an e2e test project
-- [ ] Check how to trace events
 - [ ] Move read models part to a separate web job project
 - [ ] Prepare project to be deployed in azure or aws
 - [ ] What could be a strategy for service discovery?
@@ -18,10 +17,13 @@
 - [ ] How can I rebuild read models replayng events from the beginning?
 - [ ] Create a separate project to manage teams
 - [ ] Check anti patterns
+- [ ] Make other domain aggregates react to domain events
+- [ ] Resolve ConsumeException ErrorCode.UnknownTopicOrPart when using Kafka
+- [ ] Avoid inheriting from INotification for domain events
 
 ## In Progress
-- [ ] In the result maybe I should not use exceptions, maybe is better to use text or some validation result
 - [ ] Let's implement structured logging, also check what is useful to make something with good metrics, check otel
+- [ ] Check how to trace events
 
 ## Completed
 - [ ] 

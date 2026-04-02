@@ -4,18 +4,11 @@ using Miniclip.Simulator.Domain.Aggregates.Groups.Errors;
 
 namespace Miniclip.Simulator.Domain.Aggregates.Groups.Services.Simulator;
 
-public class GroupSimulator : IGroupSimulator
+public class GroupSimulator(IMatchSimulatorFactory matchSimulatorFactory) : IGroupSimulator
 {
-    private readonly IMatchSimulatorFactory IMatchSimulatorFactory;
-
-    public GroupSimulator(IMatchSimulatorFactory IMatchSimulatorFactory)
-    {
-        this.IMatchSimulatorFactory = IMatchSimulatorFactory;
-    }
-
     public Result SimulateAllMatches(Group group)
     {
-        var matchSimulator = IMatchSimulatorFactory.Create(group);
+        var matchSimulator = matchSimulatorFactory.Create(group);
         var matchesNotPlayed = group
             .Matches
             .Where(m => !m.IsPlayed)

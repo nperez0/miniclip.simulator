@@ -15,7 +15,7 @@ public sealed class Validation<T>
     public Result Validate()
         => messages.Count == 0
             ? Result.Success()
-            : Result.Failure(Error.Validation(code, messages.ToArray()));
+            : Result.Failure(Error.Validation(code, [.. messages]));
 }
 
 public static class Validation

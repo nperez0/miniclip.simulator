@@ -11,6 +11,9 @@ public abstract class KafkaConsumerService(
     ILogger logger,
     IConsumerRetryPolicy retryPolicy) : BackgroundService
 {
+    private static readonly TimeSpan TopicConsumerDelay = TimeSpan.FromSeconds(5);
+    private static readonly TimeSpan ConsumeExceptionDelay = TimeSpan.FromSeconds(5);
+
     protected abstract string ConsumerGroupId { get; }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -36,14 +39,14 @@ public abstract class KafkaConsumerService(
             catch (OperationCanceledException) { break; }
             catch (ConsumeException ex) when (ex.Error.Code == ErrorCode.UnknownTopicOrPart)
             {
-                logger.LogWarning("Topic not yet available: {Topics}. Retrying in 5s", topics);
-                await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
+                logger.LogWarning("Topic not yet available: {Topics}. Retrying in {delay}s", topics, TopicConsumerDelay.TotalSeconds);
+                await Task.Delay(TopicConsumerDelay, stoppingToken);
                 continue;
             }
             catch (Exception ex)
             {
                 logger.LogError(ex, "Error consuming from {Topics}", topics);
-                await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
+                await Task.Delay(ConsumeExceptionDelay, stoppingToken);
                 continue;
             }
 

@@ -1,5 +1,6 @@
 using Mediator;
 using Miniclip.Core.Application.Behaviors;
+using Miniclip.Core.ServiceDefaults.Behaviors;
 
 namespace Miniclip.Simulator.Api.Infrastructure.Configuration;
 
@@ -11,6 +12,7 @@ public static class MediatorConfiguration
 
         services.AddMediator(options => options.ServiceLifetime = ServiceLifetime.Scoped);
 
+        services.AddScoped(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
         services.AddScoped(typeof(IPipelineBehavior<,>), typeof(EventStoreCommandBehavior<,>));
 
         return services;

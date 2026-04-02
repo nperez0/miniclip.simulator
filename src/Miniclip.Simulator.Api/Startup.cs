@@ -1,4 +1,5 @@
 ﻿using Miniclip.Simulator.Api.Infrastructure.Configuration;
+using Serilog;
 
 namespace Miniclip.Simulator.Api;
 
@@ -22,6 +23,8 @@ public class Startup(IConfiguration configuration)
     public void Configure(IApplicationBuilder app)
     {
         app.InitializeDatabases();
+
+        app.UseSerilogRequestLogging();
 
         app.UseHttpsRedirection();
         app.UseRouting();

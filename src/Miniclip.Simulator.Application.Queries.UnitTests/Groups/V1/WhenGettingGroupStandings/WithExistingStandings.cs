@@ -125,7 +125,7 @@ public class WithExistingStandings : WhenGettingGroupStandings
     [Test]
     public void ShouldReturnAllStandings()
     {
-        Result.Value!.Standings.Count().ShouldBe(3);
+        Result.Value!.Standings.Length.ShouldBe(3);
     }
 
     [Test]
@@ -140,7 +140,7 @@ public class WithExistingStandings : WhenGettingGroupStandings
     [Test]
     public void ShouldReturnAllMatchResults()
     {
-        Result.Value!.MatchResults.Count().ShouldBe(2);
+        Result.Value!.MatchResults.Length.ShouldBe(2);
     }
 
     [Test]
@@ -155,7 +155,7 @@ public class WithExistingStandings : WhenGettingGroupStandings
     [Test]
     public void ShouldReturnQualifiedTeams()
     {
-        Result.Value!.QualifiedTeams.Count().ShouldBe(2);
+        Result.Value!.QualifiedTeams.Length.ShouldBe(2);
         Result.Value!.QualifiedTeams.ShouldAllBe(t => t.QualifiesForKnockout);
     }
 }

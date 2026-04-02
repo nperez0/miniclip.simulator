@@ -4,15 +4,8 @@ using Miniclip.Simulator.Domain.Aggregates.Groups.Errors;
 
 namespace Miniclip.Simulator.Domain.Aggregates.Groups.Services.Fixtures;
 
-public class FixtureSchedulerService : IFixtureSchedulerService
+public class FixtureSchedulerService(IFixtureSchedulerFactory fixtureSchedulerFactory) : IFixtureSchedulerService
 {
-    private readonly IFixtureSchedulerFactory fixtureSchedulerFactory;
-
-    public FixtureSchedulerService(IFixtureSchedulerFactory fixtureSchedulerFactory)
-    {
-        this.fixtureSchedulerFactory = fixtureSchedulerFactory;
-    }
-
     public Result GenerateFixtures(Group group)
     {
         if (group.Teams.Count < group.Capacity)
