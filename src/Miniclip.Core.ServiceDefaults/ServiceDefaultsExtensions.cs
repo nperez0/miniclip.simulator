@@ -36,12 +36,15 @@ public static class ServiceDefaultsExtensions
                 .WithMetrics(metrics =>
                 {
                     metrics.AddAspNetCoreInstrumentation()
-                        .AddHttpClientInstrumentation();
+                        .AddHttpClientInstrumentation()
+                        .AddMeter("Miniclip.Kafka");
                 })
                 .WithTracing(tracing =>
                 {
                     tracing.AddAspNetCoreInstrumentation()
-                        .AddHttpClientInstrumentation();
+                        .AddHttpClientInstrumentation()
+                        .AddSource("Miniclip.Mediator")
+                        .AddSource("Miniclip.Kafka");
                 });
 
             builder.AddOpenTelemetryExporters();

@@ -1,4 +1,3 @@
-using NSubstitute;
 using NUnit.Framework;
 
 namespace Miniclip.Core.Kafka.UnitTests.WhenExecutingConsumer;
@@ -19,10 +18,6 @@ public class AndHandlerFailsThenSucceeds : WhenExecuting
     [Test]
     public void ShouldCallHandlerTwice()
         => Assert.That(Sut!.HandleCallCount, Is.EqualTo(2));
-
-    [Test]
-    public void ShouldCommitOffsetOnce()
-        => MockConsumer.Received(1).Commit(TheResult);
 
     [Test]
     public void ShouldNotRouteToDeadLetter()

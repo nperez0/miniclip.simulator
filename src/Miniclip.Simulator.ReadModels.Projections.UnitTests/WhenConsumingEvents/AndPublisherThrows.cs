@@ -4,7 +4,7 @@ using NSubstitute;
 using NUnit.Framework;
 using Shouldly;
 
-namespace Miniclip.Simulator.ReadModels.Projections.UnitTests.WhenConsumingMatchPlayed;
+namespace Miniclip.Simulator.ReadModels.Projections.UnitTests.WhenConsumingEvents;
 
 [TestFixture]
 public class AndPublisherThrows : WhenConsumingEvents

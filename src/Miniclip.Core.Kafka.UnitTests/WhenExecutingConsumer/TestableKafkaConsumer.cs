@@ -1,24 +1,24 @@
 using Confluent.Kafka;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
+using Miniclip.Core.Kafka.OpenTelemetry;
 using NSubstitute;
 
 namespace Miniclip.Core.Kafka.UnitTests.WhenExecutingConsumer;
 
-public sealed class TestableKafkaConsumer(
-    IConsumerRetryPolicy retryPolicy, 
-    IConsumer<string, byte[]> consumer) 
-    : KafkaConsumerService(["test-topic"], Substitute.For<IConfiguration>(), NullLogger.Instance, retryPolicy)
+public sealed class TestableKafkaConsumer(IConsumerRetryPolicy retryPolicy)
+    : KafkaConsumerService(
+        Substitute.For<IKafkaConsumerConfig>(),
+        Substitute.For<IKafkaConsumerFactory>(),
+        retryPolicy,
+        Substitute.For<ITelemetryRecorderFactory>(),
+        NullLogger.Instance)
 {
     public int HandleCallCount { get; private set; }
     public Exception? DeadLetterException { get; private set; }
     public Func<Task> HandleAction { get; set; } = () => Task.CompletedTask;
 
-    public Task RunAsync(CancellationToken ct) => ExecuteAsync(ct);
-
-    protected override string ConsumerGroupId => "test-group";
-
-    protected override IConsumer<string, byte[]> BuildConsumer(ConsumerConfig config) => consumer;
+    public Task InvokeHandleMessageAsync(KafkaMessageContext context, CancellationToken ct)
+        => HandleMessageAsync(context, ct);
 
     protected override Task OnDeadLetterAsync(
         ConsumeResult<string, byte[]> result,

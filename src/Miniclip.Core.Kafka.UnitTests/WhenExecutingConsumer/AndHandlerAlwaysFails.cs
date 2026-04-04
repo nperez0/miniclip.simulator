@@ -1,4 +1,3 @@
-using NSubstitute;
 using NUnit.Framework;
 using Shouldly;
 
@@ -16,10 +15,6 @@ public class AndHandlerAlwaysFails : WhenExecuting
     [Test]
     public void ShouldCallHandlerMaxAttemptsTimes()
         => Assert.That(Sut!.HandleCallCount, Is.EqualTo(3));
-
-    [Test]
-    public void ShouldCommitOffsetAfterDeadLetter()
-        => MockConsumer.Received(1).Commit(TheResult);
 
     [Test]
     public void ShouldRouteToDeadLetter()

@@ -2,7 +2,7 @@ using Mediator;
 using NSubstitute;
 using NUnit.Framework;
 
-namespace Miniclip.Simulator.ReadModels.Projections.UnitTests.WhenConsumingMatchPlayed;
+namespace Miniclip.Simulator.ReadModels.Projections.UnitTests.WhenConsumingEvents;
 
 [TestFixture]
 public class AndMessageAlreadyProcessed : WhenConsumingEvents

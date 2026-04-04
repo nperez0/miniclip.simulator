@@ -8,7 +8,7 @@ public partial class LoggingBehavior<TRequest, TResponse>(ILogger<LoggingBehavio
     : IPipelineBehavior<TRequest, TResponse>
     where TRequest : IRequest<TResponse>
 {
-    private readonly ActivitySource activitySource = new("Miniclip.Application");
+    private static readonly ActivitySource ActivitySource = new("Miniclip.Mediator");
 
     public async ValueTask<TResponse> Handle(
         TRequest request,
@@ -17,7 +17,7 @@ public partial class LoggingBehavior<TRequest, TResponse>(ILogger<LoggingBehavio
     {
         var requestName = typeof(TRequest).Name;
 
-        using var activity = activitySource.StartActivity(requestName);
+        using var activity = ActivitySource.StartActivity(requestName);
         activity?.SetTag("request.type", requestName);
 
         LogHandlingRequest(logger, requestName);

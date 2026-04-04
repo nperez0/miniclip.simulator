@@ -1,5 +1,5 @@
-using System.Text;
 using Confluent.Kafka;
+using System.Text;
 
 namespace Miniclip.Core.Kafka;
 

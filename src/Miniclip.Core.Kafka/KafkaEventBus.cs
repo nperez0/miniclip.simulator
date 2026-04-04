@@ -1,31 +1,35 @@
-using System.Text;
 using Confluent.Kafka;
 using Miniclip.Core.Application;
-using Miniclip.Core.Domain;
 using Miniclip.Core.EventSourcing;
+using Miniclip.Core.Kafka.OpenTelemetry;
+using System.Text;
+using Microsoft.Extensions.Logging;
 
 namespace Miniclip.Core.Kafka;
 
 public sealed class KafkaEventBus(
     IProducer<string, byte[]> producer,
-    IEventSerializer serializer) : IEventBus
+    IEventSerializer serializer,
+    ILogger<KafkaEventBus> logger) : IEventBus
 {
-    public async Task PublishAsync(IDomainEvent @event, CancellationToken cancellationToken = default)
+    public async Task PublishAsync(CommittedEvent committed, CancellationToken cancellationToken = default)
     {
-        var topic = TopicNaming.For(@event);
-        var (eventType, data) = serializer.Serialize(@event);
+        var topic = TopicNaming.ForAggregate(committed.AggregateType);
+        var (eventType, data) = serializer.Serialize(committed.Event);
 
         var message = new Message<string, byte[]>
         {
-            Key = @event.AggregateId.ToString(),
+            Key = committed.Event.AggregateId.ToString(),
             Value = data,
             Headers =
             [
-                new Header("event-type",   Encoding.UTF8.GetBytes(eventType)),
-                new Header("event-id",     Encoding.UTF8.GetBytes(Guid.NewGuid().ToString())),
-                new Header("occurred-on",  Encoding.UTF8.GetBytes(DateTimeOffset.UtcNow.ToString("O")))
+                new Header("event-type", Encoding.UTF8.GetBytes(eventType)),
+                new Header("event-id", Encoding.UTF8.GetBytes(Guid.NewGuid().ToString())),
+                new Header("occurred-on", Encoding.UTF8.GetBytes(DateTimeOffset.UtcNow.ToString("O")))
             ]
         };
+
+        message.InjectTraceContext(topic, logger);
 
         await producer.ProduceAsync(topic, message, cancellationToken);
     }

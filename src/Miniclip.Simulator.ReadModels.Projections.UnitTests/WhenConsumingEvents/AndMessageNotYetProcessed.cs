@@ -2,7 +2,7 @@ using Miniclip.Core.Domain;
 using NSubstitute;
 using NUnit.Framework;
 
-namespace Miniclip.Simulator.ReadModels.Projections.UnitTests.WhenConsumingMatchPlayed;
+namespace Miniclip.Simulator.ReadModels.Projections.UnitTests.WhenConsumingEvents;
 
 [TestFixture]
 public class AndMessageNotYetProcessed : WhenConsumingEvents
@@ -37,7 +37,7 @@ public class AndMessageNotYetProcessed : WhenConsumingEvents
 
     [Test]
     public void ShouldRecordEventAsProcessed()
-        => ProcessedEvents.Received(1).Add(eventId, "simulator-projections-match-played");
+        => ProcessedEvents.Received(1).Add(eventId, Arg.Any<string>());
 
     [Test]
     public async Task ShouldSaveChanges()

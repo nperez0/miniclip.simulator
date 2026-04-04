@@ -20,8 +20,8 @@ public class EventStoreCommandBehavior<TRequest, TResponse>(IEventBus eventBus, 
 
         await session.CommitAsync(cancellationToken);
 
-        foreach (var @event in session.GetCommittedEvents())
-            await eventBus.PublishAsync(@event, cancellationToken);
+        foreach (var committed in session.GetCommittedEvents())
+            await eventBus.PublishAsync(committed, cancellationToken);
 
         return response;
     }

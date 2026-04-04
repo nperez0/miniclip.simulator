@@ -1,19 +1,19 @@
-using System.Text;
 using AutoFixture;
 using Confluent.Kafka;
 using Mediator;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Miniclip.Core.EventSourcing;
 using Miniclip.Core.Kafka;
+using Miniclip.Core.Kafka.OpenTelemetry;
 using Miniclip.Core.ReadModels;
 using Miniclip.Core.Tests;
-using Miniclip.Simulator.Domain.Aggregates.Groups.Events;
+using Miniclip.Simulator.Domain.Aggregates.Groups.Entities;
 using Miniclip.Simulator.ReadModels.Repositories.Write;
 using NSubstitute;
+using System.Text;
 
-namespace Miniclip.Simulator.ReadModels.Projections.UnitTests.WhenConsumingMatchPlayed;
+namespace Miniclip.Simulator.ReadModels.Projections.UnitTests.WhenConsumingEvents;
 
 public abstract class WhenConsumingEvents : AsyncTestBase<TestableConsumer>
 {
@@ -31,6 +31,8 @@ public abstract class WhenConsumingEvents : AsyncTestBase<TestableConsumer>
         Uow = Fixture.Freeze<IReadModelUnitOfWork>();
         Publisher = Fixture.Freeze<IPublisher>();
         Fixture.Freeze<IConsumerRetryPolicy>();
+        Fixture.Freeze<ITelemetryRecorderFactory>();
+        Fixture.Freeze<ILogger<ProjectionsConsumerService<Group>>>();
 
         var sp = Substitute.For<IServiceProvider>();
         sp.GetService(typeof(IProcessedEventsRepository)).Returns(ProcessedEvents);
@@ -43,8 +45,7 @@ public abstract class WhenConsumingEvents : AsyncTestBase<TestableConsumer>
         ScopeFactory = Fixture.Freeze<IServiceScopeFactory>();
         ScopeFactory.CreateScope().Returns(scope);
 
-        Fixture.Freeze<IConfiguration>();
-        Fixture.Freeze<ILogger<ProjectionsConsumerService<MatchPlayed>>>();
+        Fixture.Inject(Substitute.For<IKafkaConsumerConfig>());
 
         return Task.CompletedTask;
     }

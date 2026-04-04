@@ -1,3 +1,5 @@
+using Miniclip.Simulator.AppHost.Extensions;
+
 var builder = DistributedApplication.CreateBuilder(args);
 
 var mysqlPassword = builder.AddParameter("mysql-password", secret: true);
@@ -21,12 +23,14 @@ builder.AddContainer("eventstoredb", "eventstore/eventstore")
 var kafka = builder.AddKafka("kafka")
     .WithKafkaUI();
 
+var kafkaTopics = kafka.WithTopicCreation();
+
 builder.AddProject<Projects.Miniclip_Simulator_Api>("simulator-api")
     .WithReference(writeDb)
     .WithReference(readDb)
     .WithReference(kafka)
     .WaitFor(writeDb)
     .WaitFor(readDb)
-    .WaitFor(kafka);
+    .WaitFor(kafkaTopics);
 
 builder.Build().Run();

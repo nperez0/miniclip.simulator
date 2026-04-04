@@ -80,11 +80,11 @@ public sealed class EventStoreDbEventStore<T>(
         return aggregates.Values;
     }
 
-    private async Task<IDomainEvent[]> AppendAsync(T aggregate, CancellationToken cancellationToken)
+    private async Task<CommittedEvent[]> AppendAsync(T aggregate, CancellationToken cancellationToken)
     {
         var events = aggregate.DequeueUncommittedEvents();
         if (events.Length == 0)
-            return events;
+            return [];
 
         var streamName = GetStreamName(aggregate.Id);
         var eventData = events
@@ -96,19 +96,21 @@ public sealed class EventStoreDbEventStore<T>(
             await client.AppendToStreamAsync(streamName, StreamState.NoStream, eventData, cancellationToken: cancellationToken);
 
             SetVersion(aggregate, eventData.Length - 1);
+        }
+        else
+        {
+            await client.AppendToStreamAsync(
+                streamName,
+                StreamRevision.FromInt64(aggregate.Version),
+                eventData,
+                cancellationToken: cancellationToken);
 
-            return events;
+            SetVersion(aggregate, aggregate.Version + eventData.Length);
         }
 
-        await client.AppendToStreamAsync(
-            streamName,
-            StreamRevision.FromInt64(aggregate.Version),
-            eventData,
-            cancellationToken: cancellationToken);
-
-        SetVersion(aggregate, aggregate.Version + eventData.Length);
-
-        return events;
+        return events
+            .Select(e => new CommittedEvent(e, typeof(T).Name))
+            .ToArray();
     }
 
     private EventData ToEventData(IDomainEvent @event)

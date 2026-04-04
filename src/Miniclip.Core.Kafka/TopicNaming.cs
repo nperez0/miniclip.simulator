@@ -3,13 +3,16 @@ using Miniclip.Core.Domain;
 
 namespace Miniclip.Core.Kafka;
 
-public static class TopicNaming
+public static partial class TopicNaming
 {
-    private static readonly Regex PascalCasePattern = new(@"(?<=.)([A-Z])", RegexOptions.Compiled);
+    private static readonly Regex PascalCasePattern = PascalRegex();
 
-    public static string For(IDomainEvent @event)
-        => $"simulator.{PascalCasePattern.Replace(@event.GetType().Name, "-$1").ToLowerInvariant()}";
+    public static string ForAggregate<TAggregate>() where TAggregate : AggregateRoot
+        => ForAggregate(typeof(TAggregate).Name);
 
-    public static string ForType<TEvent>() where TEvent : IDomainEvent
-        => $"simulator.{PascalCasePattern.Replace(typeof(TEvent).Name, "-$1").ToLowerInvariant()}";
+    public static string ForAggregate(string aggregateType)
+        => $"simulator.{PascalCasePattern.Replace(aggregateType, "-$1").ToLowerInvariant()}";
+
+    [GeneratedRegex("(?<=.)([A-Z])", RegexOptions.Compiled)]
+    private static partial Regex PascalRegex();
 }
