@@ -166,6 +166,38 @@ Only the **read side** uses EF Core (`SimulatorReadDbContext`). Read DB migratio
 | `Miniclip.Simulator.Common.Tests` | Shared test helpers and builders |
 | `Miniclip.Core.Tests` | Shared kernel tests |
 
+### Unit Test Conventions
+
+All unit tests follow the **abstract `When*` / concrete `With*`** pattern backed by `TestBase<TSut>` or `AsyncTestBase<TSut>` (from `Miniclip.Core.Tests`).
+
+#### Structure
+- **Abstract `When<Context>` class** -- extends `TestBase<TSut>` (sync) or `AsyncTestBase<TSut>` (async).
+  - No `[TestFixture]` attribute.
+  - `Given()` / `GivenAsync()` -- sets up shared state (mocks, configuration, fixtures).
+  - `CreateSystemUnderTest()` -- constructs and returns the SUT; called by the base after `Given()`.
+  - `When()` / `WhenAsync()` -- executes the action under test (override when needed).
+- **Concrete `With<Scenario>` classes** -- one per test scenario; inherit the abstract base.
+  - No `[TestFixture]` attribute.
+  - Override `Given()` only when the scenario requires different setup from the base.
+  - Each `[Test]` method contains a **single assertion**.
+  - Name tests as `Should<ExpectedBehaviour>`.
+
+#### Base class lifecycle (`[OneTimeSetUp]`)
+`Given() -> CreateSystemUnderTest() -> When()`
+
+#### DI registration tests
+When testing `IServiceCollection` configuration, use `TestBase<ServiceProvider>`:
+- `Given()` sets up `IConfiguration`.
+- `CreateSystemUnderTest()` builds and returns the `ServiceProvider`.
+- Concrete classes assert that specific services are / are not registered via `Sut!.GetService<T>()` / `GetServices<T>()`.
+- Do **not** name the config property `Configuration` inside a namespace ending in `.Configuration` -- it causes `CS0118`; use `Config` instead.
+
+#### Key rules
+- `Fixture` (AutoFixture + AutoNSubstitute) is provided by the base -- use `Fixture.Freeze<T>()` for mocks.
+- `Sut` is the typed SUT instance, available after `CreateSystemUnderTest()` runs.
+- Every test project has `GlobalUsings.cs` with `global using NUnit.Framework; Shouldly; NSubstitute; Microsoft.Extensions.DependencyInjection`.
+- No `[TestFixture]` on concrete classes (NUnit discovers them via the abstract base).
+
 ---
 
 ## Further Reading
