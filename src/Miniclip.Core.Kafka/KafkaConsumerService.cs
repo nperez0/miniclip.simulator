@@ -2,6 +2,7 @@ using Confluent.Kafka;
 using Confluent.Kafka.Admin;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Miniclip.Core.OpenTelemetry;
 
 namespace Miniclip.Core.Kafka;
 
@@ -39,6 +40,7 @@ public abstract partial class KafkaConsumerService(
     protected virtual async Task HandleMessageAsync(KafkaMessageContext context, CancellationToken stoppingToken)
     {
         var attempt = 0;
+        using var activity = OpenTelemetryActivity.StartActivity(context.Result.GetHeader("event-type"));
 
         while (true)
         {
@@ -51,11 +53,14 @@ public abstract partial class KafkaConsumerService(
             catch (Exception ex) when (attempt < retryPolicy.MaxAttempts - 1)
             {
                 attempt++;
+                OpenTelemetryMetrics.RecordRetryAttempt();
                 LogRetryAttempt(logger, ex, attempt, retryPolicy.MaxAttempts, context.Result.Topic);
                 await Task.Delay(retryPolicy.Delay(attempt), stoppingToken);
             }
             catch (Exception ex)
             {
+                activity.NoticeError(ex);
+                OpenTelemetryMetrics.RecordMessageFailed();
                 LogMessagePermanentlyFailed(logger, ex, retryPolicy.MaxAttempts, context.Result.Topic);
                 await OnDeadLetterAsync(context, ex, stoppingToken);
                 break;

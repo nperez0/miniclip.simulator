@@ -21,7 +21,8 @@ public static class OpenTelemetryConfiguration
                         .AddHttpClientInstrumentation()
                         .AddOtlpExporter()
                         .AddKafkaProducerInstrumentation<string, byte[]>()
-                        .AddKafkaConsumerInstrumentation<string, byte[]>(TopicNaming.ForAggregate<Group>());
+                        .AddKafkaConsumerInstrumentation<string, byte[]>(TopicNaming.ForAggregate<Group>())
+                        .AddSimulator();
                 })
                 .WithTracing(tracing =>
                 {
@@ -33,7 +34,8 @@ public static class OpenTelemetryConfiguration
                         .AddKafkaConsumerInstrumentation<string, byte[]>(TopicNaming.ForAggregate<Group>())
                         .AddMySqlData()
                         .AddMySqlConnector()
-                        .AddKurrentDBClientInstrumentation();
+                        .AddKurrentDBClientInstrumentation()
+                        .AddSimulator();
                 });
 
             return services;

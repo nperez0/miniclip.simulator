@@ -20,7 +20,7 @@ public partial class KafkaConsumer(
 
         while (!stoppingToken.IsCancellationRequested)
         {
-            ConsumeResult<string, byte[]>? result = null;
+            ConsumeResult<string, byte[]>? result;
             try
             {
                 result = consumer.Consume(stoppingToken);

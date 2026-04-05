@@ -1,6 +1,7 @@
 ﻿using Mediator;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
+using Miniclip.Core.OpenTelemetry;
 
 namespace Miniclip.Core.ServiceDefaults.Behaviors;
 
@@ -28,6 +29,7 @@ public partial class LoggingBehavior<TRequest, TResponse>(ILogger<LoggingBehavio
             {
                 if (failed.Error.Type == ErrorType.Conflict)
                 {
+                    Activity.Current.NoticeError(failed.Error.Code);
                     LogConflict(logger, requestName, failed.Error.Code, sw.ElapsedMilliseconds);
                 }
                 else
