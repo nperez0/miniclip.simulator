@@ -1,10 +1,8 @@
 ﻿using Confluent.Kafka;
-using Microsoft.Extensions.Configuration;
 using Miniclip.Core.Application;
 using Miniclip.Core.Domain;
 using Miniclip.Core.EventSourcing;
 using Miniclip.Core.Kafka;
-using Miniclip.Core.Kafka.OpenTelemetry;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Entities;
 using Miniclip.Simulator.Infrastructure.Read.Persistence.Repositories.Write;
 using Miniclip.Simulator.ReadModels.Projections;
@@ -16,57 +14,80 @@ public static class KafkaConfiguration
 {
     extension(IServiceCollection services)
     {
-        public IServiceCollection AddKafkaDependencies(
-        IConfiguration configuration)
+        public IServiceCollection AddKafkaDependencies(IConfiguration configuration)
         {
             services.AddEventBus(configuration);
 
-            services.AddSingleton<IKafkaConsumerFactory, KafkaConsumerFactory>();
             services.AddSingleton<IConsumerRetryPolicy, ExponentialBackoffRetryPolicy>();
-            services.AddSingleton<ITelemetryRecorderFactory, KafkaTelemetryRecorderFactory>();
             services.AddScoped<IProcessedEventsRepository, ProcessedEventsRepository>();
 
-            services.AddProjectionsConsumers();
+            services.AddProjectionsConsumers(configuration);
 
             return services;
         }
 
-        private IServiceCollection AddEventBus(
-            IConfiguration configuration)
+        private IServiceCollection AddEventBus(IConfiguration configuration)
         {
             var config = new ProducerConfig
             {
                 BootstrapServers = configuration.GetConnectionString("kafka")!
             };
 
-            services.AddSingleton<IProducer<string, byte[]>>(_ =>
-                new ProducerBuilder<string, byte[]>(config).Build());
+            services.AddSingleton(new InstrumentedProducerBuilder<string, byte[]>(config));
+
+            services.AddSingleton<IProducer<string, byte[]>>(sp =>
+                sp.GetRequiredService<InstrumentedProducerBuilder<string, byte[]>>().Build());
 
             services.AddSingleton<IEventBus, KafkaEventBus>();
 
             return services;
         }
 
-        private IServiceCollection AddProjectionsConsumers()
-            => services.AddHostedService(BuildProjectionsConsumerFor<Group>);
+        private IServiceCollection AddProjectionsConsumers(IConfiguration configuration)
+        {
+            var connectionString = configuration.GetConnectionString("kafka");
+
+            return services.AddProjectionsConsumer<Group>(connectionString);
+        }
+
+        private IServiceCollection AddProjectionsConsumer<TAggregate>(string? connectionString) where TAggregate : AggregateRoot
+        {
+            var key = TopicNaming.ForAggregate<TAggregate>();
+            var config = new KafkaConsumerConfig
+            {
+                BootstrapServers = connectionString!,
+                ConsumerGroupId = BuildProjectionsConsumerGroupIdFor<TAggregate>(),
+                Topics = [TopicNaming.ForAggregate<TAggregate>()]
+            };
+
+            services.AddKeyedSingleton<InstrumentedConsumerBuilder<string, byte[]>, InstrumentedConsumerBuilder<string, byte[]>>(
+                key,
+                (_, _) => new InstrumentedConsumerBuilder<string, byte[]>(config.ConsumerConfig));
+
+            return services
+                .AddHostedService<ProjectionsConsumerService<TAggregate>>(sp => BuildProjectionsConsumerFor<TAggregate>(sp, config, key));
+        }
     }
 
-    private static ProjectionsConsumerService<TAggregate> BuildProjectionsConsumerFor<TAggregate>(this IServiceProvider service) where TAggregate : AggregateRoot
+    private static ProjectionsConsumerService<TAggregate> BuildProjectionsConsumerFor<TAggregate>(
+        IServiceProvider service, 
+        KafkaConsumerConfig config,
+        string key) 
+        where TAggregate : AggregateRoot
     {
-        var config = new KafkaConsumerConfig
-        {
-            BootstrapServers = service.GetRequiredService<IConfiguration>().GetConnectionString("kafka")!,
-            ConsumerGroupId = $"simulator-projections-{ConsumerGroupIdNaming.ForAggregate<Group>()}",
-            Topics = [TopicNaming.ForAggregate<Group>()]
-        };
+        var consumerFactory = new KafkaConsumerFactory(
+            service.GetKeyedService<InstrumentedConsumerBuilder<string, byte[]>>(key)!,
+            config,
+            service.GetRequiredService<ILogger<KafkaConsumer>>());
 
         var serviceFactory = service.GetRequiredService<IServiceScopeFactory>();
-        var consumerFactory = service.GetRequiredService<IKafkaConsumerFactory>();
         var retryPolicy = service.GetRequiredService<IConsumerRetryPolicy>();
         var serializer = service.GetRequiredService<IEventSerializer>();
         var logger = service.GetRequiredService<ILogger<ProjectionsConsumerService<TAggregate>>>();
-        var telemetryRecorderFactory = service.GetRequiredService<ITelemetryRecorderFactory>();
 
-        return new ProjectionsConsumerService<TAggregate>(config, serviceFactory, consumerFactory, retryPolicy, serializer, telemetryRecorderFactory, logger);
+        return new ProjectionsConsumerService<TAggregate>(config, serviceFactory, consumerFactory, retryPolicy, serializer, logger);
     }
+
+    private static string BuildProjectionsConsumerGroupIdFor<TAggregate>() where TAggregate : AggregateRoot
+        => $"simulator-projections-{ConsumerGroupIdNaming.ForAggregate<TAggregate>()}";
 }

@@ -8,17 +8,12 @@ public partial class LoggingBehavior<TRequest, TResponse>(ILogger<LoggingBehavio
     : IPipelineBehavior<TRequest, TResponse>
     where TRequest : IRequest<TResponse>
 {
-    private static readonly ActivitySource ActivitySource = new("Miniclip.Mediator");
-
     public async ValueTask<TResponse> Handle(
         TRequest request,
         MessageHandlerDelegate<TRequest, TResponse> next,
         CancellationToken cancellationToken)
     {
         var requestName = typeof(TRequest).Name;
-
-        using var activity = ActivitySource.StartActivity(requestName);
-        activity?.SetTag("request.type", requestName);
 
         LogHandlingRequest(logger, requestName);
 
@@ -31,15 +26,19 @@ public partial class LoggingBehavior<TRequest, TResponse>(ILogger<LoggingBehavio
 
             if (response is Result { IsFailure: true } failed)
             {
-                activity?.SetStatus(ActivityStatusCode.Error, failed.Error.Code);
-                activity?.SetTag("error.code", failed.Error.Code);
-                activity?.SetTag("error.type", failed.Error.Type.ToString());
-
                 if (failed.Error.Type == ErrorType.Conflict)
+                {
                     LogConflict(logger, requestName, failed.Error.Code, sw.ElapsedMilliseconds);
+                }
                 else
-                    LogDomainFailure(logger, requestName, failed.Error.Code,
-                        failed.Error.Type.ToString(), sw.ElapsedMilliseconds);
+                {
+                    LogDomainFailure(
+                        logger,
+                        requestName,
+                        failed.Error.Code,
+                        failed.Error.Type.ToString(),
+                        sw.ElapsedMilliseconds);
+                }
             }
             else
                 LogHandledRequest(logger, requestName, sw.ElapsedMilliseconds);
@@ -49,7 +48,6 @@ public partial class LoggingBehavior<TRequest, TResponse>(ILogger<LoggingBehavio
         catch (Exception ex)
         {
             sw.Stop();
-            activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
             LogUnhandledException(logger, ex, requestName, sw.ElapsedMilliseconds);
             throw;
         }

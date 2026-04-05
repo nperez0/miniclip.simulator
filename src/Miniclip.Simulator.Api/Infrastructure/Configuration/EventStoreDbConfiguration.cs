@@ -1,4 +1,4 @@
-﻿using EventStore.Client;
+﻿using KurrentDB.Client;
 using Miniclip.Core.Domain;
 using Miniclip.Core.EventSourcing;
 using Miniclip.Core.EventSourcing.EventStoreDB;
@@ -15,9 +15,9 @@ public static class EventStoreDbConfiguration
         IConfiguration configuration)
     {
         var connectionString = configuration.GetConnectionString("EventStore")!;
-        var settings = EventStoreClientSettings.Create(connectionString);
+        var settings = KurrentDBClientSettings.Create(connectionString);
 
-        services.AddSingleton(_ => new EventStoreClient(settings));
+        services.AddSingleton(_ => new KurrentDBClient(settings));
         services.AddSingleton<IEventSerializer, SystemTextJsonEventSerializer>();
         services.AddScoped<IEventStoreSession, EventStoreSession>();
         services.AddScoped(typeof(IEventStore<>), typeof(EventStoreDbEventStore<>));

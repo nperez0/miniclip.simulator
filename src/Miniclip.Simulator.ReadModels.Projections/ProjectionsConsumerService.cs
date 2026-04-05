@@ -5,7 +5,6 @@ using Microsoft.Extensions.Logging;
 using Miniclip.Core.Domain;
 using Miniclip.Core.EventSourcing;
 using Miniclip.Core.Kafka;
-using Miniclip.Core.Kafka.OpenTelemetry;
 using Miniclip.Core.ReadModels;
 using Miniclip.Simulator.ReadModels.Repositories.Write;
 
@@ -17,18 +16,16 @@ public partial class ProjectionsConsumerService<TAggregate>(
     IKafkaConsumerFactory consumerFactory,
     IConsumerRetryPolicy retryPolicy,
     IEventSerializer serializer,
-    ITelemetryRecorderFactory telemetryRecorderFactory,
-    ILogger<ProjectionsConsumerService<TAggregate>> logger
-    ) : KafkaConsumerService(config, consumerFactory, retryPolicy, telemetryRecorderFactory, logger)
+    ILogger<ProjectionsConsumerService<TAggregate>> logger) 
+    : KafkaConsumerService(config, consumerFactory, retryPolicy, logger)
     where TAggregate : AggregateRoot
 {
     protected override async Task HandleAsync(
-        ConsumeResult<string, byte[]> result,
+        KafkaMessageContext context,
         CancellationToken cancellationToken)
     {
-        var eventId = result.GetHeader("event-id");
-        var eventType = result.GetHeader("event-type");
-
+        var eventId = context.Result.GetHeader("event-id");
+        var eventType = context.Result.GetHeader("event-type");
         using var scope = scopeFactory.CreateScope();
         var processedEventsRepository = scope.ServiceProvider.GetRequiredService<IProcessedEventsRepository>();
 
@@ -38,7 +35,7 @@ public partial class ProjectionsConsumerService<TAggregate>(
             return;
         }
 
-        var domainEvent = serializer.Deserialize(eventType, result.Message.Value);
+        var domainEvent = serializer.Deserialize(eventType, context.Result.Message.Value);
 
         var unitOfWork = scope.ServiceProvider.GetRequiredService<IReadModelUnitOfWork>();
         var publisher = scope.ServiceProvider.GetRequiredService<IPublisher>();

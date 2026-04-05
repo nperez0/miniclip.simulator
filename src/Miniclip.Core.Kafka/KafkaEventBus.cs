@@ -1,7 +1,6 @@
 using Confluent.Kafka;
 using Miniclip.Core.Application;
 using Miniclip.Core.EventSourcing;
-using Miniclip.Core.Kafka.OpenTelemetry;
 using System.Text;
 using Microsoft.Extensions.Logging;
 
@@ -28,8 +27,6 @@ public sealed class KafkaEventBus(
                 new Header("occurred-on", Encoding.UTF8.GetBytes(DateTimeOffset.UtcNow.ToString("O")))
             ]
         };
-
-        message.InjectTraceContext(topic, logger);
 
         await producer.ProduceAsync(topic, message, cancellationToken);
     }

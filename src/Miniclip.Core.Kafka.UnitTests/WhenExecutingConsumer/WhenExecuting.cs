@@ -6,7 +6,7 @@ namespace Miniclip.Core.Kafka.UnitTests.WhenExecutingConsumer;
 
 public abstract class WhenExecuting : AsyncTestBase<TestableKafkaConsumer>
 {
-    protected ConsumeResult<string, byte[]> TheResult { get; private set; } = null!;
+    protected ConsumeResult<string, byte[]> Result { get; private set; } = null!;
     protected KafkaMessageContext MessageContext { get; private set; } = null!;
     protected Func<Task> HandleAction { get; set; } = () => Task.CompletedTask;
 
@@ -16,12 +16,12 @@ public abstract class WhenExecuting : AsyncTestBase<TestableKafkaConsumer>
 
         consumerConfig.ConsumerConfig.Returns(new ConsumerConfig { GroupId = "test-group" });
 
-        TheResult = new ConsumeResult<string, byte[]>
+        Result = new ConsumeResult<string, byte[]>
         {
             Message = new Message<string, byte[]> { Key = "key", Value = [], Headers = [] }
         };
 
-        MessageContext = new KafkaMessageContext(TheResult, consumerConfig);
+        MessageContext = new KafkaMessageContext(Result);
 
         return Task.CompletedTask;
     }

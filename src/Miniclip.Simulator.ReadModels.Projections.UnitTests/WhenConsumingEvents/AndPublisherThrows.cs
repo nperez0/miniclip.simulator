@@ -13,7 +13,7 @@ public class AndPublisherThrows : WhenConsumingEvents
     {
         await base.GivenAsync();
 
-        ConsumeResult = BuildConsumeResult(Guid.NewGuid().ToString(), "MatchPlayed");
+        Context = BuildKafkaMessageContext(Guid.NewGuid().ToString(), "MatchPlayed");
 
         ProcessedEvents
             .ContainsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())

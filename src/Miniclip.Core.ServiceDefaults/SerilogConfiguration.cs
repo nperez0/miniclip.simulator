@@ -4,7 +4,7 @@ using Serilog.Sinks.OpenTelemetry;
 
 namespace Miniclip.Core.ServiceDefaults;
 
-public static class SerilogExtensions
+public static class SerilogConfiguration
 {
     public static IHostApplicationBuilder AddStructuredLogging(this IHostApplicationBuilder builder)
     {

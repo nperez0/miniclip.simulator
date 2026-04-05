@@ -18,6 +18,8 @@ public class Startup(IConfiguration configuration)
         services.AddReadModelsDbDependencies(configuration);
         services.AddDomainDependencies();
         services.AddProjectionsDependencies();
+
+        services.AddOpenTelemetryDependencies();
     }
 
     public void Configure(IApplicationBuilder app)

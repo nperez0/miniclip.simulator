@@ -2,10 +2,7 @@
 
 namespace Miniclip.Core.Kafka;
 
-public class KafkaMessageContext(
-    ConsumeResult<string, byte[]> message,
-    IKafkaConsumerConfig config)
+public class KafkaMessageContext(ConsumeResult<string, byte[]> result)
 {
-    public ConsumeResult<string, byte[]> Message { get; } = message;
-    public IKafkaConsumerConfig Config { get; } = config;
+    public ConsumeResult<string, byte[]> Result { get; } = result;
 }

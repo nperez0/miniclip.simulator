@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 namespace Miniclip.Core.Kafka;
 
 public partial class KafkaConsumer(
+    IConsumer<string, byte[]> consumer,
     IKafkaConsumerConfig config,
     Func<KafkaMessageContext, CancellationToken, Task> onHandleAsync,
     ILogger logger)
@@ -11,12 +12,11 @@ public partial class KafkaConsumer(
 {
     private static readonly TimeSpan ConsumeExceptionDelay = TimeSpan.FromSeconds(5);
 
-    private readonly IConsumer<string, byte[]> consumer = BuildConsumer(config.ConsumerConfig);
-
     public async Task ConsumeAsync(CancellationToken stoppingToken)
     {
-        LogTopicsSubscription(logger, string.Join(",", config.Topics));
         consumer.Subscribe(config.Topics);
+
+        LogTopicsSubscribed(logger, string.Join(",", config.Topics));
 
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -33,16 +33,13 @@ public partial class KafkaConsumer(
                 continue;
             }
 
-            await onHandleAsync(new KafkaMessageContext(result, config), stoppingToken);
+            await onHandleAsync(new KafkaMessageContext(result), stoppingToken);
             consumer.Commit(result);
         }
     }
 
-    private static IConsumer<string, byte[]> BuildConsumer(ConsumerConfig config)
-        => new ConsumerBuilder<string, byte[]>(config).Build();
-
-    [LoggerMessage(LogLevel.Information, "Subscribing to topics: {Topics}")]
-    static partial void LogTopicsSubscription(ILogger logger, string Topics);
+    [LoggerMessage(LogLevel.Information, "Topics subscribed: {Topics}")]
+    static partial void LogTopicsSubscribed(ILogger logger, string Topics);
 
     [LoggerMessage(LogLevel.Warning, "Topic not yet available: {Topics}. Retrying in {DelaySeconds}s")]
     static partial void LogTopicNotAvailable(ILogger logger, string Topics, int DelaySeconds);

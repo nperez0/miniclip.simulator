@@ -2,7 +2,5 @@
 
 public interface IKafkaConsumerFactory
 {
-    IKafkaConsumer CreateConsumer(
-        IKafkaConsumerConfig config,
-        Func<KafkaMessageContext, CancellationToken, Task> onHandleAsync);
+    IKafkaConsumer CreateConsumer(Func<KafkaMessageContext, CancellationToken, Task> onHandleAsync);
 }

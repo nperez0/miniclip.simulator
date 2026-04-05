@@ -1,6 +1,4 @@
-using Confluent.Kafka;
 using Microsoft.Extensions.Logging.Abstractions;
-using Miniclip.Core.Kafka.OpenTelemetry;
 using NSubstitute;
 
 namespace Miniclip.Core.Kafka.UnitTests.WhenExecutingConsumer;
@@ -10,7 +8,6 @@ public sealed class TestableKafkaConsumer(IConsumerRetryPolicy retryPolicy)
         Substitute.For<IKafkaConsumerConfig>(),
         Substitute.For<IKafkaConsumerFactory>(),
         retryPolicy,
-        Substitute.For<ITelemetryRecorderFactory>(),
         NullLogger.Instance)
 {
     public int HandleCallCount { get; private set; }
@@ -21,7 +18,7 @@ public sealed class TestableKafkaConsumer(IConsumerRetryPolicy retryPolicy)
         => HandleMessageAsync(context, ct);
 
     protected override Task OnDeadLetterAsync(
-        ConsumeResult<string, byte[]> result,
+        KafkaMessageContext context,
         Exception exception,
         CancellationToken cancellationToken)
     {
@@ -29,7 +26,7 @@ public sealed class TestableKafkaConsumer(IConsumerRetryPolicy retryPolicy)
         return Task.CompletedTask;
     }
 
-    protected override Task HandleAsync(ConsumeResult<string, byte[]> result, CancellationToken ct)
+    protected override Task HandleAsync(KafkaMessageContext context, CancellationToken ct)
     {
         HandleCallCount++;
         return HandleAction();

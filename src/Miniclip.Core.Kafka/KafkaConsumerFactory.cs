@@ -3,10 +3,13 @@ using Microsoft.Extensions.Logging;
 
 namespace Miniclip.Core.Kafka;
 
-public class KafkaConsumerFactory(ILogger<KafkaConsumer> logger) : IKafkaConsumerFactory
+public class KafkaConsumerFactory(
+    ConsumerBuilder<string, byte[]> consumerBuilder,
+    IKafkaConsumerConfig config,
+    ILogger<KafkaConsumer> logger) : IKafkaConsumerFactory
 {
-    public IKafkaConsumer CreateConsumer(
-        IKafkaConsumerConfig config,
-        Func<KafkaMessageContext, CancellationToken, Task> onHandleAsync)
-        => new KafkaConsumer(config, onHandleAsync, logger);
+    public IKafkaConsumer CreateConsumer(Func<KafkaMessageContext, CancellationToken, Task> onHandleAsync)
+    {
+        return new KafkaConsumer(consumerBuilder.Build(), config, onHandleAsync, logger);
+    }
 }

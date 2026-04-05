@@ -16,7 +16,7 @@ public class AndMessageNotYetProcessed : WhenConsumingEvents
 
         eventId = Guid.NewGuid().ToString();
         domainEvent = Substitute.For<IDomainEvent>();
-        ConsumeResult = BuildConsumeResult(eventId, "MatchPlayed");
+        Context = BuildKafkaMessageContext(eventId, "MatchPlayed");
 
         ProcessedEvents
             .ContainsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())

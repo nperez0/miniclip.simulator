@@ -2,7 +2,6 @@ using Confluent.Kafka;
 using Confluent.Kafka.Admin;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Miniclip.Core.Kafka.OpenTelemetry;
 
 namespace Miniclip.Core.Kafka;
 
@@ -10,7 +9,6 @@ public abstract partial class KafkaConsumerService(
     IKafkaConsumerConfig config,
     IKafkaConsumerFactory consumerFactory,
     IConsumerRetryPolicy retryPolicy,
-    ITelemetryRecorderFactory telemetryRecorderFactory,
     ILogger logger) : BackgroundService
 {
     protected IKafkaConsumerConfig Config => config;
@@ -22,53 +20,47 @@ public abstract partial class KafkaConsumerService(
 
         var consumers = Enumerable
             .Range(0, effectiveConsumerCount)
-            .Select(_ => consumerFactory.CreateConsumer(config, HandleMessageAsync))
+            .Select(_ => consumerFactory.CreateConsumer(HandleMessageAsync))
             .ToList();
 
         await Task.WhenAll(consumers.Select(c => c.ConsumeAsync(stoppingToken)));
     }
 
     protected virtual Task OnDeadLetterAsync(
-        ConsumeResult<string, byte[]> result,
+        KafkaMessageContext context,
         Exception exception,
         CancellationToken cancellationToken)
         => Task.CompletedTask;
 
     protected abstract Task HandleAsync(
-        ConsumeResult<string, byte[]> result,
+        KafkaMessageContext context,
         CancellationToken cancellationToken);
 
     protected virtual async Task HandleMessageAsync(KafkaMessageContext context, CancellationToken stoppingToken)
     {
         var attempt = 0;
-        using var recorder = telemetryRecorderFactory.Create(context, config.ConsumerGroupId);
 
         while (true)
         {
             try
             {
-                await HandleAsync(context.Message, stoppingToken);
+                await HandleAsync(context, stoppingToken);
                 break;
             }
             catch (OperationCanceledException) { throw; }
             catch (Exception ex) when (attempt < retryPolicy.MaxAttempts - 1)
             {
                 attempt++;
-                recorder.RecordRetryAttempt();
-                LogRetryAttempt(logger, ex, attempt, retryPolicy.MaxAttempts, context.Message.Topic);
+                LogRetryAttempt(logger, ex, attempt, retryPolicy.MaxAttempts, context.Result.Topic);
                 await Task.Delay(retryPolicy.Delay(attempt), stoppingToken);
             }
             catch (Exception ex)
             {
-                recorder.SetErrorStatus(ex);
-                recorder.RecordMessageFailed();
-                LogMessagePermanentlyFailed(logger, ex, retryPolicy.MaxAttempts, context.Message.Topic);
-                await OnDeadLetterAsync(context.Message, ex, stoppingToken);
+                LogMessagePermanentlyFailed(logger, ex, retryPolicy.MaxAttempts, context.Result.Topic);
+                await OnDeadLetterAsync(context, ex, stoppingToken);
                 break;
             }
         }
-
-        recorder.RecordProcessingDuration();
     }
 
     protected virtual int ResolveConsumerCount(CancellationToken stoppingToken)
@@ -136,15 +128,13 @@ public abstract partial class KafkaConsumerService(
         }
     }
 
-    [LoggerMessage(LogLevel.Warning,
-        "ConsumerGroup {consumerGroup}: ConsumerCount {requested} exceeds partition count {partitionCount}")]
+    [LoggerMessage(LogLevel.Warning, "ConsumerGroup {consumerGroup}: ConsumerCount {requested} exceeds partition count {partitionCount}")]
     static partial void LogConsumerCountClamped(ILogger logger, string consumerGroup, int requested, int partitionCount);
 
     [LoggerMessage(LogLevel.Warning, "Topic not yet available: {topics}. Retrying in {delaySeconds}s")]
     static partial void LogTopicNotAvailable(ILogger logger, string topics, int delaySeconds);
 
-    [LoggerMessage(LogLevel.Information,
-        "ConsumerGroup {ConsumerGroupId} - {Topic}[{Partition}]: currentOffset={CurrentOffset} endOffset={EndOffset} lag={Lag}")]
+    [LoggerMessage(LogLevel.Information, "ConsumerGroup {ConsumerGroupId} - {Topic}[{Partition}]: currentOffset={CurrentOffset} endOffset={EndOffset} lag={Lag}")]
     static partial void LogConsumerPartitionStatus(ILogger logger, string ConsumerGroupId, string Topic, int Partition,
         long CurrentOffset, long EndOffset, long Lag);
 

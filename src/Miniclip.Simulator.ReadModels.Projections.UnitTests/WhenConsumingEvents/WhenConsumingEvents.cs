@@ -5,7 +5,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Miniclip.Core.EventSourcing;
 using Miniclip.Core.Kafka;
-using Miniclip.Core.Kafka.OpenTelemetry;
 using Miniclip.Core.ReadModels;
 using Miniclip.Core.Tests;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Entities;
@@ -22,7 +21,7 @@ public abstract class WhenConsumingEvents : AsyncTestBase<TestableConsumer>
     protected IProcessedEventsRepository ProcessedEvents { get; private set; } = null!;
     protected IReadModelUnitOfWork Uow { get; private set; } = null!;
     protected IPublisher Publisher { get; private set; } = null!;
-    protected ConsumeResult<string, byte[]>? ConsumeResult { get; set; }
+    protected KafkaMessageContext? Context { get; set; }
 
     protected override Task GivenAsync()
     {
@@ -31,7 +30,6 @@ public abstract class WhenConsumingEvents : AsyncTestBase<TestableConsumer>
         Uow = Fixture.Freeze<IReadModelUnitOfWork>();
         Publisher = Fixture.Freeze<IPublisher>();
         Fixture.Freeze<IConsumerRetryPolicy>();
-        Fixture.Freeze<ITelemetryRecorderFactory>();
         Fixture.Freeze<ILogger<ProjectionsConsumerService<Group>>>();
 
         var sp = Substitute.For<IServiceProvider>();
@@ -51,7 +49,10 @@ public abstract class WhenConsumingEvents : AsyncTestBase<TestableConsumer>
     }
 
     protected override Task WhenAsync()
-        => Sut!.InvokeHandleAsync(ConsumeResult!, CancellationToken.None);
+        => Sut!.InvokeHandleAsync(Context!, CancellationToken.None);
+
+    protected static KafkaMessageContext BuildKafkaMessageContext(string eventId, string eventType)
+        => new(BuildConsumeResult(eventId, eventType));
 
     protected static ConsumeResult<string, byte[]> BuildConsumeResult(string eventId, string eventType)
     {

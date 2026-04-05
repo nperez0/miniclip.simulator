@@ -1,10 +1,10 @@
-using EventStore.Client;
+using KurrentDB.Client;
 using Miniclip.Core.Domain;
 
 namespace Miniclip.Core.EventSourcing.EventStoreDB;
 
 public sealed class EventStoreDbEventStore<T>(
-    EventStoreClient client,
+    KurrentDBClient client,
     IEventSerializer serializer,
     IEventStoreSession session) : IEventStore<T>
     where T : AggregateRoot
@@ -29,7 +29,7 @@ public sealed class EventStoreDbEventStore<T>(
                 resolvedEvent.Event.EventType,
                 resolvedEvent.Event.Data.ToArray());
 
-            version = (long)resolvedEvent.Event.EventNumber.ToUInt64();
+            version = (long)(ulong)resolvedEvent.Event.EventNumber;
             aggregate.ReplayEvent(domainEvent, version);
         }
 
@@ -73,7 +73,7 @@ public sealed class EventStoreDbEventStore<T>(
                 resolvedEvent.Event.EventType,
                 resolvedEvent.Event.Data.ToArray());
 
-            var version = (long)resolvedEvent.Event.EventNumber.ToUInt64();
+            var version = (long)(ulong)resolvedEvent.Event.EventNumber;
             aggregate.ReplayEvent(domainEvent, version);
         }
 
@@ -101,7 +101,7 @@ public sealed class EventStoreDbEventStore<T>(
         {
             await client.AppendToStreamAsync(
                 streamName,
-                StreamRevision.FromInt64(aggregate.Version),
+                StreamState.StreamRevision((ulong)aggregate.Version),
                 eventData,
                 cancellationToken: cancellationToken);
 
