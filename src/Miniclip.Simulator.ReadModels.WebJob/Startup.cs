@@ -11,6 +11,7 @@ public class Startup(IConfiguration configuration)
         services.AddMediatorDependencies();
         services.AddProjectionsKafkaDependencies(configuration);
         services.AddOpenTelemetryDependencies();
+        services.AddHealthChecksDependencies(configuration);
     }
 
     public void Configure(IHost app)

@@ -28,7 +28,9 @@ var webjob = builder.AddProject<Projects.Miniclip_Simulator_ReadModels_WebJob>("
     .WithReference(readDb)
     .WithReference(kafka)
     .WaitFor(readDb)
-    .WaitFor(kafkaTopics);
+    .WaitFor(kafkaTopics)
+    .WithHttpEndpoint(port: 8081, name: "health")
+    .WithEnvironment("HEALTHCHECK_HTTP_PORT_LISTENER", "8081");
 
 builder.AddProject<Projects.Miniclip_Simulator_Api>("simulator-api")
     .WithReference(readDb)
