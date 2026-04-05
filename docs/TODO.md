@@ -24,7 +24,7 @@
 - [ ] Graceful shutdown
 - [ ] Add useful OpenTelemetry tags and metrics (e.g. domain error counters, conflict rate)
 - [ ] Continue improving `Result<T>`
-- [ ] Add health checks to the ReadModels WebJob project
+
 
 ## In Progress
 - [ ] (nothing currently in progress)
@@ -45,6 +45,7 @@
 - [x] Add idempotency via `ProcessedEvents` table
 - [x] Auto-create Kafka topics on startup (AppHost `WithTopicCreation()`)
 - [x] Add integration test project for projections
+- [x] Add health checks to the ReadModels WebJob project
 
 ## Notes
 - EventStoreDB was rebranded to **KurrentDB**; client library is `KurrentDB.Client`, Docker image is `kurrentplatform/kurrentdb`.

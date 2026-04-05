@@ -5,31 +5,29 @@ using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 namespace Miniclip.Simulator.ReadModels.WebJob.Infrastructure;
 
-public sealed class HealthCheckHttpServerService(
+public sealed partial class HealthCheckHttpServerService(
     HealthCheckService healthCheckService,
-    IConfiguration configuration,
+    HealthCheckConfig options,
     ILogger<HealthCheckHttpServerService> logger) : BackgroundService
 {
-    public const string HealthCheckHttpPortListenerKey = "HEALTHCHECK_HTTP_PORT_LISTENER";
-
-    private readonly HttpListener _listener = new();
+    private readonly HttpListener listener = new();
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        var port = configuration[HealthCheckHttpPortListenerKey];
-        _listener.Prefixes.Add($"http://localhost:{port}/");
+        var port = options.Port;
+        listener.Prefixes.Add($"http://localhost:{port}/");
 
         try
         {
-            _listener.Start();
+            listener.Start();
         }
         catch (HttpListenerException ex)
         {
-            logger.LogCritical(ex, "Failed to start health check HTTP listener on port {Port}", port);
+            LogFailedToStartHealthCheckHttpListenerOnPort(logger, port!);
             throw;
         }
 
-        logger.LogInformation("Health check HTTP listener started on port {Port}", port);
+        LogHealthCheckHttpListenerStartedOnPort(logger, port!);
 
         try
         {
@@ -37,7 +35,7 @@ public sealed class HealthCheckHttpServerService(
             {
                 try
                 {
-                    var context = await _listener.GetContextAsync().WaitAsync(stoppingToken);
+                    var context = await listener.GetContextAsync().WaitAsync(stoppingToken);
                     _ = HandleRequestAsync(context, stoppingToken);
                 }
                 catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
@@ -52,9 +50,9 @@ public sealed class HealthCheckHttpServerService(
         }
         finally
         {
-            _listener.Stop();
-            _listener.Close();
-            logger.LogInformation("Health check HTTP listener stopped");
+            listener.Stop();
+            listener.Close();
+            LogHealthCheckHttpListenerStopped(logger);
         }
     }
 
@@ -77,7 +75,7 @@ public sealed class HealthCheckHttpServerService(
         }
         else
         {
-            logger.LogWarning("Health check HTTP listener received request for unknown path {Path}", path);
+            LogHealthCheckHttpListenerReceivedRequestForUnknownPath(logger, path);
             context.Response.StatusCode = 404;
         }
 
@@ -86,7 +84,19 @@ public sealed class HealthCheckHttpServerService(
 
     public override void Dispose()
     {
-        _listener.Close();
+        listener.Close();
         base.Dispose();
     }
+
+    [LoggerMessage(LogLevel.Information, "Health check HTTP listener started on port {Port}")]
+    static partial void LogHealthCheckHttpListenerStartedOnPort(ILogger<HealthCheckHttpServerService> logger, string Port);
+
+    [LoggerMessage(LogLevel.Critical, "Failed to start health check HTTP listener on port {Port}")]
+    static partial void LogFailedToStartHealthCheckHttpListenerOnPort(ILogger<HealthCheckHttpServerService> logger, string Port);
+
+    [LoggerMessage(LogLevel.Warning, "Health check HTTP listener received request for unknown path {Path}")]
+    static partial void LogHealthCheckHttpListenerReceivedRequestForUnknownPath(ILogger<HealthCheckHttpServerService> logger, string Path);
+
+    [LoggerMessage(LogLevel.Information, "Health check HTTP listener stopped")]
+    static partial void LogHealthCheckHttpListenerStopped(ILogger<HealthCheckHttpServerService> logger);
 }

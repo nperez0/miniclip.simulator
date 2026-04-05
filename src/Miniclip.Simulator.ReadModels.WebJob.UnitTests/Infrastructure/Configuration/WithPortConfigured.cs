@@ -10,7 +10,7 @@ public class WithPortConfigured : WhenConfiguringHealthChecks
         Config = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
-                [HealthCheckHttpServerService.HealthCheckHttpPortListenerKey] = "8081"
+                [HealthCheckConfig.HealthCheckHttpPortListenerKey] = "8081"
             })
             .Build();
     }

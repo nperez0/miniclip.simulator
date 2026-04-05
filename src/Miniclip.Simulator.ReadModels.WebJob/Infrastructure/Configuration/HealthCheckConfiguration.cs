@@ -12,11 +12,16 @@ public static class HealthCheckConfiguration
             services.AddHealthChecks()
                 .AddCheck("self", () => HealthCheckResult.Healthy(), tags: ["live"]);
 
-            var port = configuration[HealthCheckHttpServerService.HealthCheckHttpPortListenerKey];
-            if (!string.IsNullOrEmpty(port))
+            var config = new HealthCheckConfig
             {
-                services.AddHostedService<HealthCheckHttpServerService>();
-            }
+                Port = configuration[HealthCheckConfig.HealthCheckHttpPortListenerKey]
+            };
+
+            if (string.IsNullOrEmpty(config.Port)) 
+                return services;
+
+            services.AddSingleton(config);
+            services.AddHostedService<HealthCheckHttpServerService>();
 
             return services;
         }
