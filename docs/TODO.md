@@ -9,7 +9,8 @@
 - [ ] Implement deadletter 
 - [ ] Implement a caching strategy, just to show how it works, maybe I can use redis or something like that using a decorator pattern
 - [ ] I want to add an e2e test project
-- [ ] Move read models part to a separate web job project
+- [ ] Can prevent receiving events that are not interested in the read model project? Maybe using a different topic for each read model?
+- [ ] Check how to trace events
 - [ ] Prepare project to be deployed in azure or aws
 - [ ] What could be a strategy for service discovery?
 - [ ] Check launch darkly
@@ -27,8 +28,7 @@
 - [ ] Continue improving Result
 
 ## In Progress
-- [ ] Can prevent receiving events that are not interested in the read model project? Maybe using a different topic for each read model?
-- [ ] Check how to trace events
+- [ ] Add health check to the web job project
 
 ## Completed
 - [ ] 

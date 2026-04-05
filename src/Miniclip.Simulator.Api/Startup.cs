@@ -1,4 +1,6 @@
-﻿using Miniclip.Simulator.Api.Infrastructure.Configuration;
+﻿using Google.Api;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Miniclip.Simulator.Api.Infrastructure.Configuration;
 using Serilog;
 
 namespace Miniclip.Simulator.Api;
@@ -12,20 +14,28 @@ public class Startup(IConfiguration configuration)
         services.AddApiVersioningConfiguration();
         services.AddVersionedOpenApi();
 
+        services.AddServiceDiscovery();
+
+        services.ConfigureHttpClientDefaults(http =>
+        {
+            http.AddStandardResilienceHandler();
+            http.AddServiceDiscovery();
+        });
+
+        services.AddHealthChecks()
+            .AddCheck("self", () => HealthCheckResult.Healthy(), ["live"]);
+
         services.AddKafkaDependencies(configuration);
         services.AddMediatorDependencies();
         services.AddEventStoreDbDependencies(configuration);
         services.AddReadModelsDbDependencies(configuration);
         services.AddDomainDependencies();
-        services.AddProjectionsDependencies();
 
         services.AddOpenTelemetryDependencies();
     }
 
     public void Configure(IApplicationBuilder app)
     {
-        app.InitializeDatabases();
-
         app.UseSerilogRequestLogging();
 
         app.UseHttpsRedirection();

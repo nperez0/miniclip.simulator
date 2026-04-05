@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Worker">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>dotnet-Miniclip.Simulator.ReadModels.WebJob-936979dc-6ca1-496f-ae72-573502c02029</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Mediator.SourceGenerator" />
+    <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" />
+    <PackageReference Include="OpenTelemetry.Extensions.Hosting" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.ConfluentKafka" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.EntityFrameworkCore" />
+    <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" />
+    <PackageReference Include="Scriban" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Miniclip.Core.Application\Miniclip.Core.Application.csproj" />
+    <ProjectReference Include="..\Miniclip.Core.ServiceDefaults\Miniclip.Core.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\Miniclip.Simulator.Infrastructure.Read\Miniclip.Simulator.Infrastructure.Read.csproj" />
+    <ProjectReference Include="..\Miniclip.Simulator.ReadModels.Projections\Miniclip.Simulator.ReadModels.Projections.csproj" />
+  </ItemGroup>
+
+</Project>

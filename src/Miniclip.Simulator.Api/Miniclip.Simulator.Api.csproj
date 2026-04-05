@@ -13,16 +13,23 @@
     <PackageReference Include="Asp.Versioning.Mvc" />
     <PackageReference Include="Asp.Versioning.Mvc.ApiExplorer" />
     <PackageReference Include="KurrentDB.Client" />
+    <PackageReference Include="Mediator.SourceGenerator" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
-    <PackageReference Include="OpenTelemetry.Instrumentation.ConfluentKafka" />
-    <PackageReference Include="Scalar.AspNetCore" />
-    <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+	    <PrivateAssets>all</PrivateAssets>
+	    <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Mediator.SourceGenerator" />
+    <PackageReference Include="Microsoft.Extensions.Http.Resilience" />
+    <PackageReference Include="Microsoft.Extensions.ServiceDiscovery" />
+    <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" />
+    <PackageReference Include="OpenTelemetry.Extensions.Hosting" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.ConfluentKafka" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.EntityFrameworkCore" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.Http" />
+    <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" />
+    <PackageReference Include="Scalar.AspNetCore" />
     <PackageReference Include="Scriban" PrivateAssets="all" />
   </ItemGroup>
 
@@ -34,7 +41,6 @@
     <ProjectReference Include="..\Miniclip.Simulator.Application.Queries\Miniclip.Simulator.Application.Queries.csproj" />
     <ProjectReference Include="..\Miniclip.Simulator.Infrastructure.Read\Miniclip.Simulator.Infrastructure.Read.csproj" />
     <ProjectReference Include="..\Miniclip.Simulator.ReadModels\Miniclip.Simulator.ReadModels.csproj" />
-    <ProjectReference Include="..\Miniclip.Simulator.ReadModels.Projections\Miniclip.Simulator.ReadModels.Projections.csproj" />
     <ProjectReference Include="..\Miniclip.Simulator.Domain\Miniclip.Simulator.Domain.csproj" />
     <ProjectReference Include="..\Miniclip.Core.Application\Miniclip.Core.Application.csproj" />
   </ItemGroup>

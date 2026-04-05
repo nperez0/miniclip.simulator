@@ -1,6 +1,6 @@
-﻿using Miniclip.Simulator.ReadModels.Projections.Services;
+using Miniclip.Simulator.ReadModels.Projections.Services;
 
-namespace Miniclip.Simulator.Api.Infrastructure.Configuration;
+namespace Miniclip.Simulator.ReadModels.WebJob.Infrastructure.Configuration;
 
 public static class ProjectionsConfiguration
 {

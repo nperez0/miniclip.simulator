@@ -1,9 +1,10 @@
 using Miniclip.Core.ServiceDefaults;
 using Miniclip.Simulator.Api;
+using Miniclip.Simulator.Api.Infrastructure.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.AddServiceDefaults();
+builder.AddStructuredLogging();
 
 var startup = new Startup(builder.Configuration);
 startup.ConfigureServices(builder.Services);

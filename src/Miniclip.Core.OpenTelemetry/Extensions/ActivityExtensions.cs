@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 
-namespace Miniclip.Core.OpenTelemetry;
+namespace Miniclip.Core.OpenTelemetry.Extensions;
 
 public static class ActivityExtensions
 {

@@ -1,7 +1,8 @@
-using Miniclip.Core.Domain;
 using System.Text.Json;
+using Miniclip.Core.Domain;
+using Miniclip.Core.EventSourcing;
 
-namespace Miniclip.Core.EventSourcing.EventStoreDB;
+namespace Miniclip.Core.Application.Serializers;
 
 public sealed class SystemTextJsonEventSerializer : IEventSerializer
 {

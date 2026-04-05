@@ -86,7 +86,7 @@ internal sealed partial class KafkaTopicsEventingSubscriber(
                 State = new ResourceStateSnapshot(KnownResourceStates.Running, KnownResourceStateStyles.Success)
             });
         }
-        catch (Exception ex)
+        catch
         {
             LogFailedToCreateKafkaTopicsForResource(logger, resource.Name);
 

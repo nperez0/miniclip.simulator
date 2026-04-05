@@ -1,4 +1,5 @@
 ﻿using KurrentDB.Client;
+using Miniclip.Core.Application.Serializers;
 using Miniclip.Core.Domain;
 using Miniclip.Core.EventSourcing;
 using Miniclip.Core.EventSourcing.EventStoreDB;

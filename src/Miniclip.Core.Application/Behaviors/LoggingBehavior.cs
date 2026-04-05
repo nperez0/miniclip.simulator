@@ -1,9 +1,9 @@
 ﻿using Mediator;
 using Microsoft.Extensions.Logging;
+using Miniclip.Core.OpenTelemetry.Extensions;
 using System.Diagnostics;
-using Miniclip.Core.OpenTelemetry;
 
-namespace Miniclip.Core.ServiceDefaults.Behaviors;
+namespace Miniclip.Core.Application.Behaviors;
 
 public partial class LoggingBehavior<TRequest, TResponse>(ILogger<LoggingBehavior<TRequest, TResponse>> logger)
     : IPipelineBehavior<TRequest, TResponse>

@@ -1,7 +1,7 @@
 ﻿using OpenTelemetry.Metrics;
 using static Miniclip.Core.OpenTelemetry.OpenTelemetryConstants;
 
-namespace Miniclip.Core.ServiceDefaults.Extensions;
+namespace Miniclip.Core.OpenTelemetry.Extensions;
 
 public static class MeterProviderBuilderExtensions
 {

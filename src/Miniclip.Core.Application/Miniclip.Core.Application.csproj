@@ -8,11 +8,13 @@
 
   <ItemGroup>
     <PackageReference Include="Mediator.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Miniclip.Core.Domain\Miniclip.Core.Domain.csproj" />
     <ProjectReference Include="..\Miniclip.Core.EventSourcing\Miniclip.Core.EventSourcing.csproj" />
+    <ProjectReference Include="..\Miniclip.Core.OpenTelemetry\Miniclip.Core.OpenTelemetry.csproj" />
     <ProjectReference Include="..\Miniclip.Core.ReadModels.Projections\Miniclip.Core.ReadModels.Projections.csproj" />
     <ProjectReference Include="..\Miniclip.Core.ReadModels\Miniclip.Core.ReadModels.csproj" />
     <ProjectReference Include="..\Miniclip.Core\Miniclip.Core.csproj" />

@@ -24,10 +24,18 @@ var kafka = builder.AddKafka("kafka")
 
 var kafkaTopics = kafka.WithTopicCreation();
 
-builder.AddProject<Projects.Miniclip_Simulator_Api>("simulator-api")
+var webjob = builder.AddProject<Projects.Miniclip_Simulator_ReadModels_WebJob>("simulator-readmodels-webjob")
     .WithReference(readDb)
     .WithReference(kafka)
     .WaitFor(readDb)
     .WaitFor(kafkaTopics);
+
+builder.AddProject<Projects.Miniclip_Simulator_Api>("simulator-api")
+    .WithReference(readDb)
+    .WithReference(kafka)
+    .WaitFor(readDb)
+    .WaitFor(kafkaTopics)
+    .WaitFor(webjob);
+
 
 builder.Build().Run();
