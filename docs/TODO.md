@@ -5,7 +5,8 @@
 
 ## Projects & Ideas
 - [ ] Create an integration test base class
-- [ ] Implement a retry policy, I could use polly
+- [ ] Improve retry policy, I could use polly
+- [ ] Implement deadletter 
 - [ ] Implement a caching strategy, just to show how it works, maybe I can use redis or something like that using a decorator pattern
 - [ ] I want to add an e2e test project
 - [ ] Move read models part to a separate web job project
@@ -22,11 +23,11 @@
 - [ ] Separate write request from the query request? 
 - [ ] Check performance on write side
 - [ ] Gracefully shutdown
+- [ ] Add useful open telemetry tags and metrics (for example I could add metrics for domain errors or conflicts)
+- [ ] Continue improving Result
 
 ## In Progress
-- [ ] Let's implement structured logging, also check what is useful to make something with good metrics, check otel
-- [ ] Trace the application using opentelemetry
-- [ ] can prevent receiving events that are not interested in the read model project? Maybe using a different topic for each read model?
+- [ ] Can prevent receiving events that are not interested in the read model project? Maybe using a different topic for each read model?
 - [ ] Check how to trace events
 
 ## Completed

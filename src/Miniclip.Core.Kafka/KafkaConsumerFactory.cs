@@ -9,7 +9,5 @@ public class KafkaConsumerFactory(
     ILogger<KafkaConsumer> logger) : IKafkaConsumerFactory
 {
     public IKafkaConsumer CreateConsumer(Func<KafkaMessageContext, CancellationToken, Task> onHandleAsync)
-    {
-        return new KafkaConsumer(consumerBuilder.Build(), config, onHandleAsync, logger);
-    }
+        => new KafkaConsumer(consumerBuilder.Build(), config, onHandleAsync, logger);
 }

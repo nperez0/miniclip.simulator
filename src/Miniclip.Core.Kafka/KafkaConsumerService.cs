@@ -1,5 +1,4 @@
 using Confluent.Kafka;
-using Confluent.Kafka.Admin;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Miniclip.Core.OpenTelemetry;
@@ -17,7 +16,6 @@ public abstract partial class KafkaConsumerService(
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         var effectiveConsumerCount = ResolveConsumerCount(stoppingToken);
-        await LogConsumerStatusAsync(stoppingToken);
 
         var consumers = Enumerable
             .Range(0, effectiveConsumerCount)
@@ -88,63 +86,8 @@ public abstract partial class KafkaConsumerService(
         return partitionCount;
     }
 
-    protected virtual async Task LogConsumerStatusAsync(CancellationToken stoppingToken)
-    {
-        try
-        {
-            using var adminClient = new AdminClientBuilder(config.ConsumerConfig).Build();
-
-            var topicPartitions = config.Topics
-                .SelectMany(t => adminClient.GetMetadata(t, TimeSpan.FromSeconds(10)).Topics)
-                .Where(t => t.Error.Code == ErrorCode.NoError)
-                .SelectMany(t => t.Partitions.Select(p => new TopicPartition(t.Topic, p.PartitionId)))
-                .ToList();
-
-            if (topicPartitions.Count == 0)
-                return;
-
-            var committedResult = await adminClient.ListConsumerGroupOffsetsAsync(
-                [new ConsumerGroupTopicPartitions(config.ConsumerGroupId, topicPartitions)]);
-
-            var topicPartitionsOffsetSpecs = topicPartitions
-                .Select(tp => new TopicPartitionOffsetSpec() { TopicPartition = tp, OffsetSpec = OffsetSpec.Latest() });
-            var endOffsetsResult = await adminClient.ListOffsetsAsync(topicPartitionsOffsetSpecs);
-
-            var endOffsetMap = endOffsetsResult
-                .ResultInfos
-                .ToDictionary(
-                    r => r.TopicPartitionOffsetError.TopicPartition,
-                    r => r.TopicPartitionOffsetError.Offset);
-
-            foreach (var tpo in committedResult.SelectMany(g => g.Partitions))
-            {
-                var endOffset = endOffsetMap.TryGetValue(tpo.TopicPartition, out var e) ? e : Offset.Unset;
-                var lag = !endOffset.IsSpecial && !tpo.Offset.IsSpecial
-                    ? endOffset.Value - tpo.Offset.Value
-                    : -1L;
-
-                LogConsumerPartitionStatus(logger, config.ConsumerGroupId, tpo.Topic, tpo.Partition.Value,
-                    tpo.Offset.Value, endOffset.Value, lag);
-            }
-        }
-        catch (Exception ex)
-        {
-            LogConsumerLagQueryFailed(logger, ex, config.ConsumerGroupId);
-        }
-    }
-
     [LoggerMessage(LogLevel.Warning, "ConsumerGroup {consumerGroup}: ConsumerCount {requested} exceeds partition count {partitionCount}")]
     static partial void LogConsumerCountClamped(ILogger logger, string consumerGroup, int requested, int partitionCount);
-
-    [LoggerMessage(LogLevel.Warning, "Topic not yet available: {topics}. Retrying in {delaySeconds}s")]
-    static partial void LogTopicNotAvailable(ILogger logger, string topics, int delaySeconds);
-
-    [LoggerMessage(LogLevel.Information, "ConsumerGroup {ConsumerGroupId} - {Topic}[{Partition}]: currentOffset={CurrentOffset} endOffset={EndOffset} lag={Lag}")]
-    static partial void LogConsumerPartitionStatus(ILogger logger, string ConsumerGroupId, string Topic, int Partition,
-        long CurrentOffset, long EndOffset, long Lag);
-
-    [LoggerMessage(LogLevel.Warning, "Failed to query consumer lag for group {ConsumerGroupId}")]
-    static partial void LogConsumerLagQueryFailed(ILogger logger, Exception ex, string ConsumerGroupId);
 
     [LoggerMessage(LogLevel.Warning, "Retry {Attempt}/{MaxAttempts} for message from {Topic}")]
     static partial void LogRetryAttempt(ILogger logger, Exception ex, int Attempt, int MaxAttempts, string Topic);

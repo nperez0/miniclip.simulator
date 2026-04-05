@@ -12,7 +12,7 @@ internal sealed record KafkaTopicsAnnotation(string[] Topics, KafkaServerResourc
 
 internal static class KafkaTopicExtensions
 {
-    private static string[] topics = ["simulator.group"];
+    private static readonly string[] topics = ["simulator.group"];
 
     internal static IResourceBuilder<KafkaTopicsResource> WithTopicCreation(
         this IResourceBuilder<KafkaServerResource> kafka)

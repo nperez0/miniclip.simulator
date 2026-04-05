@@ -16,7 +16,7 @@ public partial class KafkaConsumer(
     {
         consumer.Subscribe(config.Topics);
 
-        LogTopicsSubscribed(logger, string.Join(",", config.Topics));
+        LogSubscribedTopics(logger, string.Join(",", config.Topics));
 
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -38,8 +38,8 @@ public partial class KafkaConsumer(
         }
     }
 
-    [LoggerMessage(LogLevel.Information, "Topics subscribed: {Topics}")]
-    static partial void LogTopicsSubscribed(ILogger logger, string Topics);
+    [LoggerMessage(LogLevel.Information, "Subscribed topics: {Topics}")]
+    static partial void LogSubscribedTopics(ILogger logger, string Topics);
 
     [LoggerMessage(LogLevel.Warning, "Topic not yet available: {Topics}. Retrying in {DelaySeconds}s")]
     static partial void LogTopicNotAvailable(ILogger logger, string Topics, int DelaySeconds);
