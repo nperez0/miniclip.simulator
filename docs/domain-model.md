@@ -24,7 +24,7 @@ The central aggregate of the simulator. Owns the full lifecycle of a football gr
 
 ### `Team` (Aggregate Root)
 
-Represents a football team. Stored as an event stream in EventStoreDB (`team-{id}`). A fixed squad of 10 teams is seeded at startup by `TeamDataSeeder`.
+Represents a football team. Stored as an event stream in KurrentDB (`team-{id}`). A fixed squad of 10 teams is seeded at startup by `TeamDataSeeder`.
 
 | Property | Type | Rule |
 |---|---|---|
@@ -62,9 +62,9 @@ All domain events implement `IDomainEvent` and carry an `AggregateId`.
 | `MatchScheduled` | `Group` | `group-{id}` | No |
 | `MatchPlayed` | `Group` | `group-{id}` | **Yes** — drives `GroupStandingsProjection` + `MatchResultProjection` |
 
-Events are **enqueued** inside the aggregate via `AggregateRoot.Enqueue` during `Create`/command processing. `Apply(IDomainEvent)` is called only during stream **replay** from EventStoreDB — it is not invoked during normal command processing.
+Events are **enqueued** inside the aggregate via `AggregateRoot.Enqueue` during `Create`/command processing. `Apply(IDomainEvent)` is called only during stream **replay** from KurrentDB — it is not invoked during normal command processing.
 
-After a command completes, `EventStoreCommandBehavior` commits the session (appends events to EventStoreDB), then `DomainEventPublisherBehavior` publishes committed events to Kafka.
+After a command completes, `EventStoreCommandBehavior` commits the session (appends events to KurrentDB) and publishes committed events to Kafka (both in the same behavior).
 
 ---
 

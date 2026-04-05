@@ -12,7 +12,7 @@ Status: **Superseded by EventStoreDB + Kafka (Phase 3/4)** | Date: 2026-02
 
 1. `EventStoreCommandBehavior` calls `IEventStoreSession.CommitAsync()` — appends events to EventStoreDB atomically.
 2. `DomainEventPublisherBehavior` publishes committed events to Kafka **only after** the ESDB append succeeds.
-3. `ProjectionsConsumerService<TEvent>` consumes each event from Kafka and updates the read DB in a separate transaction, with idempotency via the `ProcessedEvents` table.
+3. `ProjectionsConsumerService<TAggregate>` (in the ReadModels WebJob) consumes each event from Kafka and updates the read DB in a separate transaction, with idempotency via the `ProcessedEvents` table.
 
 ## Consequences
 

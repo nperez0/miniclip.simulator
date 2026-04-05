@@ -4,33 +4,49 @@
 - [ ] Use options pattern for configuration
 
 ## Projects & Ideas
-- [ ] Create an integration test base class
-- [ ] Improve retry policy, I could use polly
-- [ ] Implement deadletter 
-- [ ] Implement a caching strategy, just to show how it works, maybe I can use redis or something like that using a decorator pattern
-- [ ] I want to add an e2e test project
-- [ ] Can prevent receiving events that are not interested in the read model project? Maybe using a different topic for each read model?
-- [ ] Check how to trace events
-- [ ] Prepare project to be deployed in azure or aws
+- [ ] Improve retry policy — could use Polly for more advanced strategies
+- [ ] Implement dead-letter queue (persist failed messages)
+- [ ] Implement a caching strategy (e.g. Redis via decorator pattern) — just to show how it works
+- [ ] Add an e2e test project
+- [ ] Can we prevent receiving events that a read model is not interested in? Maybe using a different topic per aggregate?
+- [ ] How to trace events end-to-end across services
+- [ ] Prepare project to be deployed on Azure or AWS
 - [ ] What could be a strategy for service discovery?
-- [ ] Check launch darkly
-- [ ] How it works a migration using EventStoreDB?
-- [ ] How can I rebuild read models replayng events from the beginning?
+- [ ] Check LaunchDarkly for feature flags
+- [ ] How does a migration work using KurrentDB?
+- [ ] How can read models be rebuilt by replaying events from the beginning?
 - [ ] Create a separate project to manage teams
-- [ ] Check anti patterns
+- [ ] Check anti-patterns
 - [ ] Make other domain aggregates react to domain events
-- [ ] Resolve ConsumeException ErrorCode.UnknownTopicOrPart when using Kafka
-- [ ] Avoid inheriting from INotification for domain events
-- [ ] Separate write request from the query request? 
-- [ ] Check performance on write side
-- [ ] Gracefully shutdown
-- [ ] Add useful open telemetry tags and metrics (for example I could add metrics for domain errors or conflicts)
-- [ ] Continue improving Result
+- [ ] Avoid inheriting from `INotification` for domain events
+- [ ] Separate write requests from query requests?
+- [ ] Check performance on the write side
+- [ ] Graceful shutdown
+- [ ] Add useful OpenTelemetry tags and metrics (e.g. domain error counters, conflict rate)
+- [ ] Continue improving `Result<T>`
+- [ ] Add health checks to the ReadModels WebJob project
 
 ## In Progress
-- [ ] Add health check to the web job project
+- [ ] (nothing currently in progress)
 
 ## Completed
-- [ ] 
+- [x] Add health checks to the API (`/health` and `/alive` endpoints)
+- [x] Add OpenTelemetry tracing and metrics (custom `Miniclip.Simulator.Kafka` meter, retry/fail counters)
+- [x] Add Serilog structured logging with OTLP sink (`Miniclip.Core.ServiceDefaults`)
+- [x] Migrate write store from EF Core to EventStoreDB / KurrentDB
+- [x] Migrate event bus from in-process Mediator to Kafka
+- [x] Move projections to Kafka consumers (`ProjectionsConsumerService<TAggregate>`)
+- [x] Separate projections into a standalone ReadModels WebJob
+- [x] Add retry policy with exponential back-off (`ExponentialBackoffRetryPolicy`)
+- [x] Fix per-aggregate consumer group IDs (`simulator-projections-{aggregate}`)
+- [x] Per-partition consumer scaling (`ResolveConsumerCount`)
+- [x] Remove `ReadModelUnitOfWorkBehavior` from write pipeline
+- [x] Add `LoggingBehavior` to Mediator pipeline
+- [x] Add idempotency via `ProcessedEvents` table
+- [x] Auto-create Kafka topics on startup (AppHost `WithTopicCreation()`)
+- [x] Add integration test project for projections
 
 ## Notes
+- EventStoreDB was rebranded to **KurrentDB**; client library is `KurrentDB.Client`, Docker image is `kurrentplatform/kurrentdb`.
+- Topic naming convention: `simulator.{aggregate-kebab-case}` (e.g. `simulator.group`).
+- Consumer group naming: `simulator-projections-{aggregate}` (e.g. `simulator-projections-group`).

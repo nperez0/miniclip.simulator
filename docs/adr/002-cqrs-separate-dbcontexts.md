@@ -9,10 +9,10 @@ Reads and writes have different shapes. Writes operate on event-sourced aggregat
 ## Decision
 
 Two separate persistence stores:
-- **EventStoreDB** is the write store. All aggregates (`Group`, `Team`) are stored as event streams. There is no EF Core write model for aggregates; `SimulatorWriteDbContext` has an empty model and exists only to carry the migration that dropped legacy aggregate tables.
+- **KurrentDB** is the write store. All aggregates (`Group`, `Team`) are stored as event streams. There is no EF Core write model for aggregates; `SimulatorWriteDbContext` has an empty model and exists only to carry the migration that dropped legacy aggregate tables.
 - **`SimulatorReadDbContext`** (MySQL, EF Core) owns `GroupStandings`, `MatchResults`, and `ProcessedEvents`.
 
-The read DB is populated exclusively by `ProjectionsConsumerService<TEvent>` reacting to Kafka events. Query handlers never touch the write store.
+The read DB is populated exclusively by `ProjectionsConsumerService<TAggregate>` (in the **ReadModels WebJob**) reacting to Kafka events. Query handlers never touch the write store.
 
 ## Consequences
 

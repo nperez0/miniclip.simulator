@@ -21,6 +21,19 @@ These projects have zero dependencies on any simulator-specific logic.
 | `IDomainEvent` | Marker interface implemented by all domain events. |
 | `IAggregateRepository<T>` | Generic write-side repository interface. Implemented by `AggregateRepository<T>` backed by `IEventStore<T>`. |
 
+### Observability — `Miniclip.Core.OpenTelemetry` & `Miniclip.Core.ServiceDefaults`
+
+Cross-cutting observability infrastructure shared by the API and the WebJob.
+
+| Component | Purpose |
+|---|---|
+| `OpenTelemetryActivity` | Wraps `ActivitySource` to start named spans; records exceptions with `NoticeError`. |
+| `OpenTelemetryMetrics` | Exposes `RecordRetryAttempt()` / `RecordMessageFailed()` counters on the `Miniclip.Simulator.Kafka` meter. |
+| `OpenTelemetryConstants` | Meter and activity source names. |
+| `TraceProviderBuilderExtensions` | `AddSimulator()`, `AddMySqlData()`, `AddMySqlConnector()` extension methods. |
+| `MeterProviderBuilderExtensions` | `AddSimulator()` extension method. |
+| `SerilogConfiguration` | `AddStructuredLogging()` — configures Serilog with console JSON and optional OTLP log sink. |
+
 ### Domain — `Miniclip.Simulator.Domain`
 
 Pure business logic. No dependencies on ASP.NET Core, EF Core, or any infrastructure library.
@@ -48,7 +61,7 @@ Split into two projects to enforce CQRS.
 **`Miniclip.Simulator.Application.Commands`** (write side)
 - Depends on `Miniclip.Simulator.Domain` and `IAggregateRepository<T>`.
 - Handlers: `GenerateGroupCommandHandler`, `SimulateGroupCommandHandler`.
-- `GenerateGroupCommandHandler` loads all teams from EventStoreDB via `IAggregateRepository<Team>.GetAllAsync()`, picks a random subset, and creates a `Group`.
+- `GenerateGroupCommandHandler` loads all teams from KurrentDB via `IAggregateRepository<Team>.GetAllAsync()`, picks a random subset, and creates a `Group`.
 
 **`Miniclip.Simulator.Application.Queries`** (read side)
 - Depends only on read model repository interfaces (`IGroupStandingsRepository`, `IMatchResultsRepository`).
@@ -59,7 +72,7 @@ Split into two projects to enforce CQRS.
 
 **`Miniclip.Simulator.ReadModels`** — POCO read model definitions (`GroupStandingsModel`, `MatchResultModel`) and repository interfaces.
 
-**`Miniclip.Simulator.ReadModels.Projections`** — `ProjectionsConsumerService<TEvent>` (Kafka consumer) and `INotificationHandler<TEvent>` projection handlers dispatched in priority order via Mediator.
+**`Miniclip.Simulator.ReadModels.Projections`** — `ProjectionsConsumerService<TAggregate>` (Kafka consumer) and `INotificationHandler<TEvent>` projection handlers dispatched in priority order via Mediator.
 
 Projections are the **only** writers to the read database. They run in priority order via `[HandlerPriority(n)]`:
 
@@ -70,7 +83,7 @@ Projections are the **only** writers to the read database. They run in priority 
 
 ### Infrastructure — Write & Read
 
-The **write side** is EventStoreDB. `SimulatorWriteDbContext` has an empty EF model and exists only to run the migration that dropped all legacy aggregate tables.
+The **write side** is KurrentDB. `SimulatorWriteDbContext` has an empty EF model and exists only to run the migration that dropped all legacy aggregate tables.
 
 `SimulatorReadDbContext` holds all read models and exposes both read and write repositories:
 
@@ -78,8 +91,6 @@ The **write side** is EventStoreDB. `SimulatorWriteDbContext` has an empty EF mo
 |---|---|---|
 | `SimulatorWriteDbContext` | `Infrastructure.Write` | Nothing (empty model; migrations only) |
 | `SimulatorReadDbContext` | `Infrastructure.Read` | `GroupStandingsModel`, `MatchResultModel`, `ProcessedEventsModel` |
-
-The read DB context exposes both read (query) and write (projection) repositories under `Persistence/Repositories/Read/` and `Persistence/Repositories/Write/`.
 
 ### API — `Miniclip.Simulator.Api`
 
@@ -91,21 +102,46 @@ Extensions/        ResultExtensions  (Result<T> → IActionResult mapping)
 Infrastructure/
   Configuration/   EventStoreDbConfiguration, ReadModelsConfiguration,
                    KafkaConfiguration, MediatorConfiguration,
-                   DomainConfiguration, ApiVersioningConfiguration
-  Seeding/         TeamDataSeeder  (seeds 10 teams to EventStoreDB on startup)
+                   DomainConfiguration, ApiVersioningConfiguration,
+                   OpenTelemetryConfiguration, WebApplicationConfiguration
+  Seeding/         TeamDataSeeder  (seeds 10 teams to KurrentDB on startup)
 Startup.cs         ConfigureServices + Configure
 Program.cs         Host builder entry point
 ```
 
+**Mediator pipeline (write side):**
+1. `LoggingBehavior` (outermost) — logs request timing; tags active OTel span on domain errors.
+2. `EventStoreCommandBehavior` — commits `IEventStoreSession` then publishes committed events to Kafka.
+
+### ReadModels WebJob — `Miniclip.Simulator.ReadModels.WebJob`
+
+A **.NET Worker Service** (`Microsoft.NET.Sdk.Worker`) that is the single owner of all Kafka projection consumers and the read-model database.
+
+```
+Infrastructure/
+  Configuration/   ReadModelsConfiguration  (DbContext + write repositories + InitializeDatabases)
+                   KafkaConfiguration       (AddProjectionsConsumer<TAggregate> factory)
+                   MediatorConfiguration    (OrderedNotificationPublisher)
+                   ProjectionsConfiguration (IRecalculatePositionService)
+                   OpenTelemetryConfiguration
+Startup.cs         ConfigureServices + Configure
+Program.cs         Host builder entry point (AddStructuredLogging)
+```
+
+The WebJob starts before the API in Aspire (`WaitFor(webjob)`):
+1. Runs EF Core read-DB migrations via `host.InitializeDatabases()`.
+2. Registers `ProjectionsConsumerService<Group>` as a hosted service.
+3. On `ExecuteAsync`, queries Kafka admin for partition count and spawns one `KafkaConsumer` per partition.
+
 ### Orchestration — `Miniclip.Simulator.AppHost`
 
 .NET Aspire AppHost. Provisions:
-- A **MySQL** container (write migrations DB + read model DB).
-- An **EventStoreDB** container (with `$by_category` and standard projections enabled).
+- A **MySQL** container.
+- A **KurrentDB** container (`kurrentplatform/kurrentdb`) with `$by_category` and standard projections enabled.
 - A **Kafka** container with **Kafka UI**.
-- The **API** project as a service.
-
-Entry point for local development.
+- A **`KafkaTopicsResource`** (`WithTopicCreation()`) that auto-creates the `simulator.group` topic via the Kafka admin client before any service starts.
+- The **WebJob** project as a service (starts before the API).
+- The **API** project as a service (waits for the WebJob and Kafka topics).
 
 ---
 
@@ -117,8 +153,14 @@ Entry point for local development.
 POST /api/v1/groups
         │
         ▼
+LoggingBehavior (start timer)
+        │
+        ▼
+EventStoreCommandBehavior (pre-handler — nothing yet)
+        │
+        ▼
 GenerateGroupCommandHandler
-  ├── teamsRepository.GetAllAsync()              → loads all Team aggregates from EventStoreDB
+  ├── teamsRepository.GetAllAsync()              → loads all Team aggregates from KurrentDB
   ├── random subset of size capacity selected
   ├── Group.Create(id, name, capacity)           → validates; enqueues GroupCreated
   ├── group.AddTeam(TeamInfo.FromTeam(t)) x N   → enqueues TeamAdded per team
@@ -126,21 +168,17 @@ GenerateGroupCommandHandler
   └── groupsRepository.Add(group)               → tracks aggregate in IEventStoreSession
         │
         ▼
-EventStoreCommandBehavior → IEventStoreSession.CommitAsync()
-  └── appends GroupCreated + TeamAdded(N) + MatchScheduled(N) to ESDB stream group-{id}
+EventStoreCommandBehavior (post-handler)
+  ├── IEventStoreSession.CommitAsync()
+  │     └── appends GroupCreated + TeamAdded(N) + MatchScheduled(N) to KurrentDB stream group-{id}
+  └── IEventBus.PublishAsync() per committed event
+        └── only MatchPlayed is subscribed by projections; Group creation events are KurrentDB-only
         │
         ▼
-DomainEventPublisherBehavior → IEventBus.PublishAsync() per committed event
-  └── only MatchPlayed is consumed by projections; Group creation events are ESDB-only
+LoggingBehavior (log elapsed time)
         │
         ▼
 Returns Result<Guid> (GroupId) → 200 OK
-```IUnitOfWork.CommitAsync()
-  ├── Saves Group + Teams + Matches to write DB
-  └── DequeueUncommittedEvents() → dispatches nothing yet (no match played)
-        │
-        ▼
-Returns Result<Guid> (GroupId) → 204 No Content
 ```
 
 ### Write — Simulate Group
@@ -150,7 +188,7 @@ POST /api/v1/groups/{id}/simulate
         │
         ▼
 SimulateGroupCommandHandler
-  ├── repository.FindAsync(groupId)              → replays group-{id} stream from EventStoreDB
+  ├── repository.FindAsync(groupId)              → replays group-{id} stream from KurrentDB
   └── groupSimulator.SimulateAllMatches(group)
         ├── For each unplayed Match:
         │     ├── matchSimulator.SimulateMatch(home, away)  ← Poisson distribution
@@ -159,20 +197,24 @@ SimulateGroupCommandHandler
         │                 └── Enqueue(new MatchPlayed(...))
         │
         ▼
-EventStoreCommandBehavior → IEventStoreSession.CommitAsync()
-  └── appends MatchPlayed events to ESDB stream group-{id}
+EventStoreCommandBehavior
+  ├── IEventStoreSession.CommitAsync()
+  │     └── appends MatchPlayed events to KurrentDB stream group-{id}
+  └── IEventBus.PublishAsync() per MatchPlayed
+        └── publishes to simulator.group Kafka topic
         │
         ▼
-DomainEventPublisherBehavior → IEventBus.PublishAsync() per MatchPlayed
-  └── publishes to simulator.match-played Kafka topic
-        │
-        ▼
-ProjectionsConsumerService<MatchPlayed>  (background service)
-  ├── Deduplication: ProcessedEvents table checked before processing
+ProjectionsConsumerService<Group>  (WebJob — background service)
+  ├── KafkaConsumer receives message from simulator.group topic
+  ├── Idempotency check: ProcessedEvents table checked for event-id
+  ├── serializer.Deserialize(eventType, bytes) → MatchPlayed domain event
+  ├── unitOfWork.BeginTransactionAsync()
   ├── IPublisher.Publish(matchPlayed) dispatches to ordered handlers:
   │     ├── MatchResultProjection      [priority 1] → inserts MatchResultModel row
   │     └── GroupStandingsProjection   [priority 2] → updates stats + recalculates positions
-  └── ProcessedEvents row written; transaction committed
+  ├── processedEventsRepository.Add(eventId, consumerGroupId)
+  ├── unitOfWork.SaveChangesAsync()
+  └── unitOfWork.CommitAsync()
 ```
 
 ### Read — Get Standings
@@ -199,14 +241,20 @@ Api
  │    └── Simulator.Domain
  │         └── Core.Domain ← Core
  ├── Application.Queries
- │    └── Core.ReadModels
- ├── ReadModels.Projections
- │    ├── Simulator.Domain (MatchPlayed event)
  │    └── Simulator.ReadModels
  ├── Core.EventSourcing.EventStoreDB
  │    └── Core.EventSourcing
  ├── Core.Kafka
- │    └── Core.Application
+ ├── Core.ServiceDefaults        (Serilog)
  └── Infrastructure.Read
-      └── Core.EF
+
+ReadModels.WebJob
+ ├── Simulator.ReadModels.Projections
+ │    └── Simulator.ReadModels
+ ├── Core.Kafka
+ ├── Core.ServiceDefaults        (Serilog)
+ └── Infrastructure.Read
 ```
+
+---
+

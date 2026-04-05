@@ -3,7 +3,7 @@
 ## Goal
 
 Replace state-based persistence and in-process event dispatching with:
-- **EventStoreDB** as the append-only event store (source of truth for the write side)
+- **KurrentDB** (formerly EventStoreDB) as the append-only event store (source of truth for the write side)
 - **Kafka** as the distributed event bus (replacing in-process Mediator publishing)
 
 ---
@@ -12,11 +12,11 @@ Replace state-based persistence and in-process event dispatching with:
 
 | Concern | Technology | Rationale |
 |---|---|---|
-| Event Store | EventStoreDB | Per-aggregate streams, optimistic concurrency, native replay |
+| Event Store | KurrentDB | Per-aggregate streams, optimistic concurrency, native replay |
 | Event Bus | Kafka | Ordered delivery per partition (key = `AggregateId`), consumer groups |
 | Read Model Store | MySQL (unchanged) | Materialised views; no reason to change |
 
-- Topic naming: `simulator.{event-name}` (e.g. `simulator.match-played`)
+- Topic naming: `simulator.{aggregate-kebab-case}` (e.g. `simulator.group` for `Group` aggregate)
 - Stream naming: `{type}-{id}` (e.g. `group-{guid}`, `team-{guid}`)
 - Category streams (`$ce-{type}`) used by `GetAllAsync` via the built-in `$by_category` projection
 
