@@ -8,6 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="AutoFixture" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="NSubstitute" />
     <PackageReference Include="NUnit" />
@@ -16,6 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Miniclip.Core.Tests\Miniclip.Core.Tests.csproj" />
     <ProjectReference Include="..\Miniclip.Simulator.ReadModels.WebJob\Miniclip.Simulator.ReadModels.WebJob.csproj" />
   </ItemGroup>
 
