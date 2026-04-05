@@ -1,7 +1,7 @@
 # Copilot Instructions
 
 ## Agent Guidelines
-- Correct the user's English when responding to their requests, especially after discussing code changes.
+- **Correct the user's English when responding to their requests.**
 
 ---
 
@@ -150,6 +150,12 @@ Only the **read side** uses EF Core (`SimulatorReadDbContext`). Read DB migratio
 - **Traces** — `OpenTelemetryActivity.StartActivity(name)` per Kafka message; KurrentDB, ASP.NET Core, MySQL, and Kafka instrumentation wired in.
 - **Metrics** — `kafka.retry.attempts` / `kafka.messages.failed` counters from `Miniclip.Simulator.Kafka` meter, exported via OTLP.
 
+
+### Configuration
+
+- **Strongly-typed config objects** -- services receive a `*Config` record instead of `IConfiguration`. `IConfiguration` is consumed only inside `*Configuration` registration classes.
+- **Naming** -- config data objects are named `<Feature>Config` (e.g., `HealthCheckConfig`). Never `<Feature>Options` or `<Feature>Settings`.
+- **Registration** -- the `*Config` record is populated from `IConfiguration` inside the `AddXxxDependencies` extension method and registered as a singleton: `services.AddSingleton(new HealthCheckConfig { Port = configuration[...] })`.
 ---
 
 ## Testing
