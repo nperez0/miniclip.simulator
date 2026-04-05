@@ -1,8 +1,5 @@
 # TODO List
 
-## Do not forget
-- [ ] Use options pattern for configuration
-
 ## Projects & Ideas
 - [ ] Improve retry policy — could use Polly for more advanced strategies
 - [ ] Implement dead-letter queue (persist failed messages)
@@ -24,7 +21,6 @@
 - [ ] Graceful shutdown
 - [ ] Add useful OpenTelemetry tags and metrics (e.g. domain error counters, conflict rate)
 - [ ] Continue improving `Result<T>`
-
 
 ## In Progress
 - [ ] (nothing currently in progress)
