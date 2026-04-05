@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Miniclip.Simulator.Infrastructure.Read.Persistence;
 using Miniclip.Simulator.ReadModels.WebJob.Infrastructure;
 
 namespace Miniclip.Simulator.ReadModels.WebJob.Infrastructure.Configuration;
@@ -10,7 +11,8 @@ public static class HealthCheckConfiguration
         public IServiceCollection AddHealthChecksDependencies(IConfiguration configuration)
         {
             services.AddHealthChecks()
-                .AddCheck("self", () => HealthCheckResult.Healthy(), tags: ["live"]);
+                .AddCheck("self", () => HealthCheckResult.Healthy(), tags: ["live"])
+                .AddDbContextCheck<SimulatorReadDbContext>("mysql", tags: ["ready"]);
 
             var config = new HealthCheckConfig
             {
