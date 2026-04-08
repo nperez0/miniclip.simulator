@@ -18,6 +18,6 @@ public abstract class WhenProjectingMatchResults : TestBase<MatchResultProjectio
 
     protected override void When()
     {
-        Sut!.Handle(Event, CancellationToken.None).AsTask().Wait();
+        Sut!.HandleAsync(Event, CancellationToken.None).AsTask().Wait();
     }
 }

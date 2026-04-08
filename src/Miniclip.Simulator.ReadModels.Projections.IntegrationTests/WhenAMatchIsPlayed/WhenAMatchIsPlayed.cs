@@ -1,7 +1,6 @@
-using Mediator;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Miniclip.Core.Application.Behaviors;
+using Miniclip.Core.ReadModels.Projections;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Events;
 using Miniclip.Simulator.Infrastructure.Read.Persistence;
 using Miniclip.Simulator.Infrastructure.Read.Persistence.Repositories.Write;
@@ -24,12 +23,10 @@ public abstract class WhenAMatchIsPlayed
         sc.AddDbContext<SimulatorReadDbContext>(o =>
             o.UseInMemoryDatabase(dbName));
 
-        sc.AddSingleton<INotificationPublisher, OrderedNotificationPublisher>();
-        sc.AddMediator(o => o.ServiceLifetime = ServiceLifetime.Scoped);
-
         sc.AddScoped<Write.IGroupStandingsRepository, GroupStandingsRepository>();
         sc.AddScoped<Write.IMatchResultsRepository, MatchResultsRepository>();
         sc.AddScoped<IRecalculatePositionService, RecalculatePositionService>();
+        sc.AddProjectionHandlers(typeof(MatchResultProjection).Assembly);
 
         Services = sc.BuildServiceProvider();
 
@@ -45,10 +42,10 @@ public abstract class WhenAMatchIsPlayed
         {
             using var scope = Services.CreateScope();
             var sp = scope.ServiceProvider;
-            var publisher = sp.GetRequiredService<IPublisher>();
+            var dispatcher = sp.GetRequiredService<IProjectionDispatcher>();
             var context = sp.GetRequiredService<SimulatorReadDbContext>();
 
-            await publisher.Publish(@event, CancellationToken.None);
+            await dispatcher.DispatchAsync(@event, CancellationToken.None);
             await context.SaveChangesAsync(CancellationToken.None);
         }
     }

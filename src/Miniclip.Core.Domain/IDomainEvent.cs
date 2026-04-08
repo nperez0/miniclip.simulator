@@ -1,8 +1,6 @@
-﻿using Mediator;
+﻿namespace Miniclip.Core.Domain;
 
-namespace Miniclip.Core.Domain;
-
-public interface IDomainEvent : INotification
+public interface IDomainEvent
 {
     Guid AggregateId { get; }
 }

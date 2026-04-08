@@ -4,12 +4,12 @@ using Miniclip.Core.EventSourcing;
 
 namespace Miniclip.Core.Application.Serializers;
 
-public sealed class SystemTextJsonEventSerializer : IEventSerializer
+public sealed class DomainEventJsonSerializer : IEventSerializer
 {
     private static readonly JsonSerializerOptions options = new(JsonSerializerDefaults.Web);
     private readonly IReadOnlyDictionary<string, Type> eventTypes;
 
-    public SystemTextJsonEventSerializer()
+    public DomainEventJsonSerializer()
     {
         eventTypes = AppDomain.CurrentDomain
             .GetAssemblies()

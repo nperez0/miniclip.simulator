@@ -1,4 +1,3 @@
-using Mediator;
 using Miniclip.Core.Domain;
 using NSubstitute;
 using NUnit.Framework;
@@ -23,9 +22,9 @@ public class AndPublisherThrows : WhenConsumingEvents
             .Deserialize(Arg.Any<string>(), Arg.Any<byte[]>())
             .Returns(Substitute.For<IDomainEvent>());
 
-        Publisher
-            .Publish(Arg.Any<INotification>(), Arg.Any<CancellationToken>())
-            .Returns(_ => throw new InvalidOperationException("Publish failed"));
+        Dispatcher
+            .DispatchAsync(Arg.Any<IDomainEvent>(), Arg.Any<CancellationToken>())
+            .Returns(_ => throw new InvalidOperationException("Dispatch failed"));
 
         RecordAnyExceptionsThrown();
     }
