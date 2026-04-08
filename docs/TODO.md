@@ -1,6 +1,7 @@
 # TODO List
 
 ## Projects & Ideas
+- [ ] Crate a message context and pass it downstream to the projections
 - [ ] How to trace events end-to-end across services
 - [ ] Add more information to the events, e.g. correlation ID, causation ID, timestamp, etc.
 - [ ] Improve retry policy — could use Polly for more advanced strategies
@@ -8,6 +9,7 @@
 - [ ] The current IEventBus.PublishAsync takes a CommittedEvent, which is an EventStoreDB concept. Should we have a more generic event message that can be used across different bus implementations? Maybe something like `EventMessage { string Type; string Payload; }`.
 - [ ] Create messaging logic that uses AWS SQS/SNS
 - [ ] Can we prevent receiving events that a read model is not interested in? Maybe using a different topic per aggregate? The current IEventBus should be renamed to IEventPublisher, and we should add an IEventSubscriber for the projections consumer
+- [ ] Review read models strategy
 - [ ] Implement a caching strategy (e.g. Redis via decorator pattern) — just to show how it works
 - [ ] Add an e2e test project
 - [ ] Prepare project to be deployed on Azure or AWS
@@ -26,7 +28,7 @@
 - [ ] There some elements in Miniclip.Core.Application that I am not sure they should be there
 
 ## In Progress
-- [ ] Avoid inheriting from `INotification` for domain events
+- [ ] 
 
 ## Completed
 - [x] Add health checks to the API (`/health` and `/alive` endpoints)
@@ -45,6 +47,7 @@
 - [x] Auto-create Kafka topics on startup (AppHost `WithTopicCreation()`)
 - [x] Add integration test project for projections
 - [x] Add health checks to the ReadModels WebJob project
+- [x] Avoid inheriting from `INotification` for domain events
 
 ## Notes
 - EventStoreDB was rebranded to **KurrentDB**; client library is `KurrentDB.Client`, Docker image is `kurrentplatform/kurrentdb`.
