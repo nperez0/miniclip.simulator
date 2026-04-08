@@ -225,3 +225,22 @@ dotnet run
 ```
 
 Aspire provisions MySQL, KurrentDB, Kafka, the ReadModels WebJob, and the API. Read DB migrations run automatically in the WebJob before the API starts.
+
+---
+
+## Sequential Thinking
+
+Use the `sequentialthinking` tool for tasks that involve non-obvious tradeoffs or multi-step reasoning. Skip it for straightforward single-file changes.
+
+**Use it for:**
+- Designing a feature that spans multiple projects (entity → command → handler → projection → API)
+- Saga design, compensation/rollback logic
+- Architectural decisions or domain modelling (new aggregate, value object design)
+- Planning changes that touch multiple DbContexts or migrations
+- Diagnosing architectural violations or subtle bugs
+- Designing a new swap rule engine flow
+
+**Skip it for:**
+- Simple additions (enum value, DTO property, mapping column, feature toggle)
+- Renames, small bug fixes, test additions following an existing pattern
+- Tasks where the correct pattern is already obvious from the AGENTS.md files

@@ -1,12 +1,15 @@
 # TODO List
 
 ## Projects & Ideas
+- [ ] How to trace events end-to-end across services
+- [ ] Add more information to the events, e.g. correlation ID, causation ID, timestamp, etc.
 - [ ] Improve retry policy — could use Polly for more advanced strategies
 - [ ] Implement dead-letter queue (persist failed messages)
+- [ ] The current IEventBus.PublishAsync takes a CommittedEvent, which is an EventStoreDB concept. Should we have a more generic event message that can be used across different bus implementations? Maybe something like `EventMessage { string Type; string Payload; }`.
+- [ ] Create messaging logic that uses AWS SQS/SNS
+- [ ] Can we prevent receiving events that a read model is not interested in? Maybe using a different topic per aggregate? The current IEventBus should be renamed to IEventPublisher, and we should add an IEventSubscriber for the projections consumer
 - [ ] Implement a caching strategy (e.g. Redis via decorator pattern) — just to show how it works
 - [ ] Add an e2e test project
-- [ ] Can we prevent receiving events that a read model is not interested in? Maybe using a different topic per aggregate?
-- [ ] How to trace events end-to-end across services
 - [ ] Prepare project to be deployed on Azure or AWS
 - [ ] What could be a strategy for service discovery?
 - [ ] Check LaunchDarkly for feature flags
@@ -15,15 +18,15 @@
 - [ ] Create a separate project to manage teams
 - [ ] Check anti-patterns
 - [ ] Make other domain aggregates react to domain events
-- [ ] Avoid inheriting from `INotification` for domain events
 - [ ] Separate write requests from query requests?
 - [ ] Check performance on the write side
 - [ ] Graceful shutdown
 - [ ] Add useful OpenTelemetry tags and metrics (e.g. domain error counters, conflict rate)
 - [ ] Continue improving `Result<T>`
+- [ ] There some elements in Miniclip.Core.Application that I am not sure they should be there
 
 ## In Progress
-- [ ] (nothing currently in progress)
+- [ ] Avoid inheriting from `INotification` for domain events
 
 ## Completed
 - [x] Add health checks to the API (`/health` and `/alive` endpoints)
