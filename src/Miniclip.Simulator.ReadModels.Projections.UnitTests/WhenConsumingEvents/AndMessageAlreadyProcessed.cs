@@ -1,4 +1,3 @@
-using Mediator;
 using NSubstitute;
 using NUnit.Framework;
 
@@ -23,8 +22,8 @@ public class AndMessageAlreadyProcessed : WhenConsumingEvents
         => await Uow.DidNotReceive().BeginTransactionAsync(Arg.Any<CancellationToken>());
 
     [Test]
-    public async Task ShouldNotPublishToMediator()
-        => await Publisher.DidNotReceive().Publish(Arg.Any<INotification>(), Arg.Any<CancellationToken>());
+    public async Task ShouldNotDispatch()
+        => await Dispatcher.DidNotReceive().DispatchAsync(Arg.Any<Miniclip.Core.Domain.IDomainEvent>(), Arg.Any<CancellationToken>());
 
     [Test]
     public void ShouldNotRecordAsProcessed()

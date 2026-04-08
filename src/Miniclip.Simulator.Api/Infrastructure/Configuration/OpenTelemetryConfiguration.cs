@@ -19,6 +19,7 @@ public static class OpenTelemetryConfiguration
                         .AddHttpClientInstrumentation()
                         .AddOtlpExporter()
                         .AddKafkaProducerInstrumentation<string, byte[]>()
+                        .AddMeter(Mediator.Mediator.MeterName)
                         .AddSimulator();
                 })
                 .WithTracing(tracing =>
@@ -28,6 +29,7 @@ public static class OpenTelemetryConfiguration
                         .AddHttpClientInstrumentation()
                         .AddOtlpExporter()
                         .AddKafkaProducerInstrumentation<string, byte[]>()
+                        .AddSource(Mediator.Mediator.ActivitySourceName)
                         .AddMySqlData()
                         .AddMySqlConnector()
                         .AddKurrentDBClientInstrumentation()

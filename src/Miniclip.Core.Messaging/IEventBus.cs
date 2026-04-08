@@ -1,6 +1,6 @@
 using Miniclip.Core.EventSourcing;
 
-namespace Miniclip.Core.Application;
+namespace Miniclip.Core.Messaging;
 
 public interface IEventBus
 {

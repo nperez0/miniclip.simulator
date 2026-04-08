@@ -1,11 +1,10 @@
-using Confluent.Kafka;
-using Mediator;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Miniclip.Core.Domain;
 using Miniclip.Core.EventSourcing;
 using Miniclip.Core.Kafka;
 using Miniclip.Core.ReadModels;
+using Miniclip.Core.ReadModels.Projections;
 using Miniclip.Simulator.ReadModels.Repositories.Write;
 
 namespace Miniclip.Simulator.ReadModels.Projections;
@@ -37,14 +36,14 @@ public partial class ProjectionsConsumerService<TAggregate>(
 
         var domainEvent = serializer.Deserialize(eventType, context.Result.Message.Value);
 
-        var unitOfWork = scope.ServiceProvider.GetRequiredService<IReadModelUnitOfWork>();
-        var publisher = scope.ServiceProvider.GetRequiredService<IPublisher>();
+        var unitOfWork  = scope.ServiceProvider.GetRequiredService<IReadModelUnitOfWork>();
+        var dispatcher  = scope.ServiceProvider.GetRequiredService<IProjectionDispatcher>();
 
         await unitOfWork.BeginTransactionAsync(cancellationToken);
 
         try
         {
-            await publisher.Publish(domainEvent, cancellationToken);
+            await dispatcher.DispatchAsync(domainEvent, cancellationToken);
             processedEventsRepository.Add(eventId, Config.ConsumerGroupId);
             await unitOfWork.SaveChangesAsync(cancellationToken);
             await unitOfWork.CommitAsync(cancellationToken);

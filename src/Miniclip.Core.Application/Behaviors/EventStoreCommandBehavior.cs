@@ -1,6 +1,7 @@
 using Mediator;
 using Miniclip.Core.Application.Extensions;
 using Miniclip.Core.EventSourcing;
+using Miniclip.Core.Messaging;
 
 namespace Miniclip.Core.Application.Behaviors;
 

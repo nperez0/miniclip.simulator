@@ -1,11 +1,11 @@
 using AutoFixture;
 using Confluent.Kafka;
-using Mediator;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Miniclip.Core.EventSourcing;
 using Miniclip.Core.Kafka;
 using Miniclip.Core.ReadModels;
+using Miniclip.Core.ReadModels.Projections;
 using Miniclip.Core.Tests;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Entities;
 using Miniclip.Simulator.ReadModels.Repositories.Write;
@@ -20,7 +20,7 @@ public abstract class WhenConsumingEvents : AsyncTestBase<TestableConsumer>
     protected IServiceScopeFactory ScopeFactory { get; private set; } = null!;
     protected IProcessedEventsRepository ProcessedEvents { get; private set; } = null!;
     protected IReadModelUnitOfWork Uow { get; private set; } = null!;
-    protected IPublisher Publisher { get; private set; } = null!;
+    protected IProjectionDispatcher Dispatcher { get; private set; } = null!;
     protected KafkaMessageContext? Context { get; set; }
 
     protected override Task GivenAsync()
@@ -28,14 +28,14 @@ public abstract class WhenConsumingEvents : AsyncTestBase<TestableConsumer>
         Serializer = Fixture.Freeze<IEventSerializer>();
         ProcessedEvents = Fixture.Freeze<IProcessedEventsRepository>();
         Uow = Fixture.Freeze<IReadModelUnitOfWork>();
-        Publisher = Fixture.Freeze<IPublisher>();
+        Dispatcher = Fixture.Freeze<IProjectionDispatcher>();
         Fixture.Freeze<IConsumerRetryPolicy>();
         Fixture.Freeze<ILogger<ProjectionsConsumerService<Group>>>();
 
         var sp = Substitute.For<IServiceProvider>();
         sp.GetService(typeof(IProcessedEventsRepository)).Returns(ProcessedEvents);
         sp.GetService(typeof(IReadModelUnitOfWork)).Returns(Uow);
-        sp.GetService(typeof(IPublisher)).Returns(Publisher);
+        sp.GetService(typeof(IProjectionDispatcher)).Returns(Dispatcher);
 
         var scope = Substitute.For<IServiceScope>();
         scope.ServiceProvider.Returns(sp);

@@ -18,7 +18,7 @@ public static class KafkaConfiguration
         {
             var connectionString = configuration.GetConnectionString("kafka");
 
-            services.AddSingleton<IEventSerializer, SystemTextJsonEventSerializer>();
+            services.AddSingleton<IEventSerializer, DomainEventJsonSerializer>();
             services.AddSingleton<IConsumerRetryPolicy, ExponentialBackoffRetryPolicy>();
             services.AddScoped<IProcessedEventsRepository, ProcessedEventsRepository>();
 

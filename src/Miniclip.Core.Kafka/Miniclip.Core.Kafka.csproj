@@ -17,6 +17,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Miniclip.Core.Application\Miniclip.Core.Application.csproj" />
     <ProjectReference Include="..\Miniclip.Core.EventSourcing\Miniclip.Core.EventSourcing.csproj" />
+    <ProjectReference Include="..\Miniclip.Core.Messaging\Miniclip.Core.Messaging.csproj" />
     <ProjectReference Include="..\Miniclip.Core.OpenTelemetry\Miniclip.Core.OpenTelemetry.csproj" />
     <ProjectReference Include="..\Miniclip.Simulator.Domain\Miniclip.Simulator.Domain.csproj" />
   </ItemGroup>

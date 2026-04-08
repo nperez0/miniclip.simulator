@@ -1,4 +1,5 @@
 using Miniclip.Core.Domain;
+using Miniclip.Core.ReadModels.Projections;
 using NSubstitute;
 using NUnit.Framework;
 
@@ -32,8 +33,8 @@ public class AndMessageNotYetProcessed : WhenConsumingEvents
         => await Uow.Received(1).BeginTransactionAsync(Arg.Any<CancellationToken>());
 
     [Test]
-    public async Task ShouldDispatchViaMediator()
-        => await Publisher.Received(1).Publish(domainEvent, Arg.Any<CancellationToken>());
+    public async Task ShouldDispatch()
+        => await Dispatcher.Received(1).DispatchAsync(domainEvent, Arg.Any<CancellationToken>());
 
     [Test]
     public void ShouldRecordEventAsProcessed()

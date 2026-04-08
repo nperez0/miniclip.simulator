@@ -1,6 +1,6 @@
 ﻿using Confluent.Kafka;
-using Miniclip.Core.Application;
 using Miniclip.Core.Kafka;
+using Miniclip.Core.Messaging;
 
 namespace Miniclip.Simulator.Api.Infrastructure.Configuration;
 

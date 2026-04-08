@@ -1,5 +1,5 @@
 using Confluent.Kafka;
-using Miniclip.Core.Application;
+using Miniclip.Core.Messaging;
 using Miniclip.Core.EventSourcing;
 using System.Text;
 using Microsoft.Extensions.Logging;

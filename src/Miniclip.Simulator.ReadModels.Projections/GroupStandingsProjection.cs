@@ -1,4 +1,4 @@
-using Mediator;
+using Miniclip.Core.ReadModels.Projections;
 using Miniclip.Core.ReadModels.Projections.Attributes;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Events;
 using Miniclip.Simulator.ReadModels.Models;
@@ -7,49 +7,50 @@ using Miniclip.Simulator.ReadModels.Repositories.Write;
 
 namespace Miniclip.Simulator.ReadModels.Projections;
 
-[HandlerPriority(2)]
+[HandlerHighPriority(2)]
 public class GroupStandingsProjection(
     IGroupStandingsRepository groupStandingsRepository,
-    IRecalculatePositionService recalculatePositionService) 
-    : INotificationHandler<MatchPlayed>
+    IRecalculatePositionService recalculatePositionService)
+    : IProjectionHandler<MatchPlayed>
 {
-    public async ValueTask Handle(MatchPlayed notification, CancellationToken cancellationToken)
+    public async ValueTask HandleAsync(MatchPlayed @event, CancellationToken cancellationToken)
     {
-        var allStandings = await GetCurrentStandings(notification.GroupId, cancellationToken);
-        
+
+        var allStandings = await GetCurrentStandings(@event.GroupId, cancellationToken);
+
         // Get or create standings for both teams
         var homeTeamStanding = GetOrCreateStanding(
-            allStandings, 
-            notification.GroupId, 
-            notification.GroupName, 
-            notification.HomeTeamId, 
-            notification.HomeTeamName, 
-            notification.HomeTeamStrength);
+            allStandings,
+            @event.GroupId,
+            @event.GroupName,
+            @event.HomeTeamId,
+            @event.HomeTeamName,
+            @event.HomeTeamStrength);
         var awayTeamStanding = GetOrCreateStanding(
-            allStandings, 
-            notification.GroupId, 
-            notification.GroupName,
-            notification.AwayTeamId, 
-            notification.AwayTeamName, 
-            notification.AwayTeamStrength);
+            allStandings,
+            @event.GroupId,
+            @event.GroupName,
+            @event.AwayTeamId,
+            @event.AwayTeamName,
+            @event.AwayTeamStrength);
 
         // Update statistics
-        UpdateTeamStanding(homeTeamStanding, notification.HomeScore, notification.AwayScore);
-        UpdateTeamStanding(awayTeamStanding, notification.AwayScore, notification.HomeScore);
+        UpdateTeamStanding(homeTeamStanding, @event.HomeScore, @event.AwayScore);
+        UpdateTeamStanding(awayTeamStanding, @event.AwayScore, @event.HomeScore);
 
         // Save new standings if they were created
-        if (allStandings.TryAdd(notification.HomeTeamId, homeTeamStanding))
+        if (allStandings.TryAdd(@event.HomeTeamId, homeTeamStanding))
             groupStandingsRepository.Add(homeTeamStanding);
-        
-        if (allStandings.TryAdd(notification.AwayTeamId, awayTeamStanding))
+
+        if (allStandings.TryAdd(@event.AwayTeamId, awayTeamStanding))
             groupStandingsRepository.Add(awayTeamStanding);
 
         // Recalculate positions for all teams in group (with H2H logic)
-        await recalculatePositionService.RecalculatePositionsAsync(allStandings.Values, notification.GroupId, cancellationToken);
+        await recalculatePositionService.RecalculatePositionsAsync(allStandings.Values, @event.GroupId, cancellationToken);
     }
 
     private async Task<Dictionary<Guid, GroupStandingsModel>> GetCurrentStandings(
-        Guid groupId, 
+        Guid groupId,
         CancellationToken cancellationToken)
     {
         var standings = await groupStandingsRepository.GetStandingsByGroupIdAsync(groupId, cancellationToken);
@@ -81,8 +82,8 @@ public class GroupStandingsProjection(
     }
 
     private static void UpdateTeamStanding(
-        GroupStandingsModel standing, 
-        int goalsFor, 
+        GroupStandingsModel standing,
+        int goalsFor,
         int goalsAgainst)
     {
         standing.MatchesPlayed++;
@@ -106,5 +107,5 @@ public class GroupStandingsProjection(
         standing.LastUpdated = DateTime.UtcNow;
     }
 
-    
+
 }

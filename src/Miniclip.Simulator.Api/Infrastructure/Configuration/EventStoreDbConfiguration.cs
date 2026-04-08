@@ -19,7 +19,7 @@ public static class EventStoreDbConfiguration
         var settings = KurrentDBClientSettings.Create(connectionString);
 
         services.AddSingleton(_ => new KurrentDBClient(settings));
-        services.AddSingleton<IEventSerializer, SystemTextJsonEventSerializer>();
+        services.AddSingleton<IEventSerializer, DomainEventJsonSerializer>();
         services.AddScoped<IEventStoreSession, EventStoreSession>();
         services.AddScoped(typeof(IEventStore<>), typeof(EventStoreDbEventStore<>));
         
