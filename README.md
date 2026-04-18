@@ -61,22 +61,28 @@ Idempotency is guaranteed by recording each processed `event-id` + consumer grou
 src/
 ├── Miniclip.Core/                              # Primitives: Result<T>, extension methods
 ├── Miniclip.Core.Domain/                       # AggregateRoot, IAggregateRepository<T>, IDomainEvent
-├── Miniclip.Core.Application/                  # IEventBus, pipeline behaviour base types, LoggingBehavior
+├── Miniclip.Core.Application/                  # ICommand, IQuery, pipeline behaviours, DomainEventJsonSerializer
 ├── Miniclip.Core.EF/                           # EF Core base types (IReadModelUnitOfWork)
 ├── Miniclip.Core.EventSourcing/                # IEventStore<T>, IEventStoreSession, AggregateRepository<T>
 ├── Miniclip.Core.EventSourcing.EventStoreDB/   # EventStoreDbEventStore<T>, SystemTextJsonEventSerializer
-├── Miniclip.Core.Kafka/                        # KafkaConsumerService, KafkaConsumer, KafkaConsumerFactory,
-│                                               #   KafkaEventBus, TopicNaming, retry/DLQ policy
+├── Miniclip.Core.Messaging/                    # IEventBus, IMessagePipeline, IMessageHandler<T>,
+│                                               #   IMessageMiddleware, IRetryPolicy, IDeadLetterHandler,
+│                                               #   ExponentialBackoffRetryPolicy, MessageHeaders
+├── Miniclip.Core.Messaging.Pipeline/           # MessagePipeline, TracingMiddleware, LoggingMiddleware,
+│                                               #   RetryMiddleware, MessageHandlerRegistry
+├── Miniclip.Core.Messaging.Kafka/              # KafkaConsumerHost, KafkaEventBus, KafkaDeadLetterHandler,
+│                                               #   TopicNaming, ConsumerGroupIdNaming, KafkaMessageMapper
 ├── Miniclip.Core.OpenTelemetry/                # OpenTelemetryActivity, OpenTelemetryMetrics, OTel extensions
 ├── Miniclip.Core.ReadModels/                   # IReadModelUnitOfWork, projection handler base types
-├── Miniclip.Core.ReadModels.Projections/       # [HandlerPriority] attribute, ordered projection execution
+├── Miniclip.Core.ReadModels.Projections/       # [HandlerPriority] attribute, IProjectionDispatcher,
+│                                               #   ordered projection execution
 ├── Miniclip.Core.ServiceDefaults/              # Serilog structured logging (AddStructuredLogging)
 │
 ├── Miniclip.Simulator.Domain/                  # Group + Team aggregates, domain services, value objects
 ├── Miniclip.Simulator.Application.Commands/    # Command handlers: GenerateGroup, SimulateGroup
 ├── Miniclip.Simulator.Application.Queries/     # Query handlers: GetGroupStandings, GetMatchResults
 ├── Miniclip.Simulator.ReadModels/              # Read model POCOs and repository interfaces
-├── Miniclip.Simulator.ReadModels.Projections/  # ProjectionsConsumerService<TAggregate>,
+├── Miniclip.Simulator.ReadModels.Projections/  # ProjectionMessageHandler<TEvent>,
 │                                               #   GroupStandingsProjection, MatchResultProjection
 ├── Miniclip.Simulator.Infrastructure.Read/     # EF read DbContext, repository implementations
 │
@@ -101,23 +107,27 @@ Command
                  └▶ AggregateRepository.Add(aggregate)   ← tracks uncommitted events
 ```
 
-### Kafka consumer pattern
+### Kafka messaging pipeline (read side)
 
-`KafkaConsumerService` is an abstract `BackgroundService`. On startup it queries Kafka admin for the partition count and spawns one `KafkaConsumer` per partition (via `IKafkaConsumerFactory`). Each consumer owns its own Confluent consumer instance and commit loop. A retry loop with `IConsumerRetryPolicy` (default: `ExponentialBackoffRetryPolicy`) wraps each message; permanently failing messages hit the virtual `OnDeadLetterAsync` hook.
+`KafkaConsumerHost` is a `BackgroundService` (one instance per consumer group). It subscribes to a Kafka topic and forwards each message through the `IMessagePipeline` — a middleware chain registered outermost-first:
 
-```csharp
-// Abstract base — drives concurrency and retry
-public abstract class KafkaConsumerService(IKafkaConsumerConfig, IKafkaConsumerFactory,
-    IConsumerRetryPolicy, ILogger) : BackgroundService
-
-// Concrete — handles one aggregate's event stream
-public class ProjectionsConsumerService<TAggregate> : KafkaConsumerService where TAggregate : AggregateRoot
+```
+KafkaConsumerHost
+  └▶ IMessagePipeline
+       ├── TracingMiddleware    ← starts OTel span; tags message-id, type, subscription-id
+       ├── LoggingMiddleware    ← logs receipt and outcome
+       └── RetryMiddleware      ← exponential back-off; dead-letters on exhaustion
+              └▶ ProjectionMessageHandler<TEvent>   ← IMessageHandler<TEvent>
+                   ├── idempotency check (ProcessedEvents table)
+                   └── IProjectionDispatcher
+                         ├── MatchResultProjection    (priority 1)
+                         └── GroupStandingsProjection (priority 2)
 ```
 
-> **Topic naming:** `simulator.{aggregate-kebab-case}` — e.g. `Group` → `simulator.group`
+> **Topic naming:** `simulator.{aggregate-kebab-case}` — e.g. `Group` → `simulator.group`  
 > **Consumer group:** `simulator-projections-{aggregate}` — e.g. `simulator-projections-group`
 
-> **Why `IServiceScopeFactory`?** `BackgroundService` is a singleton. Injecting scoped services (e.g. `DbContext`) directly creates a captive dependency. `ProjectionsConsumerService` instead creates a **fresh scope per message** inside `HandleAsync`, giving each message its own `DbContext` and transactional boundary.
+> **Why `IServiceScopeFactory`?** `ProjectionMessageHandler<TEvent>` creates a **fresh DI scope per message**, giving each message its own `DbContext` and transactional boundary.
 
 ### Observability
 

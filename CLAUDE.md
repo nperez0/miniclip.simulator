@@ -13,7 +13,7 @@ For full project context, architecture, domain model, and coding conventions, se
 - **Mediator:** source-generated `Mediator` package — not MediatR
 - **Error handling:** `Result<T>` pattern — never throw for business rule violations
 - **Write store:** KurrentDB (aggregates as event streams; client: `KurrentDB.Client`)
-- **Read store:** MySQL, populated by `ProjectionsConsumerService<TAggregate>` (Kafka consumers in the ReadModels WebJob)
+- **Read store:** MySQL, populated by `KafkaConsumerHost` + `ProjectionMessageHandler<TEvent>` (Kafka consumers in the ReadModels WebJob)
 - **Observability:** OpenTelemetry (traces + metrics via OTLP) + Serilog structured logging
 - **Solution root:** `src/`
 - **Entry points:** `src/Miniclip.Simulator.AppHost` (Aspire), `src/Miniclip.Simulator.Api` (API), `src/Miniclip.Simulator.ReadModels.WebJob` (projections)

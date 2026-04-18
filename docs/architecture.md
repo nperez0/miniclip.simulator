@@ -119,10 +119,10 @@ A **.NET Worker Service** (`Microsoft.NET.Sdk.Worker`) that is the single owner 
 
 ```
 Infrastructure/
-  Configuration/   ReadModelsConfiguration  (DbContext + write repositories + InitializeDatabases)
-                   KafkaConfiguration       (AddProjectionsConsumer<TAggregate> factory)
-                   MediatorConfiguration    (OrderedNotificationPublisher)
-                   ProjectionsConfiguration (IRecalculatePositionService)
+  Configuration/   ReadModelsConfiguration      (DbContext + write repositories + InitializeDatabases)
+                   KafkaMessagingConfiguration  (AddKafkaMessagingInfrastructure + AddKafkaConsumer)
+                   ProjectionsConfiguration     (IRecalculatePositionService)
+                   HealthCheckConfiguration     (HealthCheckHttpServerService)
                    OpenTelemetryConfiguration
 Startup.cs         ConfigureServices + Configure
 Program.cs         Host builder entry point (AddStructuredLogging)
@@ -130,8 +130,8 @@ Program.cs         Host builder entry point (AddStructuredLogging)
 
 The WebJob starts before the API in Aspire (`WaitFor(webjob)`):
 1. Runs EF Core read-DB migrations via `host.InitializeDatabases()`.
-2. Registers `ProjectionsConsumerService<Group>` as a hosted service.
-3. On `ExecuteAsync`, queries Kafka admin for partition count and spawns one `KafkaConsumer` per partition.
+2. Registers `KafkaConsumerHost` (for `Group`) as a hosted service.
+3. On `ExecuteAsync`, the host subscribes to `simulator.group` and processes each message through the `IMessagePipeline`.
 
 ### Orchestration — `Miniclip.Simulator.AppHost`
 
@@ -204,17 +204,20 @@ EventStoreCommandBehavior
         └── publishes to simulator.group Kafka topic
         │
         ▼
-ProjectionsConsumerService<Group>  (WebJob — background service)
-  ├── KafkaConsumer receives message from simulator.group topic
-  ├── Idempotency check: ProcessedEvents table checked for event-id
-  ├── serializer.Deserialize(eventType, bytes) → MatchPlayed domain event
-  ├── unitOfWork.BeginTransactionAsync()
-  ├── IPublisher.Publish(matchPlayed) dispatches to ordered handlers:
-  │     ├── MatchResultProjection      [priority 1] → inserts MatchResultModel row
-  │     └── GroupStandingsProjection   [priority 2] → updates stats + recalculates positions
-  ├── processedEventsRepository.Add(eventId, consumerGroupId)
-  ├── unitOfWork.SaveChangesAsync()
-  └── unitOfWork.CommitAsync()
+KafkaConsumerHost  (WebJob — BackgroundService)
+  ├── receives message from simulator.group topic
+  ├── IMessagePipeline.ProcessAsync(envelope, consumerGroupId)
+  │     ├── TracingMiddleware   → starts OTel span
+  │     ├── LoggingMiddleware   → logs receipt
+  │     └── RetryMiddleware     → wraps handler with exponential back-off
+  │           └── ProjectionMessageHandler<MatchPlayed>
+  │                 ├── idempotency check: ProcessedEvents table
+  │                 ├── IProjectionDispatcher.DispatchAsync(matchPlayed)
+  │                 │     ├── MatchResultProjection      [priority 1] → inserts MatchResultModel row
+  │                 │     └── GroupStandingsProjection   [priority 2] → updates stats + recalculates positions
+  │                 ├── processedEventsRepository.Add(eventId, consumerGroupId)
+  │                 └── unitOfWork.CommitAsync()
+  └── consumer.Commit(consumeResult)   → manual Kafka offset commit
 ```
 
 ### Read — Get Standings
@@ -244,14 +247,18 @@ Api
  │    └── Simulator.ReadModels
  ├── Core.EventSourcing.EventStoreDB
  │    └── Core.EventSourcing
- ├── Core.Kafka
+ ├── Core.Messaging.Kafka
+ │    ├── Core.Messaging.Pipeline
+ │    └── Core.Messaging
  ├── Core.ServiceDefaults        (Serilog)
  └── Infrastructure.Read
 
 ReadModels.WebJob
  ├── Simulator.ReadModels.Projections
  │    └── Simulator.ReadModels
- ├── Core.Kafka
+ ├── Core.Messaging.Kafka
+ │    ├── Core.Messaging.Pipeline
+ │    └── Core.Messaging
  ├── Core.ServiceDefaults        (Serilog)
  └── Infrastructure.Read
 ```
