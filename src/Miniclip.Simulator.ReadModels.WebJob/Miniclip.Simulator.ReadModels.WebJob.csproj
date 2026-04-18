@@ -18,6 +18,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Miniclip.Core.Application\Miniclip.Core.Application.csproj" />
+    <ProjectReference Include="..\Miniclip.Core.Messaging.Kafka\Miniclip.Core.Messaging.Kafka.csproj" />
     <ProjectReference Include="..\Miniclip.Core.ServiceDefaults\Miniclip.Core.ServiceDefaults.csproj" />
     <ProjectReference Include="..\Miniclip.Simulator.Infrastructure.Read\Miniclip.Simulator.Infrastructure.Read.csproj" />
     <ProjectReference Include="..\Miniclip.Simulator.ReadModels.Projections\Miniclip.Simulator.ReadModels.Projections.csproj" />

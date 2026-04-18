@@ -15,7 +15,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Miniclip.Core.Kafka\Miniclip.Core.Kafka.csproj" />
     <ProjectReference Include="..\Miniclip.Core.Tests\Miniclip.Core.Tests.csproj" />
   </ItemGroup>
 

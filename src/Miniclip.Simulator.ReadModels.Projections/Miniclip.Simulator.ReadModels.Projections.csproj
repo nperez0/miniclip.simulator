@@ -7,10 +7,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Miniclip.Core.Kafka\Miniclip.Core.Kafka.csproj" />
+    <ProjectReference Include="..\Miniclip.Core.Messaging\Miniclip.Core.Messaging.csproj" />
     <ProjectReference Include="..\Miniclip.Core.ReadModels.Projections\Miniclip.Core.ReadModels.Projections.csproj" />
     <ProjectReference Include="..\Miniclip.Simulator.Domain\Miniclip.Simulator.Domain.csproj" />
     <ProjectReference Include="..\Miniclip.Simulator.ReadModels\Miniclip.Simulator.ReadModels.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" />
   </ItemGroup>
 
 </Project>

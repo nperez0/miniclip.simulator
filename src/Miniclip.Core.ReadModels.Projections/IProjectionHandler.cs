@@ -9,7 +9,7 @@ public interface IProjectionHandler
     ValueTask HandleAsync(IDomainEvent @event, CancellationToken ct);
 }
 
-public interface IProjectionHandler<TEvent> where TEvent : IDomainEvent
+public interface IProjectionHandler<in TEvent> where TEvent : IDomainEvent
 {
     ValueTask HandleAsync(TEvent @event, CancellationToken ct);
 }

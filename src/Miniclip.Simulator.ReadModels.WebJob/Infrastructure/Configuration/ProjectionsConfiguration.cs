@@ -1,4 +1,4 @@
-using Miniclip.Core.ReadModels.Projections;
+using Miniclip.Core.ReadModels.Projections.Configuration;
 using Miniclip.Simulator.ReadModels.Projections;
 using Miniclip.Simulator.ReadModels.Projections.Services;
 

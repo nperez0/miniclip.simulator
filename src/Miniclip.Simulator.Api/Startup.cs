@@ -1,5 +1,4 @@
-﻿using Google.Api;
-using Microsoft.Extensions.Diagnostics.HealthChecks;
+﻿using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Miniclip.Simulator.Api.Infrastructure.Configuration;
 using Serilog;
 

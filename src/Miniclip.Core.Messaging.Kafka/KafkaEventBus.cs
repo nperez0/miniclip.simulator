@@ -1,10 +1,9 @@
-using Confluent.Kafka;
-using Miniclip.Core.Messaging;
-using Miniclip.Core.EventSourcing;
 using System.Text;
+using Confluent.Kafka;
 using Microsoft.Extensions.Logging;
+using Miniclip.Core.EventSourcing;
 
-namespace Miniclip.Core.Kafka;
+namespace Miniclip.Core.Messaging.Kafka;
 
 public sealed class KafkaEventBus(
     IProducer<string, byte[]> producer,

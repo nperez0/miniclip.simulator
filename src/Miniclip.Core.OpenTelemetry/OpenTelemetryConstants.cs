@@ -15,4 +15,16 @@ public static class OpenTelemetryConstants
         public const string MySqlData = "connector-net";
         public const string MySqlConnector = "MySqlConnector";
     }
+
+    public static class Tags
+    {
+        // --- Activity names ---
+        public const string MessageProcess = "miniclip.message.process";
+
+        // --- Message attributes ---
+        public const string MessageId = "miniclip.messaging.message_id";
+        public const string MessageType = "miniclip.messaging.message_type";
+        public const string SubscriptionId = "miniclip.messaging.subscription_id";
+        public const string CorrelationId = "miniclip.messaging.correlation_id";
+    }
 }
