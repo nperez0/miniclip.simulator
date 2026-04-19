@@ -25,14 +25,11 @@
 - [ ] Add useful OpenTelemetry tags and metrics (e.g. domain error counters, conflict rate)
 - [ ] Continue improving `Result<T>`
 - [ ] There some elements in Miniclip.Core.Application that I am not sure they should be there
-- [ ] Check places where I should be using constants instead of hardcoded strings
+- [ ] Check magic string anti-pattern
 - [ ] Add global usings
 
 ## In Progress
-- [ ] Add more information to the events, e.g. correlation ID, causation ID, timestamp, etc.
-- [ ] How to trace events end-to-end across services
-- [ ] The current IEventBus.PublishAsync takes a CommittedEvent, which is an EventStoreDB concept. Should we have a more generic event message that can be used across different bus implementations?
-- [ ] The serializer should be one for the event bus, not for the event store. The event store should just store byte arrays, and the event bus should be responsible for serializing/deserializing events. This would allow us to use different serializers for different buses if needed.
+- [ ] 
 
 ## Completed
 - [x] Add health checks to the API (`/health` and `/alive` endpoints)
@@ -55,6 +52,10 @@
 - [x] Implement dead-letter queue (persist failed messages)
 - [x] Is it ok to have the projections consumer directly consume from Kafka, or should we have an intermediate service that reads from Kafka and then calls the projection methods? The current implementation couples the projections to Kafka, which might not be ideal if we want to switch to a different messaging system in the future.
 - [x] Create a message context and pass it downstream
+- [x] Add more information to the events, e.g. correlation ID, causation ID, timestamp, etc.
+- [x] How to trace events end-to-end across services
+- [x] The current IEventBus.PublishAsync takes a CommittedEvent, which is an EventStoreDB concept. Should we have a more generic event message that can be used across different bus implementations?
+- [x] The serializer should be one for the event bus, not for the event store. The event store should just store byte arrays, and the event bus should be responsible for serializing/deserializing events. This would allow us to use different serializers for different buses if needed.
 
 ## Notes
 - EventStoreDB was rebranded to **KurrentDB**; client library is `KurrentDB.Client`, Docker image is `kurrentplatform/kurrentdb`.

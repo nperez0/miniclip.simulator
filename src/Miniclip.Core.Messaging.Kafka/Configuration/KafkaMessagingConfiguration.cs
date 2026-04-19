@@ -12,7 +12,7 @@ public static class KafkaMessagingConfiguration
     extension(IServiceCollection services)
     {
         public IServiceCollection AddKafkaMessagingInfrastructure(
-            string bootstrapServers, 
+            string bootstrapServers,
             Action<PipelineOptions>? configurePipeline = null)
         {
             var config = new ProducerConfig
@@ -37,17 +37,24 @@ public static class KafkaMessagingConfiguration
 
         public IServiceCollection AddKafkaConsumer(IKafkaConsumerConfig config)
         {
+            // One builder per consumer group — keyed so OTel can resolve it via
+            // AddKafkaConsumerInstrumentation(group.Id) in the OTel configuration.
             var consumerBuilder = new InstrumentedConsumerBuilder<string, byte[]>(config.ConsumerConfig);
-
             services.AddKeyedSingleton(config.ConsumerGroup.Id, consumerBuilder);
             services.AddSingleton(config.ConsumerGroup);
 
-            services.AddHostedService(sp => new KafkaConsumerHost(
-                config,
-                consumerBuilder,
-                sp.GetRequiredService<IInboundPipeline>(),
-                sp.GetRequiredService<IDeadLetterHandler>(),
-                sp.GetRequiredService<ILogger<KafkaConsumerHost>>()));
+            // Register ConsumerCount hosted service instances, each sharing the same
+            // builder but calling .Build() independently — safe because the builder
+            // is stateless config; each .Build() produces a fresh IConsumer.
+            for (var i = 0; i < config.ConsumerCount; i++)
+            {
+                services.AddHostedService(sp => new KafkaConsumerHost(
+                    config,
+                    sp.GetRequiredKeyedService<InstrumentedConsumerBuilder<string, byte[]>>(config.ConsumerGroup.Id),
+                    sp.GetRequiredService<IInboundPipeline>(),
+                    sp.GetRequiredService<IDeadLetterHandler>(),
+                    sp.GetRequiredService<ILogger<KafkaConsumerHost>>()));
+            }
 
             return services;
         }

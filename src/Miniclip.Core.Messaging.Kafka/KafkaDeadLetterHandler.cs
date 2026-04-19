@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using Confluent.Kafka;
 using Microsoft.Extensions.Logging;
+using Miniclip.Core.Extensions;
 using Miniclip.Core.Messaging.Inbound;
 
 namespace Miniclip.Core.Messaging.Kafka;
@@ -25,7 +26,7 @@ public sealed partial class KafkaDeadLetterHandler(
             { MessageHeaders.OriginalMessageId, Encoding.UTF8.GetBytes(envelope.MessageId) },
             { MessageHeaders.OriginalMessageType, Encoding.UTF8.GetBytes(envelope.MessageType) },
             { MessageHeaders.FailureReason, Encoding.UTF8.GetBytes(reason) },
-            { MessageHeaders.FailedAt, Encoding.UTF8.GetBytes(DateTimeOffset.UtcNow.ToString("O")) }
+            { MessageHeaders.FailedAt, Encoding.UTF8.GetBytes(DateTimeOffset.UtcNow.ToRoundTripString()) }
         };
 
         if (exception is not null)

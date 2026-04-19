@@ -22,10 +22,11 @@ public sealed class MessagePipeline(
 
         // Create a single scope for the entire message -- middlewares and handler share it.
         using var scope = scopeFactory.CreateScope();
-        var scopedMiddlewares = scope.ServiceProvider.GetServices<IInboundMiddleware>().ToArray();
+        var services = scope.ServiceProvider;
+        var scopedMiddlewares = services.GetServices<IInboundMiddleware>().ToArray();
 
         // Build the middleware chain -- first registered is outermost.
-        var handler = () => InvokeHandlerAsync(envelope, context, scope, cancellationToken);
+        var handler = () => InvokeHandlerAsync(envelope, context, services, cancellationToken);
 
         foreach (var middleware in scopedMiddlewares.Reverse())
         {
@@ -45,7 +46,7 @@ public sealed class MessagePipeline(
     private async Task<MessageHandlerResult> InvokeHandlerAsync(
         IMessageEnvelope envelope,
         IMessageContext context,
-        IServiceScope scope,
+        IServiceProvider services,
         CancellationToken cancellationToken)
     {
         try
@@ -61,7 +62,7 @@ public sealed class MessagePipeline(
 
             var message = serializer.Deserialize(envelope.MessageType, envelope.Payload);
 
-            var handlerInstance = scope.ServiceProvider.GetRequiredService(handler.HandlerType);
+            var handlerInstance = services.GetRequiredService(handler.HandlerType);
 
             return await handler.InvokeAsync(handlerInstance, message, context, cancellationToken);
         }
