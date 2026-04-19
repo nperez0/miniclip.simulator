@@ -1,13 +1,14 @@
 using Confluent.Kafka;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Miniclip.Core.Messaging.Inbound;
 
 namespace Miniclip.Core.Messaging.Kafka;
 
 public sealed partial class KafkaConsumerHost(
     IKafkaConsumerConfig config,
     ConsumerBuilder<string, byte[]> consumerBuilder,
-    IMessagePipeline pipeline,
+    IInboundPipeline pipeline,
     IDeadLetterHandler deadLetterHandler,
     ILogger<KafkaConsumerHost> logger) : BackgroundService
 {
@@ -16,7 +17,7 @@ public sealed partial class KafkaConsumerHost(
         using var consumer = consumerBuilder.Build();
         consumer.Subscribe(config.Topics);
 
-        LogStarted(logger, config.ConsumerGroupId, config.Topics);
+        LogStarted(logger, config.ConsumerGroup.Id, config.Topics);
 
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -31,7 +32,7 @@ public sealed partial class KafkaConsumerHost(
 
                 var result = await pipeline.ProcessAsync(
                     envelope,
-                    config.ConsumerGroupId,
+                    config.ConsumerGroup.Id,
                     stoppingToken);
 
                 if (result.ShouldDeadLetter)
@@ -52,12 +53,12 @@ public sealed partial class KafkaConsumerHost(
             }
             catch (ConsumeException ex)
             {
-                LogConsumeError(logger, ex, config.ConsumerGroupId);
+                LogConsumeError(logger, ex, config.ConsumerGroup.Id);
             }
         }
 
         consumer.Close();
-        LogStopped(logger, config.ConsumerGroupId);
+        LogStopped(logger, config.ConsumerGroup.Id);
     }
 
     [LoggerMessage(LogLevel.Information,

@@ -1,6 +1,14 @@
 using System.Reflection;
+using Miniclip.Core.Messaging;
+using Miniclip.Core.Messaging.Inbound;
+using Miniclip.Core.Messaging.Outbound;
 using Microsoft.Extensions.DependencyInjection;
-using Miniclip.Core.Messaging.Pipeline.Middleware;
+using Miniclip.Core.Messaging.Pipeline.Inbound;
+using Miniclip.Core.Messaging.Pipeline.Inbound.Middleware;
+using Miniclip.Core.Messaging.Pipeline.Outbound;
+using Miniclip.Core.Messaging.Pipeline.Outbound.Middleware;
+using LoggingMiddleware = Miniclip.Core.Messaging.Pipeline.Inbound.Middleware.LoggingMiddleware;
+using RetryMiddleware = Miniclip.Core.Messaging.Pipeline.Inbound.Middleware.RetryMiddleware;
 
 namespace Miniclip.Core.Messaging.Pipeline.Configuration;
 
@@ -13,16 +21,34 @@ public static class PipelineConfiguration
             var options = new PipelineOptions();
             configure?.Invoke(options);
 
-            // Register middleware (order matters: first registered = outermost)
-            services.AddSingleton<IMessageMiddleware, TracingMiddleware>();
-            services.AddSingleton<IMessageMiddleware, LoggingMiddleware>();
-            services.AddSingleton<IMessageMiddleware, RetryMiddleware>();
+            // Inbound middleware (outermost first). PropagationMiddleware is Scoped; others are Singleton.
+            services.AddScoped<IInboundMiddleware, PropagationMiddleware>();
+            services.AddSingleton<IInboundMiddleware, TracingMiddleware>();
+            services.AddSingleton<IInboundMiddleware, LoggingMiddleware>();
+            services.AddSingleton<IInboundMiddleware, RetryMiddleware>();
 
             services.AddSingleton(options.RetryPolicy);
-            services.AddSingleton<IMessagePipeline, MessagePipeline>();
+            services.AddSingleton<IInboundPipeline, MessagePipeline>();
 
             services.AddSingleton<IMessageHandlerRegistry>(sp =>
                 new MessageHandlerRegistry(sp.GetServices<CompiledMessageHandler>()));
+
+            return services;
+        }
+
+        public IServiceCollection AddOutboundPipeline()
+        {
+            // Propagation context (scoped - one per message scope)
+            services.AddScoped<PropagationContext>();
+            services.AddScoped<IPropagationContext>(sp => sp.GetRequiredService<PropagationContext>());
+            services.AddScoped<IMutablePropagationContext>(sp => sp.GetRequiredService<PropagationContext>());
+
+            // Outbound middleware (outermost first). PropagationEnrichmentMiddleware is Scoped; OutboundTracingMiddleware is Singleton.
+            services.AddScoped<IOutboundMiddleware, PropagationEnrichmentMiddleware>();
+            services.AddSingleton<IOutboundMiddleware, OutboundTracingMiddleware>();
+
+            // IEventBus is Scoped so it resolves IOutboundMiddleware (and Scoped PropagationEnrichmentMiddleware) from the caller's scope.
+            services.AddScoped<IEventBus, OutboundPipeline>();
 
             return services;
         }
@@ -89,3 +115,4 @@ public class PipelineOptions
 {
     public IRetryPolicy RetryPolicy { get; set; } = new ExponentialBackoffRetryPolicy(maxAttempts: 3);
 }
+

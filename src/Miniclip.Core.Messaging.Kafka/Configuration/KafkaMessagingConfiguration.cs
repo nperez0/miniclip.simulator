@@ -1,6 +1,8 @@
 using Confluent.Kafka;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Miniclip.Core.Messaging.Inbound;
+using Miniclip.Core.Messaging.Outbound;
 using Miniclip.Core.Messaging.Pipeline.Configuration;
 
 namespace Miniclip.Core.Messaging.Kafka.Configuration;
@@ -13,14 +15,22 @@ public static class KafkaMessagingConfiguration
             string bootstrapServers, 
             Action<PipelineOptions>? configurePipeline = null)
         {
-            services.AddMessagingPipeline(configurePipeline);
+            var config = new ProducerConfig
+            {
+                BootstrapServers = bootstrapServers
+            };
 
-            services.AddSingleton<IProducer<string, byte[]>>(_ =>
-                new ProducerBuilder<string, byte[]>(
-                        new ProducerConfig { BootstrapServers = bootstrapServers })
-                    .Build());
+            services.AddMessagingPipeline(configurePipeline);
+            services.AddOutboundPipeline();
+
+            services.AddSingleton(new InstrumentedProducerBuilder<string, byte[]>(config));
+
+            services.AddSingleton<IProducer<string, byte[]>>(sp =>
+                sp.GetRequiredService<InstrumentedProducerBuilder<string, byte[]>>().Build());
 
             services.AddSingleton<IDeadLetterHandler, KafkaDeadLetterHandler>();
+
+            services.AddScoped<IEventDispatcher, KafkaEventDispatcher>();
 
             return services;
         }
@@ -29,12 +39,13 @@ public static class KafkaMessagingConfiguration
         {
             var consumerBuilder = new InstrumentedConsumerBuilder<string, byte[]>(config.ConsumerConfig);
 
-            services.AddKeyedSingleton(config.ConsumerGroupId, consumerBuilder);
+            services.AddKeyedSingleton(config.ConsumerGroup.Id, consumerBuilder);
+            services.AddSingleton(config.ConsumerGroup);
 
             services.AddHostedService(sp => new KafkaConsumerHost(
                 config,
                 consumerBuilder,
-                sp.GetRequiredService<IMessagePipeline>(),
+                sp.GetRequiredService<IInboundPipeline>(),
                 sp.GetRequiredService<IDeadLetterHandler>(),
                 sp.GetRequiredService<ILogger<KafkaConsumerHost>>()));
 

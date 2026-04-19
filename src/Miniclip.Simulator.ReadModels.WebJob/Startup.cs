@@ -8,7 +8,7 @@ public class Startup(IConfiguration configuration)
     {
         services.AddReadModelsDbDependencies(configuration);
         services.AddProjectionsDependencies();
-        services.AddProjectionsKafkaMessaging(configuration);
+        services.AddKafkaDependencies(configuration);
         services.AddOpenTelemetryDependencies();
         services.AddHealthChecksDependencies(configuration);
     }

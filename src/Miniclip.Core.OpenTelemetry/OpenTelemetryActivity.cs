@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 
 namespace Miniclip.Core.OpenTelemetry;
 
@@ -32,9 +32,14 @@ public class OpenTelemetryActivity(Activity? activity) : IDisposable
             activity?.Stop();
     }
 
-    public static OpenTelemetryActivity StartActivity(string name, IEnumerable<KeyValuePair<string, object?>>? initialTags = null)
+    public static OpenTelemetryActivity StartActivity(
+        string name,
+        ActivityKind kind = ActivityKind.Server,
+        IEnumerable<KeyValuePair<string, object?>>? initialTags = null,
+        ActivityContext? parentContext = null)
     {
-        var activity = ActivitySourceInstance.StartActivity(name, ActivityKind.Server, default(ActivityContext), initialTags);
+        var parent = parentContext ?? default(ActivityContext);
+        var activity = ActivitySourceInstance.StartActivity(name, kind, parent, initialTags);
 
         return new OpenTelemetryActivity(activity);
     }

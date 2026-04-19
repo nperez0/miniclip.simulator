@@ -21,4 +21,8 @@
     <ProjectReference Include="..\Miniclip.Core\Miniclip.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Configuration\" />
+  </ItemGroup>
+
 </Project>

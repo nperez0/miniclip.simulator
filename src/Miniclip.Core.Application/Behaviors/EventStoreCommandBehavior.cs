@@ -1,11 +1,13 @@
-using Mediator;
+﻿using Mediator;
 using Miniclip.Core.Application.Extensions;
+using Miniclip.Core.Application.Publishers;
 using Miniclip.Core.EventSourcing;
-using Miniclip.Core.Messaging;
 
 namespace Miniclip.Core.Application.Behaviors;
 
-public class EventStoreCommandBehavior<TRequest, TResponse>(IEventBus eventBus, IEventStoreSession session)
+public class EventStoreCommandBehavior<TRequest, TResponse>(
+    ICommittedEventPublisher publisher,
+    IEventStoreSession session)
     : IPipelineBehavior<TRequest, TResponse>
     where TRequest : IRequest<TResponse>
 {
@@ -22,7 +24,7 @@ public class EventStoreCommandBehavior<TRequest, TResponse>(IEventBus eventBus, 
         await session.CommitAsync(cancellationToken);
 
         foreach (var committed in session.GetCommittedEvents())
-            await eventBus.PublishAsync(committed, cancellationToken);
+            await publisher.PublishAsync(committed, cancellationToken);
 
         return response;
     }

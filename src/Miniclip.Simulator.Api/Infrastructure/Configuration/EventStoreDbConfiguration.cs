@@ -1,5 +1,6 @@
 ﻿using KurrentDB.Client;
-using Miniclip.Core.Application.Serializers;
+using Miniclip.Core.Application.Configuration;
+using Miniclip.Core.Application.Publishers;
 using Miniclip.Core.Domain;
 using Miniclip.Core.EventSourcing;
 using Miniclip.Core.EventSourcing.EventStoreDB;
@@ -19,12 +20,17 @@ public static class EventStoreDbConfiguration
         var settings = KurrentDBClientSettings.Create(connectionString);
 
         services.AddSingleton(_ => new KurrentDBClient(settings));
+
+        services.AddMessageTypeRegistry();
         services.AddSingleton<IEventSerializer, DomainEventJsonSerializer>();
+
         services.AddScoped<IEventStoreSession, EventStoreSession>();
         services.AddScoped(typeof(IEventStore<>), typeof(EventStoreDbEventStore<>));
         
         services.AddScoped<IAggregateRepository<Group>, AggregateRepository<Group>>();
         services.AddScoped<IAggregateRepository<Team>, AggregateRepository<Team>>();
+
+        services.AddScoped<ICommittedEventPublisher, CommittedEventPublisher>();
 
         services.AddHostedService<TeamDataSeeder>();
 
