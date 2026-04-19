@@ -1,5 +1,7 @@
 using System.Text;
 using Confluent.Kafka;
+using Miniclip.Core.Extensions;
+using Miniclip.Core.Messaging.Inbound;
 
 namespace Miniclip.Core.Messaging.Kafka;
 
@@ -8,14 +10,15 @@ public static class KafkaMessageMapper
     public static MessageEnvelope ToEnvelope(ConsumeResult<string, byte[]> result)
     {
         var headers = result.Message.Headers
+            .GroupBy(h => h.Key)
             .ToDictionary(
                 h => h.Key,
-                h => Encoding.UTF8.GetString(h.GetValueBytes()));
+                h => Encoding.UTF8.GetString(h.First().GetValueBytes()));
 
-        var messageId = headers.GetValueOrDefault(MessageHeaders.EventId) ?? Guid.NewGuid().ToString();
-        var messageType = headers.GetValueOrDefault(MessageHeaders.EventType) ?? "Unknown";
-        var occurredOn = headers.GetValueOrDefault(MessageHeaders.OccurredOn) ?? result.Message.Timestamp.UtcDateTime.ToString("o");
-        var brokerTimestamp = result.Message.Timestamp.UtcDateTime.ToString("o");
+        var messageId = headers.GetValueOrDefault(MessageHeaders.MessageId, Guid.NewGuid().ToString());
+        var messageType = headers.GetValueOrDefault(MessageHeaders.EventType, "Unknown");
+        var occurredOn = headers.GetValueOrDefault(MessageHeaders.OccurredOn, result.Message.Timestamp.UtcDateTime.ToRoundTripString());
+        var brokerTimestamp = result.Message.Timestamp.UtcDateTime.ToRoundTripString();
 
         // Stamp the origin topic and broker timestamp so consumers have full context via headers
         headers[KafkaConstants.Headers.OriginTopic] = result.Topic;

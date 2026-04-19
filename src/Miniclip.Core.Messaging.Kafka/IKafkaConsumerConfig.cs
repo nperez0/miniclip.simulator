@@ -4,7 +4,7 @@ namespace Miniclip.Core.Messaging.Kafka;
 
 public interface IKafkaConsumerConfig
 {
-    string ConsumerGroupId { get; }
+    ConsumerGroup ConsumerGroup { get; }
     string[] Topics { get; }
     int ConsumerCount { get; }
     ConsumerConfig ConsumerConfig { get; }

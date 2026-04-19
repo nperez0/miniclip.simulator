@@ -37,10 +37,11 @@ public static OpenTelemetryActivity StartActivity(string name, ...)
     => new(ActivitySourceInstance.StartActivity(name, ActivityKind.Server, ...));
 ```
 
-`KafkaConsumerService.HandleMessageAsync` starts one span per consumed message, named after the `event-type` header:
+`TracingMiddleware` (in `Miniclip.Core.Messaging.Pipeline`) starts one span per consumed message, named `"message process {event-type}"`:
 
 ```csharp
-using var activity = OpenTelemetryActivity.StartActivity(context.Result.GetHeader("event-type"));
+using var activity = OpenTelemetryActivity.StartActivity(
+    $"{OpenTelemetryConstants.Tags.MessageProcess} {envelope.MessageType}");
 ```
 
 ### `ActivityExtensions.NoticeError`

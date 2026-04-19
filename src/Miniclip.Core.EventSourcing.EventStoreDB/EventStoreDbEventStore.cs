@@ -37,7 +37,6 @@ public sealed class EventStoreDbEventStore<T>(
             return null;
 
         Track(aggregate);
-
         return aggregate;
     }
 
@@ -47,11 +46,7 @@ public sealed class EventStoreDbEventStore<T>(
         var prefix = $"{typeof(T).Name.ToLowerInvariant()}-";
 
         var result = client.ReadStreamAsync(
-            Direction.Forwards,
-            categoryStream,
-            StreamPosition.Start,
-            resolveLinkTos: true,
-            cancellationToken: cancellationToken);
+            Direction.Forwards, categoryStream, StreamPosition.Start, resolveLinkTos: true, cancellationToken: cancellationToken);
 
         if (await result.ReadState == ReadState.StreamNotFound)
             return [];
@@ -61,20 +56,19 @@ public sealed class EventStoreDbEventStore<T>(
         await foreach (var resolvedEvent in result)
         {
             var streamId = resolvedEvent.Event.EventStreamId;
-            var id = Guid.Parse(streamId[prefix.Length..]);
+            if (!streamId.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)) continue;
+            if (!Guid.TryParse(streamId[prefix.Length..], out var aggregateId)) continue;
 
-            if (!aggregates.TryGetValue(id, out var aggregate))
+            if (!aggregates.TryGetValue(aggregateId, out var aggregate))
             {
                 aggregate = (T)Activator.CreateInstance(typeof(T), nonPublic: true)!;
-                aggregates[id] = aggregate;
+                aggregates[aggregateId] = aggregate;
             }
 
             var domainEvent = serializer.Deserialize(
-                resolvedEvent.Event.EventType,
-                resolvedEvent.Event.Data.ToArray());
-
-            var version = (long)(ulong)resolvedEvent.Event.EventNumber;
-            aggregate.ReplayEvent(domainEvent, version);
+                resolvedEvent.Event.EventType, resolvedEvent.Event.Data.ToArray());
+            var v = (long)(ulong)resolvedEvent.Event.EventNumber;
+            aggregate.ReplayEvent(domainEvent, v);
         }
 
         return aggregates.Values;
@@ -83,40 +77,46 @@ public sealed class EventStoreDbEventStore<T>(
     private async Task<CommittedEvent[]> AppendAsync(T aggregate, CancellationToken cancellationToken)
     {
         var events = aggregate.DequeueUncommittedEvents();
-        if (events.Length == 0)
-            return [];
+        if (events.Length == 0) return [];
 
         var streamName = GetStreamName(aggregate.Id);
-        var eventData = events
-            .Select(ToEventData)
-            .ToArray();
+        var items = events.Select(e => (Event: e, Data: ToEventData(e))).ToArray();
+
+        long baseVersion;
 
         if (aggregate.Version < 0)
         {
-            await client.AppendToStreamAsync(streamName, StreamState.NoStream, eventData, cancellationToken: cancellationToken);
-
-            SetVersion(aggregate, eventData.Length - 1);
+            await client.AppendToStreamAsync(streamName, StreamState.NoStream,
+                items.Select(x => x.Data), cancellationToken: cancellationToken);
+            baseVersion = 0;
+            SetVersion(aggregate, items.Length - 1);
         }
         else
         {
-            await client.AppendToStreamAsync(
-                streamName,
+            await client.AppendToStreamAsync(streamName,
                 StreamState.StreamRevision((ulong)aggregate.Version),
-                eventData,
-                cancellationToken: cancellationToken);
-
-            SetVersion(aggregate, aggregate.Version + eventData.Length);
+                items.Select(x => x.Data), cancellationToken: cancellationToken);
+            baseVersion = aggregate.Version + 1;
+            SetVersion(aggregate, aggregate.Version + items.Length);
         }
 
-        return events
-            .Select(e => new CommittedEvent(e, typeof(T).Name))
+        var occurredOn = DateTimeOffset.UtcNow;
+        var aggregateType = typeof(T).Name;
+
+        return items
+            .Select((item, i) => new CommittedEvent(
+                Event: item.Event,
+                AggregateId: aggregate.Id,
+                AggregateType: aggregateType,
+                EventId: item.Data.EventId.ToGuid(),
+                OccurredOn: occurredOn,
+                AggregateVersion: baseVersion + i))
             .ToArray();
     }
 
     private EventData ToEventData(IDomainEvent @event)
     {
         var (eventType, data) = serializer.Serialize(@event);
-
         return new EventData(Uuid.NewUuid(), eventType, data);
     }
 
@@ -124,10 +124,5 @@ public sealed class EventStoreDbEventStore<T>(
         => $"{typeof(T).Name.ToLowerInvariant()}-{aggregateId}";
 
     private static void SetVersion(T aggregate, long version)
-    {
-        typeof(AggregateRoot)
-            .GetProperty(nameof(AggregateRoot.Version))
-            ?.SetValue(aggregate, version);
-    }
+        => typeof(AggregateRoot).GetProperty(nameof(AggregateRoot.Version))?.SetValue(aggregate, version);
 }
-

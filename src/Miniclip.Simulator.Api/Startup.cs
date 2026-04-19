@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Miniclip.Core.Messaging;
+using Miniclip.Simulator.Api.Infrastructure.Middleware;
 using Miniclip.Simulator.Api.Infrastructure.Configuration;
 using Serilog;
 
@@ -35,6 +37,8 @@ public class Startup(IConfiguration configuration)
 
     public void Configure(IApplicationBuilder app)
     {
+        app.UseMiddleware<CorrelationIdMiddleware>();
+
         app.UseSerilogRequestLogging();
 
         app.UseHttpsRedirection();

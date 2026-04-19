@@ -1,8 +1,9 @@
-using Miniclip.Core.EventSourcing;
-
-namespace Miniclip.Core.Messaging;
+﻿namespace Miniclip.Core.Messaging;
 
 public interface IEventBus
 {
-    Task PublishAsync(CommittedEvent committed, CancellationToken cancellationToken = default);
+    Task PublishAsync(
+        object @event,
+        IReadOnlyDictionary<string, string>? headers = null,
+        CancellationToken cancellationToken = default);
 }

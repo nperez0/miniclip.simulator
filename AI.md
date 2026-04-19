@@ -64,25 +64,26 @@ Registration order (outermost first):
 |---|---|---|
 | `Miniclip.Core` | Shared Kernel | `Result<T>`, `ExceptionBase`, string/enumerable extensions |
 | `Miniclip.Core.Domain` | Domain Abstractions | `AggregateRoot`, `IAggregateRepository<T>`, `IDomainEvent` |
-| `Miniclip.Core.Application` | Application Abstractions | `IEventBus`, pipeline behaviour base types, `LoggingBehavior` |
+| `Miniclip.Core.Application` | Application Abstractions | `ICommand`, `IQuery`, pipeline behaviour base types (`LoggingBehavior`, `EventStoreCommandBehavior`), `DomainEventJsonSerializer` |
 | `Miniclip.Core.ReadModels` | Read Abstractions | `IReadModelUnitOfWork`, projection handler base types |
-| `Miniclip.Core.ReadModels.Projections` | Projection Infrastructure | `[HandlerPriority]` attribute, ordered projection execution |
+| `Miniclip.Core.ReadModels.Projections` | Projection Infrastructure | `[HandlerPriority]` attribute, `IProjectionDispatcher`, ordered projection execution |
 | `Miniclip.Core.EF` | EF Infrastructure | Generic EF Core base context |
 | `Miniclip.Core.EventSourcing` | Event Sourcing Abstractions | `IEventStore<T>`, `IEventStoreSession`, `AggregateRepository<T>` |
 | `Miniclip.Core.EventSourcing.EventStoreDB` | Event Sourcing Infrastructure | `EventStoreDbEventStore<T>`, `EventStoreSession`, `SystemTextJsonEventSerializer` |
-| `Miniclip.Core.Kafka` | Kafka Infrastructure | `KafkaConsumerService`, `KafkaConsumer`, `KafkaConsumerFactory`, `KafkaEventBus`, `TopicNaming`, retry/DLQ policy |
+| `Miniclip.Core.Messaging` | Messaging Abstractions | `IEventBus`, `IMessagePipeline`, `IMessageHandler<T>`, `IMessageMiddleware`, `IMessageSerializer`, `IMessageContext`, `IMessageEnvelope`, `IRetryPolicy`, `IDeadLetterHandler`, `ExponentialBackoffRetryPolicy`, `MessageHeaders`, `PipelineResult`, `MessageHandlerResult` |
+| `Miniclip.Core.Messaging.Pipeline` | Messaging Pipeline | `MessagePipeline`, `TracingMiddleware`, `LoggingMiddleware`, `RetryMiddleware`, `IMessageHandlerRegistry`, `MessageHandlerRegistry`, `CompiledMessageHandler` |
+| `Miniclip.Core.Messaging.Kafka` | Kafka Infrastructure | `KafkaConsumerHost`, `KafkaEventBus`, `KafkaDeadLetterHandler`, `TopicNaming`, `ConsumerGroupIdNaming`, `KafkaConsumerConfig`, `KafkaMessageMapper`, `KafkaConstants` |
 | `Miniclip.Core.OpenTelemetry` | Observability | `OpenTelemetryActivity`, `OpenTelemetryMetrics`, OTel builder extension methods |
 | `Miniclip.Core.ServiceDefaults` | Service Defaults | `SerilogConfiguration.AddStructuredLogging()` — Serilog with OTLP sink |
 | `Miniclip.Simulator.Domain` | Domain | `Group`, `Team` aggregates, domain services, value objects |
 | `Miniclip.Simulator.Application.Commands` | Application – Write | `GenerateGroupCommand`, `SimulateGroupCommand` handlers |
 | `Miniclip.Simulator.Application.Queries` | Application – Read | `GroupStandingsQuery` handler |
 | `Miniclip.Simulator.ReadModels` | Read Models | `GroupStandingsModel`, `MatchResultModel`, repository interfaces |
-| `Miniclip.Simulator.ReadModels.Projections` | Projections | `ProjectionsConsumerService<TAggregate>`, `GroupStandingsProjection`, `MatchResultProjection` |
+| `Miniclip.Simulator.ReadModels.Projections` | Projections | `ProjectionMessageHandler<TEvent>`, `GroupStandingsProjection`, `MatchResultProjection`, `RecalculatePositionService` |
 | `Miniclip.Simulator.Infrastructure.Read` | Infrastructure – Read | `SimulatorReadDbContext`, repository implementations |
 | `Miniclip.Simulator.Infrastructure.Write` | Infrastructure – Write | EF migrations only (empty model; legacy aggregate tables dropped) |
 | `Miniclip.Simulator.Api` | API | `GroupsController`, configuration wiring, `TeamDataSeeder` |
 | `Miniclip.Simulator.ReadModels.WebJob` | ReadModels Worker | Worker Service; hosts all `ProjectionsConsumerService<TAggregate>` instances; runs read DB migrations |
-| `Miniclip.Simulator.AppHost` | Orchestration | .NET Aspire AppHost; provisions MySQL, KurrentDB, Kafka, API, WebJob |
 | `Miniclip.Simulator.AppHost` | Orchestration | .NET Aspire AppHost; provisions MySQL, KurrentDB, Kafka, API, WebJob |
 
 ---
@@ -125,7 +126,8 @@ All operations return `Result` or `Result<T>` — **never throw exceptions for b
 - Aggregates enqueue events via `Enqueue(IDomainEvent)` (from `AggregateRoot`) AND set their state directly in the constructor/factory (so the aggregate is immediately usable after `Create`).
 - `Apply(IDomainEvent)` handles replay from KurrentDB only — it is not called during normal command processing.
 - Events are committed to **KurrentDB** and published to **Kafka** by `EventStoreCommandBehavior` (single behavior handles both steps).
-- `ProjectionsConsumerService<TAggregate>` (in the **WebJob**) creates a **fresh DI scope per message** via `IServiceScopeFactory` (avoiding captive dependency issues with scoped `DbContext`), checks idempotency, then dispatches to ordered `INotificationHandler<TDomainEvent>` handlers via Mediator.
+- `KafkaConsumerHost` (in the **WebJob**) is a `BackgroundService` that subscribes to a Kafka topic and forwards each message through the `IMessagePipeline` (middleware chain: `TracingMiddleware` → `LoggingMiddleware` → `RetryMiddleware`).
+- `ProjectionMessageHandler<TEvent>` (registered as `IMessageHandler<TEvent>`) creates a **fresh DI scope per message**, checks idempotency, then dispatches to ordered `INotificationHandler<TDomainEvent>` projection handlers via `IProjectionDispatcher`.
 - Idempotency: the `ProcessedEvents` table records each `event-id` + consumer group ID before committing.
 
 ### Kafka Topic & Consumer Group Naming
@@ -133,8 +135,13 @@ All operations return `Result` or `Result<T>` — **never throw exceptions for b
 - **Consumer groups** follow `simulator-projections-{aggregate}`: `Group` → `simulator-projections-group`.
 - Both conventions are codified in `TopicNaming` and `ConsumerGroupIdNaming` helpers.
 
-### Kafka Consumer Lifecycle
-`KafkaConsumerService` (abstract `BackgroundService`) delegates consumer creation to `IKafkaConsumerFactory`. On startup, `ResolveConsumerCount` queries the Kafka admin API for the topic partition count and spins up one `KafkaConsumer` per partition. Each `KafkaConsumer` owns its own `IConsumer<string,byte[]>`, subscribe/consume loop, and manual commit. The retry loop with `IConsumerRetryPolicy` (`ExponentialBackoffRetryPolicy` by default) is applied inside `KafkaConsumerService.HandleMessageAsync`. Permanently failing messages hit the virtual `OnDeadLetterAsync` hook.
+### Messaging Pipeline & Kafka Consumer Lifecycle
+`KafkaConsumerHost` (`BackgroundService`) subscribes to one or more Kafka topics and processes each message through `IMessagePipeline`. The pipeline is a middleware chain registered outermost-first:
+1. `TracingMiddleware` — starts an OTel span per message; tags `message-id`, `message-type`, `subscription-id`, and `correlation-id`; records errors on the span.
+2. `LoggingMiddleware` — logs message receipt and outcome.
+3. `RetryMiddleware` — retries transient failures using `IRetryPolicy` (`ExponentialBackoffRetryPolicy` by default); permanently fails messages that exhaust all attempts.
+
+After the pipeline completes, permanently failed messages are forwarded to `IDeadLetterHandler` (`KafkaDeadLetterHandler`). Successfully processed messages are committed back to Kafka.
 
 ### Mediator
 Uses the **Mediator** NuGet package (source-generated — **not MediatR**). Commands/queries implement `IRequest<TResponse>`; handlers implement `IRequestHandler<TRequest, TResponse>`. Notification handlers are discovered at compile time; no registration boilerplate needed.
@@ -162,9 +169,10 @@ Only the **read side** uses EF Core (`SimulatorReadDbContext`). The write `DbCon
 | `Miniclip.Simulator.Domain.UnitTests` | Aggregate logic, fixture scheduling, simulation |
 | `Miniclip.Simulator.Application.Commands.UnitTests` | Command handler logic |
 | `Miniclip.Simulator.Application.Queries.UnitTests` | Query handler logic |
-| `Miniclip.Simulator.ReadModels.Projections.UnitTests` | `ProjectionsConsumerService` idempotency; projection handlers |
+| `Miniclip.Simulator.ReadModels.Projections.UnitTests` | `ProjectionMessageHandler` idempotency; projection handlers |
 | `Miniclip.Simulator.ReadModels.Projections.IntegrationTests` | Full projection pipeline against a real read DB |
-| `Miniclip.Core.Kafka.UnitTests` | `KafkaConsumerService` retry policy and DLQ routing |
+| `Miniclip.Simulator.ReadModels.WebJob.UnitTests` | WebJob infrastructure configuration (health checks, etc.) |
+| `Miniclip.Core.Kafka.UnitTests` | _(empty — tests migrated to messaging projects)_ |
 | `Miniclip.Simulator.Api.UnitTests` | Controller / result extension behaviour |
 | `Miniclip.Simulator.Common.Tests` | Shared test helpers and builders |
 | `Miniclip.Core.Tests` | Shared kernel tests |

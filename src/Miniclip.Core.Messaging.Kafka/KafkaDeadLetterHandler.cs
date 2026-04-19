@@ -1,6 +1,8 @@
-using System.Text;
+﻿using System.Text;
 using Confluent.Kafka;
 using Microsoft.Extensions.Logging;
+using Miniclip.Core.Extensions;
+using Miniclip.Core.Messaging.Inbound;
 
 namespace Miniclip.Core.Messaging.Kafka;
 
@@ -14,17 +16,17 @@ public sealed partial class KafkaDeadLetterHandler(
         Exception? exception,
         CancellationToken cancellationToken)
     {
-        // Derive DLQ topic from the origin topic stamped during message mapping
-        var originTopic = envelope.Headers.GetValueOrDefault(KafkaConstants.Headers.OriginTopic) ?? KafkaConstants.DeadLetter.UnknownOriginTopic;
+        var originTopic = envelope.Headers.GetValueOrDefault(KafkaConstants.Headers.OriginTopic)
+            ?? KafkaConstants.DeadLetter.UnknownOriginTopic;
         var dlqTopic = $"{originTopic}{KafkaConstants.DeadLetter.TopicSuffix}";
 
         var headers = new Headers
         {
-            { MessageHeaders.OriginalConcurrentId, Encoding.UTF8.GetBytes(envelope.Headers.GetValueOrDefault(MessageHeaders.ConcurrentId) ?? string.Empty) },
+            { MessageHeaders.OriginalCorrelationId, Encoding.UTF8.GetBytes(envelope.Headers.GetValueOrDefault(MessageHeaders.CorrelationId, string.Empty)) },
             { MessageHeaders.OriginalMessageId, Encoding.UTF8.GetBytes(envelope.MessageId) },
             { MessageHeaders.OriginalMessageType, Encoding.UTF8.GetBytes(envelope.MessageType) },
             { MessageHeaders.FailureReason, Encoding.UTF8.GetBytes(reason) },
-            { MessageHeaders.FailedAt, Encoding.UTF8.GetBytes(DateTimeOffset.UtcNow.ToString("O")) }
+            { MessageHeaders.FailedAt, Encoding.UTF8.GetBytes(DateTimeOffset.UtcNow.ToRoundTripString()) }
         };
 
         if (exception is not null)
@@ -51,13 +53,9 @@ public sealed partial class KafkaDeadLetterHandler(
         }
     }
 
-    [LoggerMessage(LogLevel.Warning,
-        "Message {MessageId} sent to DLQ topic {Topic}: {Reason}")]
-    static partial void LogDeadLettered(
-        ILogger logger, string MessageId, string Topic, string Reason);
+    [LoggerMessage(LogLevel.Warning, "Message {MessageId} sent to DLQ topic {Topic}: {Reason}")]
+    static partial void LogDeadLettered(ILogger logger, string MessageId, string Topic, string Reason);
 
-    [LoggerMessage(LogLevel.Error,
-        "Failed to send message {MessageId} to DLQ topic {Topic}")]
-    static partial void LogDeadLetterError(
-        ILogger logger, Exception ex, string MessageId, string Topic);
+    [LoggerMessage(LogLevel.Error, "Failed to send message {MessageId} to DLQ topic {Topic}")]
+    static partial void LogDeadLetterError(ILogger logger, Exception ex, string MessageId, string Topic);
 }

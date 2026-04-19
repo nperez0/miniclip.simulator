@@ -1,6 +1,8 @@
 using Confluent.Kafka;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Miniclip.Core.Messaging.Inbound;
+using Miniclip.Core.Messaging.Outbound;
 using Miniclip.Core.Messaging.Pipeline.Configuration;
 
 namespace Miniclip.Core.Messaging.Kafka.Configuration;
@@ -10,33 +12,49 @@ public static class KafkaMessagingConfiguration
     extension(IServiceCollection services)
     {
         public IServiceCollection AddKafkaMessagingInfrastructure(
-            string bootstrapServers, 
+            string bootstrapServers,
             Action<PipelineOptions>? configurePipeline = null)
         {
-            services.AddMessagingPipeline(configurePipeline);
+            var config = new ProducerConfig
+            {
+                BootstrapServers = bootstrapServers
+            };
 
-            services.AddSingleton<IProducer<string, byte[]>>(_ =>
-                new ProducerBuilder<string, byte[]>(
-                        new ProducerConfig { BootstrapServers = bootstrapServers })
-                    .Build());
+            services.AddMessagingPipeline(configurePipeline);
+            services.AddOutboundPipeline();
+
+            services.AddSingleton(new InstrumentedProducerBuilder<string, byte[]>(config));
+
+            services.AddSingleton<IProducer<string, byte[]>>(sp =>
+                sp.GetRequiredService<InstrumentedProducerBuilder<string, byte[]>>().Build());
 
             services.AddSingleton<IDeadLetterHandler, KafkaDeadLetterHandler>();
+
+            services.AddScoped<IEventDispatcher, KafkaEventDispatcher>();
 
             return services;
         }
 
         public IServiceCollection AddKafkaConsumer(IKafkaConsumerConfig config)
         {
+            // One builder per consumer group — keyed so OTel can resolve it via
+            // AddKafkaConsumerInstrumentation(group.Id) in the OTel configuration.
             var consumerBuilder = new InstrumentedConsumerBuilder<string, byte[]>(config.ConsumerConfig);
+            services.AddKeyedSingleton(config.ConsumerGroup.Id, consumerBuilder);
+            services.AddSingleton(config.ConsumerGroup);
 
-            services.AddKeyedSingleton(config.ConsumerGroupId, consumerBuilder);
-
-            services.AddHostedService(sp => new KafkaConsumerHost(
-                config,
-                consumerBuilder,
-                sp.GetRequiredService<IMessagePipeline>(),
-                sp.GetRequiredService<IDeadLetterHandler>(),
-                sp.GetRequiredService<ILogger<KafkaConsumerHost>>()));
+            // Register ConsumerCount hosted service instances, each sharing the same
+            // builder but calling .Build() independently — safe because the builder
+            // is stateless config; each .Build() produces a fresh IConsumer.
+            for (var i = 0; i < config.ConsumerCount; i++)
+            {
+                services.AddHostedService(sp => new KafkaConsumerHost(
+                    config,
+                    sp.GetRequiredKeyedService<InstrumentedConsumerBuilder<string, byte[]>>(config.ConsumerGroup.Id),
+                    sp.GetRequiredService<IInboundPipeline>(),
+                    sp.GetRequiredService<IDeadLetterHandler>(),
+                    sp.GetRequiredService<ILogger<KafkaConsumerHost>>()));
+            }
 
             return services;
         }

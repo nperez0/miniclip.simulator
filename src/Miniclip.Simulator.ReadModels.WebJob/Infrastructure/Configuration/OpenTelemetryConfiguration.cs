@@ -11,30 +11,32 @@ public static class OpenTelemetryConfiguration
     {
         public IServiceCollection AddOpenTelemetryDependencies()
         {
-            
+            services
+                .AddOpenTelemetry()
+                .WithMetrics(metrics => metrics
+                    .AddOtlpExporter()
+                    .AddSimulator())
+                .WithTracing(tracing => tracing
+                    .AddOtlpExporter()
+                    .AddMySqlData()
+                    .AddMySqlConnector()
+                    .AddSimulator());
 
-            services.AddOpenTelemetry()
-                .WithMetrics(metrics =>
-                {
-                    foreach (var groupId in KafkaMessagingConfiguration.ConsumerGroupIds.Values)
-                        metrics.AddKafkaConsumerInstrumentation<string, byte[]>(groupId);
+            services.ConfigureOpenTelemetryMeterProvider((sp, metrics) =>
+            {
+                metrics.AddKafkaProducerInstrumentation<string, byte[]>();
 
-                    metrics
-                        .AddOtlpExporter()
-                        .AddSimulator();
-                })
-                .WithTracing(tracing =>
-                {
-                    
-                    foreach (var groupId in KafkaMessagingConfiguration.ConsumerGroupIds.Values)
-                        tracing.AddKafkaConsumerInstrumentation<string, byte[]>(groupId);
+                foreach (var group in sp.GetServices<ConsumerGroup>())
+                    metrics.AddKafkaConsumerInstrumentation<string, byte[]>(group.Id);
+            });
 
-                    tracing
-                        .AddOtlpExporter()
-                        .AddMySqlData()
-                        .AddMySqlConnector()
-                        .AddSimulator();
-                });
+            services.ConfigureOpenTelemetryTracerProvider((sp, tracing) =>
+            {
+                tracing.AddKafkaProducerInstrumentation<string, byte[]>();
+
+                foreach (var group in sp.GetServices<ConsumerGroup>())
+                    tracing.AddKafkaConsumerInstrumentation<string, byte[]>(group.Id);
+            });
 
             return services;
         }

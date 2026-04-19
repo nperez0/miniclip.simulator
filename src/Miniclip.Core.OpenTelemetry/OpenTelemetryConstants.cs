@@ -1,5 +1,3 @@
-﻿using System.Diagnostics.Metrics;
-
 namespace Miniclip.Core.OpenTelemetry;
 
 public static class OpenTelemetryConstants
@@ -18,13 +16,21 @@ public static class OpenTelemetryConstants
 
     public static class Tags
     {
-        // --- Activity names ---
+        // Activity names
         public const string MessageProcess = "miniclip.message.process";
+        public const string MessagePublish = "miniclip.message.publish";
 
-        // --- Message attributes ---
+        // Message attributes
         public const string MessageId = "miniclip.messaging.message_id";
         public const string MessageType = "miniclip.messaging.message_type";
         public const string SubscriptionId = "miniclip.messaging.subscription_id";
         public const string CorrelationId = "miniclip.messaging.correlation_id";
+        public const string CausationId = "miniclip.messaging.causation_id";
+
+        // Event sourcing attributes
+        public const string AggregateId = "miniclip.event_sourcing.aggregate_id";
+        public const string AggregateType = "miniclip.event_sourcing.aggregate_type";
+        public const string AggregateVersion = "miniclip.event_sourcing.aggregate_version";
+        public const string EventId = "miniclip.event_sourcing.event_id";
     }
 }

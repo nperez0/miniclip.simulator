@@ -9,7 +9,7 @@ var mysql = builder.AddMySql("mysql", password: mysqlPassword, port: 3306)
 
 var readDb = mysql.AddDatabase("SimulatorRead", "MiniclipSimulator_Read");
 
-builder.AddContainer("kurrentdb", "kurrentplatform/kurrentdb")
+var eventStore = builder.AddContainer("kurrentdb", "kurrentplatform/kurrentdb")
     .WithImageTag("latest")
     .WithEnvironment("KURRENTDB_CLUSTER_SIZE", "1")
     .WithEnvironment("KURRENTDB_RUN_PROJECTIONS", "All")
@@ -35,9 +35,9 @@ var webjob = builder.AddProject<Projects.Miniclip_Simulator_ReadModels_WebJob>("
 builder.AddProject<Projects.Miniclip_Simulator_Api>("simulator-api")
     .WithReference(readDb)
     .WithReference(kafka)
+    .WaitFor(eventStore)
     .WaitFor(readDb)
     .WaitFor(kafkaTopics)
     .WaitFor(webjob);
-
 
 builder.Build().Run();
