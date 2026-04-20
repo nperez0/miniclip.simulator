@@ -3,6 +3,9 @@ namespace Miniclip.Core.Messaging;
 public static class MessageHeaders
 {
     public const string MessageId = "miniclip.message-id";
+    public const string MessageType = "miniclip.message-type";
+    public const string MessageGroupId = "miniclip.message-group-id";
+    public const string OriginTimestamp = "miniclip.origin-timestamp";
     public const string EventId = "miniclip.event-id";
     public const string EventType = "miniclip.event-type";
     public const string OccurredOn = "miniclip.occurred-on";
@@ -11,6 +14,8 @@ public static class MessageHeaders
     public const string AggregateId = "miniclip.aggregate-id";
     public const string AggregateType = "miniclip.aggregate-type";
     public const string AggregateVersion = "miniclip.aggregate-version";
+
+    // Headers for dead-lettering and error handling
     public const string OriginalCorrelationId = "miniclip.original-correlation-id";
     public const string OriginalMessageId = "miniclip.original-message-id";
     public const string OriginalMessageType = "miniclip.original-message-type";

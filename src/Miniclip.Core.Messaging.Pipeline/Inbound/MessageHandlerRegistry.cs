@@ -10,7 +10,7 @@ public sealed class MessageHandlerRegistry : IMessageHandlerRegistry
 
     internal MessageHandlerRegistry(IEnumerable<CompiledMessageHandler> compiled)
     {
-        handlers = compiled.ToFrozenDictionary(h => h.MessageType.Name);
+        handlers = compiled.ToFrozenDictionary(h => h.MessageType.FullName!);
     }
 
     public CompiledMessageHandler? TryGet(string messageTypeName) =>

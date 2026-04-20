@@ -2,11 +2,7 @@
 
 ## Projects & Ideas
 - [ ] In the deadletter handler copy all headers and properties of the original message to the new one, so we don't lose any information that could be useful for debugging
-- [ ] Can we prevent receiving events that a read model is not interested in? Maybe using a different topic per aggregate? The current IEventBus should be renamed to IEventPublisher, and we should add an IEventSubscriber for the projections consumer
 - [ ] Improve retry policy — could use Polly for more advanced strategies
-- [ ] Is it ok to publish domain events to be shared across different services, or should we have separate integration events that are published to Kafka and consumed by other services?
-- [ ] Use bags to send events instead of publishing one event at a time? This could improve performance by reducing the number of messages sent to Kafka, but it would also add complexity to the event handling logic.
-- [ ] What is CustomEvent in open telemetry?
 - [ ] Create messaging logic that uses AWS SQS/SNS
 - [ ] Review read models strategy
 - [ ] Implement a caching strategy (e.g. Redis via decorator pattern) — just to show how it works
@@ -18,18 +14,19 @@
 - [ ] How can read models be rebuilt by replaying events from the beginning?
 - [ ] Create a separate project to manage teams
 - [ ] Check anti-patterns
-- [ ] Make other domain aggregates react to domain events
+- [ ] Check magic string anti-pattern
+- [ ] Add global usings
 - [ ] Separate write requests from query requests?
 - [ ] Check performance on the write side
 - [ ] Graceful shutdown
 - [ ] Add useful OpenTelemetry tags and metrics (e.g. domain error counters, conflict rate)
 - [ ] Continue improving `Result<T>`
 - [ ] There some elements in Miniclip.Core.Application that I am not sure they should be there
-- [ ] Check magic string anti-pattern
-- [ ] Add global usings
 
 ## In Progress
-- [ ] 
+- [ ] Can we prevent receiving events that a read model is not interested in? Maybe using a different topic per aggregate?
+- [ ] Is it ok to publish domain events to be shared across different services, or should we have separate integration events that are published to Kafka and consumed by other services?
+- [ ] Use bags to send events instead of publishing one event at a time? This could improve performance by reducing the number of messages sent to Kafka, but it would also add complexity to the event handling logic.
 
 ## Completed
 - [x] Add health checks to the API (`/health` and `/alive` endpoints)

@@ -4,6 +4,7 @@ public interface IEventBus
 {
     Task PublishAsync(
         object @event,
-        IReadOnlyDictionary<string, string>? headers = null,
+        string? messageGroupId = null,
+        IReadOnlyDictionary<string, string?>? headers = null,
         CancellationToken cancellationToken = default);
 }

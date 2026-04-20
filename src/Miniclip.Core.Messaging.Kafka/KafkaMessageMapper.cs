@@ -16,13 +16,13 @@ public static class KafkaMessageMapper
                 h => Encoding.UTF8.GetString(h.First().GetValueBytes()));
 
         var messageId = headers.GetValueOrDefault(MessageHeaders.MessageId, Guid.NewGuid().ToString());
-        var messageType = headers.GetValueOrDefault(MessageHeaders.EventType, "Unknown");
-        var occurredOn = headers.GetValueOrDefault(MessageHeaders.OccurredOn, result.Message.Timestamp.UtcDateTime.ToRoundTripString());
+        var messageType = headers.GetValueOrDefault(MessageHeaders.MessageType, "Unknown");
+        var originTimestamp = headers.GetValueOrDefault(MessageHeaders.OriginTimestamp, result.Message.Timestamp.UtcDateTime.ToRoundTripString());
         var brokerTimestamp = result.Message.Timestamp.UtcDateTime.ToRoundTripString();
 
         // Stamp the origin topic and broker timestamp so consumers have full context via headers
         headers[KafkaConstants.Headers.OriginTopic] = result.Topic;
-        headers[MessageHeaders.OccurredOn] = occurredOn;
+        headers[MessageHeaders.OriginTimestamp] = originTimestamp;
         headers[KafkaConstants.Headers.BrokerTimestamp] = brokerTimestamp;
 
         return new MessageEnvelope(
