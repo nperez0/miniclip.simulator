@@ -1,7 +1,6 @@
 using System.Text;
 using Confluent.Kafka;
 using Microsoft.Extensions.Logging;
-using Miniclip.Core.Messaging.Inbound;
 using Miniclip.Core.Messaging.Outbound;
 
 namespace Miniclip.Core.Messaging.Kafka;

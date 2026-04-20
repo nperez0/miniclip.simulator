@@ -1,5 +1,6 @@
 using Miniclip.Core.Application.Configuration;
 using Miniclip.Core.Domain;
+using Miniclip.Core.Messaging;
 using Miniclip.Core.Messaging.Inbound;
 using Miniclip.Core.Messaging.Kafka;
 using Miniclip.Core.Messaging.Kafka.Configuration;

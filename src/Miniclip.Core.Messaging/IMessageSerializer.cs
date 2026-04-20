@@ -1,4 +1,4 @@
-namespace Miniclip.Core.Messaging.Inbound;
+namespace Miniclip.Core.Messaging;
 
 public interface IMessageSerializer
 {
