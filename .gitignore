@@ -246,3 +246,6 @@ Api/Files/
 .vscode/
 
 .DS_Store
+# Override global gitignore: docs are intentionally tracked in this repo
+!docs/
+!docs/**
