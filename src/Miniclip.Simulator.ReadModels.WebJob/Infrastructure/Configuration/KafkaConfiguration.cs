@@ -1,10 +1,8 @@
 using Miniclip.Core.Application.Configuration;
 using Miniclip.Core.Domain;
-using Miniclip.Core.Messaging;
 using Miniclip.Core.Messaging.Inbound;
 using Miniclip.Core.Messaging.Kafka;
 using Miniclip.Core.Messaging.Kafka.Configuration;
-using Miniclip.Core.Messaging.Pipeline.Configuration;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Entities;
 using Miniclip.Simulator.Infrastructure.Read.Persistence.Repositories.Write;
 using Miniclip.Simulator.ReadModels.Repositories.Write;
@@ -19,16 +17,12 @@ public static class KafkaConfiguration
     {
         var kafkaConnectionString = configuration.GetConnectionString("kafka");
 
-        // Message type registry + serializer (replaces the old EventSerializerAdapter)
-        services.AddMessageTypeRegistry();
-        services.AddSingleton<IMessageSerializer, JsonMessageSerializer>();
+        services.AddIntegrationEventSerializer();
 
         services.AddScoped<IProcessedEventsRepository, ProcessedEventsRepository>();
 
-        services.AddMessageHandlers();
-
         // Register shared pipeline + Kafka infrastructure (producer, DLQ handler) once
-        services.AddKafkaMessagingInfrastructure(
+        services.AddFullKafkaInfrastructure(
             kafkaConnectionString!,
             options =>
         {
@@ -46,9 +40,9 @@ public static class KafkaConfiguration
         return services;
     }
 
-    private static IKafkaConsumerConfig BuildConsumerConfig<TAggregate>(string connectionString)
+    private static KafkaConsumerConfig BuildConsumerConfig<TAggregate>(string connectionString)
         where TAggregate : AggregateRoot
-        => new KafkaConsumerConfig
+        => new()
         {
             BootstrapServers = connectionString,
             ConsumerGroup = new ConsumerGroup($"simulator-projections-{ConsumerGroupIdNaming.ForAggregate<TAggregate>()}"),

@@ -164,6 +164,13 @@ Only the **read side** uses EF Core (`SimulatorReadDbContext`). Read DB migratio
 - **Strongly-typed config objects** -- services receive a `*Config` record instead of `IConfiguration`. `IConfiguration` is consumed only inside `*Configuration` registration classes.
 - **Naming** -- config data objects are named `<Feature>Config` (e.g., `HealthCheckConfig`). Never `<Feature>Options` or `<Feature>Settings`.
 - **Registration** -- the `*Config` record is populated from `IConfiguration` inside the `AddXxxDependencies` extension method and registered as a singleton: `services.AddSingleton(new HealthCheckConfig { Port = configuration[...] })`.
+
+### Code Style
+
+- **No alignment spaces** — do not pad assignment operators or dictionary indexers with extra spaces to visually align values across lines.
+- **Arrays over lists** — prefer arrays (`T[]`) or `IReadOnlyList<T>` by default. Only use `List<T>` where there is a clear benefit (e.g., the collection is built incrementally via `Add` or requires frequent mutations).
+- **`CancellationToken` naming** — always name the parameter `cancellationToken`. Use a different name only when it meaningfully aids clarity at the call site.
+- **No XML doc comments** — do not add `///` documentation comments to methods or classes. The only exception is API controller endpoints.
 ---
 
 ## Testing

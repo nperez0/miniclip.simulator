@@ -11,7 +11,7 @@ public static class KafkaMessagingConfiguration
 {
     extension(IServiceCollection services)
     {
-        public IServiceCollection AddKafkaMessagingInfrastructure(
+        public IServiceCollection AddFullKafkaInfrastructure(
             string bootstrapServers,
             Action<PipelineOptions>? configurePipeline = null)
         {
@@ -20,8 +20,10 @@ public static class KafkaMessagingConfiguration
                 BootstrapServers = bootstrapServers
             };
 
-            services.AddMessagingPipeline(configurePipeline);
+            services.AddInboundPipeline(configurePipeline);
             services.AddOutboundPipeline();
+
+            services.AddMessageHandlers();
 
             services.AddSingleton(new InstrumentedProducerBuilder<string, byte[]>(config));
 
@@ -31,6 +33,25 @@ public static class KafkaMessagingConfiguration
             services.AddSingleton<IDeadLetterHandler, KafkaDeadLetterHandler>();
 
             services.AddScoped<IEventDispatcher, KafkaEventDispatcher>();
+
+            return services;
+        }
+
+        public IServiceCollection AddOutboundKafkaInfrastructure(string bootstrapServers)
+        {
+            var config = new ProducerConfig
+            {
+                BootstrapServers = bootstrapServers
+            };
+
+            services.AddOutboundPipeline();
+
+            services.AddSingleton(new InstrumentedProducerBuilder<string, byte[]>(config));
+
+            services.AddSingleton<IProducer<string, byte[]>>(sp =>
+                sp.GetRequiredService<InstrumentedProducerBuilder<string, byte[]>>().Build());
+            
+            services.AddSingleton<IEventDispatcher, KafkaEventDispatcher>();
 
             return services;
         }

@@ -1,4 +1,4 @@
-using Miniclip.Simulator.Domain.Aggregates.Groups.Events;
+using Miniclip.Simulator.IntegrationEvents.V1;
 using Miniclip.Simulator.ReadModels.Models;
 using NSubstitute;
 using NUnit.Framework;
@@ -19,7 +19,7 @@ public class WithNewTeams : WhenProjectingGroupStandings
         homeTeamId = Guid.NewGuid();
         awayTeamId = Guid.NewGuid();
 
-        Event = new MatchPlayed(
+        Event = new MatchPlayedIntegrationEvent(
             GroupId: groupId,
             GroupName: "Group A",
             MatchId: Guid.NewGuid(),

@@ -160,6 +160,13 @@ Only the **read side** uses EF Core (`SimulatorReadDbContext`). The write `DbCon
 - **Traces** — `OpenTelemetryActivity.StartActivity(name)` wraps per-message Kafka processing; KurrentDB client, ASP.NET Core, MySQL, and Kafka producer/consumer instrumentation are all wired in.
 - **Metrics** — `OpenTelemetryMetrics.RecordRetryAttempt()` / `RecordMessageFailed()` emit counters from the `Miniclip.Simulator.Kafka` meter. All telemetry is exported via OTLP.
 
+### Code Style
+
+- **No alignment spaces** — do not pad assignment operators or dictionary indexers with extra spaces to visually align values across lines.
+- **Arrays over lists** — prefer arrays (`T[]`) or `IReadOnlyList<T>` by default. Only use `List<T>` where there is a clear benefit (e.g., the collection is built incrementally via `Add` or requires frequent mutations).
+- **`CancellationToken` naming** — always name the parameter `cancellationToken`. Use a different name only when it meaningfully aids clarity at the call site.
+- **No XML doc comments** — do not add `///` documentation comments to methods or classes. The only exception is API controller endpoints.
+
 ---
 
 ## Testing

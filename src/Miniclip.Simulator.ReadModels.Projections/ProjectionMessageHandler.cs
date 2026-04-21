@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Miniclip.Core.Domain;
 using Miniclip.Core.Messaging;
 using Miniclip.Core.Messaging.Inbound;
 using Miniclip.Core.ReadModels;
@@ -15,7 +14,7 @@ public sealed partial class ProjectionMessageHandler<TEvent>(
     IProjectionDispatcher dispatcher,
     ILogger<ProjectionMessageHandler<TEvent>> logger)
     : IMessageHandler<TEvent>
-    where TEvent : IDomainEvent
+    where TEvent : IIntegrationEvent
 {
     public async Task<MessageHandlerResult> HandleAsync(
         TEvent message,

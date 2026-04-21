@@ -10,6 +10,9 @@ public sealed class MessagePipeline(
     IServiceScopeFactory scopeFactory,
     ILogger<MessagePipeline> logger) : IInboundPipeline
 {
+    public bool CanHandle(string messageType) =>
+        registry.TryGet(messageType) is not null;
+
     public async Task<PipelineResult> ProcessAsync(
         IMessageEnvelope envelope,
         string subscriptionId,

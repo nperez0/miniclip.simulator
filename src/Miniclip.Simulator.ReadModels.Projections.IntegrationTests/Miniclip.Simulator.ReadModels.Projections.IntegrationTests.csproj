@@ -18,8 +18,8 @@
   <ItemGroup>
     <ProjectReference Include="..\Miniclip.Core.ReadModels.Projections\Miniclip.Core.ReadModels.Projections.csproj" />
     <ProjectReference Include="..\Miniclip.Simulator.Infrastructure.Read\Miniclip.Simulator.Infrastructure.Read.csproj" />
+    <ProjectReference Include="..\Miniclip.Simulator.IntegrationEvents\Miniclip.Simulator.IntegrationEvents.csproj" />
     <ProjectReference Include="..\Miniclip.Simulator.ReadModels.Projections\Miniclip.Simulator.ReadModels.Projections.csproj" />
-    <ProjectReference Include="..\Miniclip.Simulator.Domain\Miniclip.Simulator.Domain.csproj" />
   </ItemGroup>
 
 </Project>

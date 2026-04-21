@@ -1,11 +1,6 @@
-using Miniclip.Core.Domain;
+using Miniclip.Core.Messaging;
 
 namespace Miniclip.Core.ReadModels.Projections;
-
-public interface IProjectionDispatcher
-{
-    ValueTask DispatchAsync(IDomainEvent @event, CancellationToken ct);
-}
 
 public sealed class ProjectionDispatcher : IProjectionDispatcher
 {
@@ -16,11 +11,11 @@ public sealed class ProjectionDispatcher : IProjectionDispatcher
         byEventType = handlers.OrderBy(h => h.Priority).ToLookup(h => h.EventType);
     }
 
-    public async ValueTask DispatchAsync(IDomainEvent @event, CancellationToken ct)
+    public async ValueTask DispatchAsync(IIntegrationEvent @event, CancellationToken cancellationToken)
     {
         var handlers = byEventType[@event.GetType()];
 
         foreach (var handler in handlers) 
-            await handler.HandleAsync(@event, ct).ConfigureAwait(false);
+            await handler.HandleAsync(@event, cancellationToken).ConfigureAwait(false);
     }
 }

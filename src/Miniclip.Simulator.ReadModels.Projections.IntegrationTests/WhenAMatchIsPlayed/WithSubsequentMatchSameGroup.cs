@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Miniclip.Simulator.Domain.Aggregates.Groups.Events;
 using Miniclip.Simulator.Infrastructure.Read.Persistence;
+using Miniclip.Simulator.IntegrationEvents.V1;
 using Miniclip.Simulator.ReadModels.Models;
 using NUnit.Framework;
 using Shouldly;
@@ -11,36 +11,36 @@ namespace Miniclip.Simulator.ReadModels.Projections.IntegrationTests.WhenAMatchI
 [TestFixture]
 public class WithSubsequentMatchSameGroup : WhenAMatchIsPlayed
 {
-    private readonly Guid _groupId = Guid.NewGuid();
-    private readonly Guid _teamAId = Guid.NewGuid();
-    private readonly Guid _teamBId = Guid.NewGuid();
-    private readonly Guid _teamCId = Guid.NewGuid();
+    private readonly Guid groupId = Guid.NewGuid();
+    private readonly Guid teamAId = Guid.NewGuid();
+    private readonly Guid teamBId = Guid.NewGuid();
+    private readonly Guid teamCId = Guid.NewGuid();
 
-    protected override IReadOnlyList<MatchPlayed> Events =>
+    protected override IReadOnlyList<MatchPlayedIntegrationEvent> Events =>
     [
-        new MatchPlayed(
-            GroupId: _groupId,
+        new(
+            GroupId: groupId,
             GroupName: "Group A",
             MatchId: Guid.NewGuid(),
-            HomeTeamId: _teamAId,
+            HomeTeamId: teamAId,
             HomeTeamName: "Team A",
             HomeTeamStrength: 80,
             HomeScore: 2,
-            AwayTeamId: _teamBId,
+            AwayTeamId: teamBId,
             AwayTeamName: "Team B",
             AwayTeamStrength: 70,
             AwayScore: 1,
             Round: 1),
 
-        new MatchPlayed(
-            GroupId: _groupId,
+        new(
+            GroupId: groupId,
             GroupName: "Group A",
             MatchId: Guid.NewGuid(),
-            HomeTeamId: _teamCId,
+            HomeTeamId: teamCId,
             HomeTeamName: "Team C",
             HomeTeamStrength: 85,
             HomeScore: 3,
-            AwayTeamId: _teamAId,
+            AwayTeamId: teamAId,
             AwayTeamName: "Team A",
             AwayTeamStrength: 80,
             AwayScore: 3,
@@ -53,7 +53,7 @@ public class WithSubsequentMatchSameGroup : WhenAMatchIsPlayed
         using var scope = Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<SimulatorReadDbContext>();
         var count = await context.Set<MatchResultModel>()
-            .CountAsync(m => m.GroupId == _groupId);
+            .CountAsync(m => m.GroupId == groupId);
 
         count.ShouldBe(2);
     }
@@ -64,7 +64,7 @@ public class WithSubsequentMatchSameGroup : WhenAMatchIsPlayed
         using var scope = Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<SimulatorReadDbContext>();
         var standing = await context.Set<GroupStandingsModel>()
-            .FirstAsync(s => s.TeamId == _teamAId);
+            .FirstAsync(s => s.TeamId == teamAId);
 
         standing.MatchesPlayed.ShouldBe(2);
         standing.Wins.ShouldBe(1);
@@ -78,9 +78,9 @@ public class WithSubsequentMatchSameGroup : WhenAMatchIsPlayed
         using var scope = Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<SimulatorReadDbContext>();
         var teamC = await context.Set<GroupStandingsModel>()
-            .FirstAsync(s => s.TeamId == _teamCId);
+            .FirstAsync(s => s.TeamId == teamCId);
         var teamA = await context.Set<GroupStandingsModel>()
-            .FirstAsync(s => s.TeamId == _teamAId);
+            .FirstAsync(s => s.TeamId == teamAId);
 
         teamC.Points.ShouldBe(1);
         teamA.Points.ShouldBe(4);

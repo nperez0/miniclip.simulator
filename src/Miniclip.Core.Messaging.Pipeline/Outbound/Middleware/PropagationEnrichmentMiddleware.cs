@@ -1,3 +1,4 @@
+using Miniclip.Core.Extensions;
 using Miniclip.Core.Messaging.Outbound;
 using System.Diagnostics;
 
@@ -15,7 +16,7 @@ public sealed class PropagationEnrichmentMiddleware(IPropagationContext propagat
         {
             envelope.Headers[MessageHeaders.TraceParent] = current.Id!;
 
-            if (!string.IsNullOrEmpty(current.TraceStateString))
+            if (current.TraceStateString.IsNotNullOrEmpty())
                 envelope.Headers[MessageHeaders.TraceState] = current.TraceStateString;
         }
 

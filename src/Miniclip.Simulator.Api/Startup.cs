@@ -28,7 +28,7 @@ public class Startup(IConfiguration configuration)
 
         services.AddKafkaDependencies(configuration);
         services.AddMediatorDependencies();
-        services.AddEventStoreDbDependencies(configuration);
+        services.AddEventStoreDependencies(configuration);
         services.AddReadModelsDbDependencies(configuration);
         services.AddDomainDependencies();
 

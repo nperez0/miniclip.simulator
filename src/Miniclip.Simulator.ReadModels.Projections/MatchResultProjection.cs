@@ -1,6 +1,6 @@
 using Miniclip.Core.ReadModels.Projections;
 using Miniclip.Core.ReadModels.Projections.Attributes;
-using Miniclip.Simulator.Domain.Aggregates.Groups.Events;
+using Miniclip.Simulator.IntegrationEvents.V1;
 using Miniclip.Simulator.ReadModels.Models;
 using Miniclip.Simulator.ReadModels.Repositories.Write;
 
@@ -8,9 +8,9 @@ namespace Miniclip.Simulator.ReadModels.Projections;
 
 [HandlerHighPriority(1)]
 public class MatchResultProjection(IMatchResultsRepository repository)
-    : IProjectionHandler<MatchPlayed>
+    : IProjectionHandler<MatchPlayedIntegrationEvent>
 {
-    public ValueTask HandleAsync(MatchPlayed @event, CancellationToken cancellationToken)
+    public ValueTask HandleAsync(MatchPlayedIntegrationEvent @event, CancellationToken cancellationToken)
     {
         var matchResult = new MatchResultModel
         {

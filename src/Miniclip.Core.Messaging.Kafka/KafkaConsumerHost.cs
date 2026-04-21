@@ -30,6 +30,13 @@ public sealed partial class KafkaConsumerHost(
 
                 var envelope = KafkaMessageMapper.ToEnvelope(consumeResult);
 
+                if (!pipeline.CanHandle(envelope.MessageType))
+                {
+                    consumer.Commit(consumeResult);
+                    LogSkipped(logger, envelope.MessageType, config.ConsumerGroup.Id);
+                    continue;
+                }
+
                 var result = await pipeline.ProcessAsync(
                     envelope,
                     config.ConsumerGroup.Id,
@@ -60,6 +67,11 @@ public sealed partial class KafkaConsumerHost(
         consumer.Close();
         LogStopped(logger, config.ConsumerGroup.Id);
     }
+
+    [LoggerMessage(LogLevel.Debug,
+        "Message type '{MessageType}' skipped — no handler registered in consumer group {ConsumerGroup}")]
+    static partial void LogSkipped(
+        ILogger logger, string MessageType, string ConsumerGroup);
 
     [LoggerMessage(LogLevel.Information,
         "Kafka consumer {ConsumerGroup} started, subscribing to topics: {Topics}")]

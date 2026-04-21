@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Miniclip.Core.Extensions;
 using Miniclip.Core.Messaging.Inbound;
 using Miniclip.Core.OpenTelemetry;
 
@@ -45,7 +46,7 @@ public sealed class TracingMiddleware : IInboundMiddleware
     {
         var traceParent = context.Headers.GetValueOrDefault(MessageHeaders.TraceParent);
 
-        if (string.IsNullOrEmpty(traceParent))
+        if (traceParent.IsNullOrEmpty())
             return null;
 
         var traceState = context.Headers.GetValueOrDefault(MessageHeaders.TraceState);
@@ -62,7 +63,7 @@ public sealed class TracingMiddleware : IInboundMiddleware
         string tagKey)
     {
         var value = context.Headers.GetValueOrDefault(headerKey);
-        if (!string.IsNullOrEmpty(value))
+        if (value.IsNotNullOrEmpty())
             activity.SetTag(tagKey, value);
     }
 }

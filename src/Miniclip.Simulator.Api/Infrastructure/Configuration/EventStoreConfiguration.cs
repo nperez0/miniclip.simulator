@@ -1,18 +1,17 @@
 ﻿using KurrentDB.Client;
-using Miniclip.Core.Application.Configuration;
 using Miniclip.Core.Application.Publishers;
 using Miniclip.Core.Domain;
 using Miniclip.Core.EventSourcing;
-using Miniclip.Core.EventSourcing.EventStoreDB;
+using Miniclip.Core.EventSourcing.EventStoreDB.Configuration;
 using Miniclip.Simulator.Api.Infrastructure.Seeding;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Entities;
 using Miniclip.Simulator.Domain.Aggregates.Teams.Entities;
 
 namespace Miniclip.Simulator.Api.Infrastructure.Configuration;
 
-public static class EventStoreDbConfiguration
+public static class EventStoreConfiguration
 {
-    public static IServiceCollection AddEventStoreDbDependencies(
+    public static IServiceCollection AddEventStoreDependencies(
         this IServiceCollection services,
         IConfiguration configuration)
     {
@@ -21,11 +20,7 @@ public static class EventStoreDbConfiguration
 
         services.AddSingleton(_ => new KurrentDBClient(settings));
 
-        services.AddMessageTypeRegistry();
-        services.AddSingleton<IEventSerializer, DomainEventJsonSerializer>();
-
-        services.AddScoped<IEventStoreSession, EventStoreSession>();
-        services.AddScoped(typeof(IEventStore<>), typeof(EventStoreDbEventStore<>));
+        services.AddEventStoreInfrastructure();
         
         services.AddScoped<IAggregateRepository<Group>, AggregateRepository<Group>>();
         services.AddScoped<IAggregateRepository<Team>, AggregateRepository<Team>>();

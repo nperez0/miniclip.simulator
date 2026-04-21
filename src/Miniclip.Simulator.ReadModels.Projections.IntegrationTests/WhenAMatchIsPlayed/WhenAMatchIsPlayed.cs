@@ -2,9 +2,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Miniclip.Core.ReadModels.Projections;
 using Miniclip.Core.ReadModels.Projections.Configuration;
-using Miniclip.Simulator.Domain.Aggregates.Groups.Events;
 using Miniclip.Simulator.Infrastructure.Read.Persistence;
 using Miniclip.Simulator.Infrastructure.Read.Persistence.Repositories.Write;
+using Miniclip.Simulator.IntegrationEvents.V1;
 using Miniclip.Simulator.ReadModels.Projections.Services;
 using NUnit.Framework;
 using Write = Miniclip.Simulator.ReadModels.Repositories.Write;
@@ -51,5 +51,5 @@ public abstract class WhenAMatchIsPlayed
         }
     }
 
-    protected abstract IReadOnlyList<MatchPlayed> Events { get; }
+    protected abstract IReadOnlyList<MatchPlayedIntegrationEvent> Events { get; }
 }

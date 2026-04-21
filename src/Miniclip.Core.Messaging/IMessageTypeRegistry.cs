@@ -1,4 +1,4 @@
-namespace Miniclip.Core;
+namespace Miniclip.Core.Messaging;
 
 public interface IMessageTypeRegistry
 {

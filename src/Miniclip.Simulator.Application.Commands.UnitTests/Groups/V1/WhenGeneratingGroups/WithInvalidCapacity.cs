@@ -16,7 +16,7 @@ public class WithInvalidCapacity : WhenGeneratingGroups
 
         Command = new GenerateGroupCommand("Group A", 10);
 
-        var availableTeams = new List<Team>
+        var availableTeams = new Team[]
         {
             Team.Create(Guid.NewGuid(), "Team 1", 80).Value!,
             Team.Create(Guid.NewGuid(), "Team 2", 75).Value!

@@ -22,6 +22,7 @@
     <ProjectReference Include="..\Miniclip.Core.ServiceDefaults\Miniclip.Core.ServiceDefaults.csproj" />
     <ProjectReference Include="..\Miniclip.Simulator.Infrastructure.Read\Miniclip.Simulator.Infrastructure.Read.csproj" />
     <ProjectReference Include="..\Miniclip.Simulator.ReadModels.Projections\Miniclip.Simulator.ReadModels.Projections.csproj" />
+    <ProjectReference Include="..\Miniclip.Simulator.IntegrationEvents\Miniclip.Simulator.IntegrationEvents.csproj" />
   </ItemGroup>
 
 </Project>

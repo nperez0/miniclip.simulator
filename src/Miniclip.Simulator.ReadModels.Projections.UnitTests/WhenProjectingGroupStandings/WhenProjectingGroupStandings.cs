@@ -1,6 +1,6 @@
 ﻿using AutoFixture;
 using Miniclip.Core.Tests;
-using Miniclip.Simulator.Domain.Aggregates.Groups.Events;
+using Miniclip.Simulator.IntegrationEvents.V1;
 using Miniclip.Simulator.ReadModels.Projections.Services;
 using Miniclip.Simulator.ReadModels.Repositories.Write;
 
@@ -10,7 +10,7 @@ public abstract class WhenProjectingGroupStandings : TestBase<GroupStandingsProj
 {
     protected IGroupStandingsRepository Repository { get; private set; } = null!;
     protected IRecalculatePositionService RecalculatePositionService { get; private set; } = null!;
-    protected MatchPlayed Event { get; set; } = null!;
+    protected MatchPlayedIntegrationEvent Event { get; set; } = null!;
 
     override protected void Given()
     {

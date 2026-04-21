@@ -46,7 +46,7 @@ public class WithHeadToHeadTiebreaker : WhenRecalculatingPosition
 
         Standings = [teamB, teamA];
 
-        var matches = new List<MatchResultModel>
+        var matches = new MatchResultModel[]
         {
             new() {
                 Id = Guid.NewGuid(),

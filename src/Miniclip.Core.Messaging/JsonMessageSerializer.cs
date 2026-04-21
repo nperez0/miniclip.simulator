@@ -1,6 +1,6 @@
 using System.Text.Json;
 
-namespace Miniclip.Core.Messaging.Inbound;
+namespace Miniclip.Core.Messaging;
 
 public sealed class JsonMessageSerializer(IMessageTypeRegistry registry) : IMessageSerializer
 {

@@ -1,3 +1,4 @@
+using Miniclip.Core.Extensions;
 using Microsoft.Extensions.Hosting;
 using Serilog;
 using Serilog.Sinks.OpenTelemetry;
@@ -20,7 +21,7 @@ public static class SerilogConfiguration
                 .Enrich.WithThreadId()
                 .WriteTo.Console(new Serilog.Formatting.Json.JsonFormatter());
 
-            if (!string.IsNullOrWhiteSpace(otlpEndpoint))
+            if (otlpEndpoint.IsNotNullOrWhiteSpace())
             {
                 config.WriteTo.OpenTelemetry(options =>
                 {

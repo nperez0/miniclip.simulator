@@ -1,5 +1,5 @@
 using Shouldly;
-using Miniclip.Simulator.Domain.Aggregates.Groups.Events;
+using Miniclip.Simulator.IntegrationEvents.V1;
 using Miniclip.Simulator.ReadModels.Models;
 using NSubstitute;
 using NUnit.Framework;
@@ -58,7 +58,7 @@ public class WithExistingStandings : WhenProjectingGroupStandings
             Points = 3
         };
 
-        Event = new MatchPlayed(
+        Event = new MatchPlayedIntegrationEvent(
             GroupId: groupId,
             GroupName: "Group A",
             MatchId: Guid.NewGuid(),

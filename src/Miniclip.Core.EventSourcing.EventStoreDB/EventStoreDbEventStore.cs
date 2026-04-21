@@ -5,7 +5,7 @@ namespace Miniclip.Core.EventSourcing.EventStoreDB;
 
 public sealed class EventStoreDbEventStore<T>(
     KurrentDBClient client,
-    IEventSerializer serializer,
+    IDomainEventSerializer serializer,
     IEventStoreSession session) : IEventStore<T>
     where T : AggregateRoot
 {

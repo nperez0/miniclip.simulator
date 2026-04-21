@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Miniclip.Core.Extensions;
 using Miniclip.Simulator.Infrastructure.Read.Persistence;
-using Miniclip.Simulator.ReadModels.WebJob.Infrastructure;
 
 namespace Miniclip.Simulator.ReadModels.WebJob.Infrastructure.Configuration;
 
@@ -19,7 +19,7 @@ public static class HealthCheckConfiguration
                 Port = configuration[HealthCheckConfig.HealthCheckHttpPortListenerKey]
             };
 
-            if (string.IsNullOrEmpty(config.Port)) 
+            if (config.Port.IsNullOrEmpty()) 
                 return services;
 
             services.AddSingleton(config);

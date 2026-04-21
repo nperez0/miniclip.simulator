@@ -1,6 +1,6 @@
 using Miniclip.Core.ReadModels.Projections;
 using Miniclip.Core.ReadModels.Projections.Attributes;
-using Miniclip.Simulator.Domain.Aggregates.Groups.Events;
+using Miniclip.Simulator.IntegrationEvents.V1;
 using Miniclip.Simulator.ReadModels.Models;
 using Miniclip.Simulator.ReadModels.Projections.Services;
 using Miniclip.Simulator.ReadModels.Repositories.Write;
@@ -11,9 +11,9 @@ namespace Miniclip.Simulator.ReadModels.Projections;
 public class GroupStandingsProjection(
     IGroupStandingsRepository groupStandingsRepository,
     IRecalculatePositionService recalculatePositionService)
-    : IProjectionHandler<MatchPlayed>
+    : IProjectionHandler<MatchPlayedIntegrationEvent>
 {
-    public async ValueTask HandleAsync(MatchPlayed @event, CancellationToken cancellationToken)
+    public async ValueTask HandleAsync(MatchPlayedIntegrationEvent @event, CancellationToken cancellationToken)
     {
 
         var allStandings = await GetCurrentStandings(@event.GroupId, cancellationToken);

@@ -1,5 +1,4 @@
 using System.Reflection;
-using Miniclip.Core.Messaging;
 using Miniclip.Core.Messaging.Inbound;
 using Miniclip.Core.Messaging.Outbound;
 using Microsoft.Extensions.DependencyInjection;
@@ -7,8 +6,6 @@ using Miniclip.Core.Messaging.Pipeline.Inbound;
 using Miniclip.Core.Messaging.Pipeline.Inbound.Middleware;
 using Miniclip.Core.Messaging.Pipeline.Outbound;
 using Miniclip.Core.Messaging.Pipeline.Outbound.Middleware;
-using LoggingMiddleware = Miniclip.Core.Messaging.Pipeline.Inbound.Middleware.LoggingMiddleware;
-using RetryMiddleware = Miniclip.Core.Messaging.Pipeline.Inbound.Middleware.RetryMiddleware;
 
 namespace Miniclip.Core.Messaging.Pipeline.Configuration;
 
@@ -16,7 +13,7 @@ public static class PipelineConfiguration
 {
     extension(IServiceCollection services)
     {
-        public IServiceCollection AddMessagingPipeline(Action<PipelineOptions>? configure = null)
+        public IServiceCollection AddInboundPipeline(Action<PipelineOptions>? configure = null)
         {
             var options = new PipelineOptions();
             configure?.Invoke(options);

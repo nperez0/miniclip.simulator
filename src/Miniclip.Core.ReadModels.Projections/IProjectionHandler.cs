@@ -1,4 +1,4 @@
-using Miniclip.Core.Domain;
+using Miniclip.Core.Messaging;
 
 namespace Miniclip.Core.ReadModels.Projections;
 
@@ -6,10 +6,10 @@ public interface IProjectionHandler
 {
     Type EventType { get; }
     int Priority { get; }
-    ValueTask HandleAsync(IDomainEvent @event, CancellationToken ct);
+    ValueTask HandleAsync(IIntegrationEvent @event, CancellationToken cancellationToken);
 }
 
-public interface IProjectionHandler<in TEvent> where TEvent : IDomainEvent
+public interface IProjectionHandler<in TEvent> where TEvent : IIntegrationEvent
 {
-    ValueTask HandleAsync(TEvent @event, CancellationToken ct);
+    ValueTask HandleAsync(TEvent @event, CancellationToken cancellationToken);
 }

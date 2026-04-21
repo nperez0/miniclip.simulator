@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Miniclip.Simulator.Domain.Aggregates.Groups.Events;
 using Miniclip.Simulator.Infrastructure.Read.Persistence;
+using Miniclip.Simulator.IntegrationEvents.V1;
 using Miniclip.Simulator.ReadModels.Models;
 using NUnit.Framework;
 using Shouldly;
@@ -11,21 +11,21 @@ namespace Miniclip.Simulator.ReadModels.Projections.IntegrationTests.WhenAMatchI
 [TestFixture]
 public class WithFirstMatchInGroup : WhenAMatchIsPlayed
 {
-    private readonly Guid _groupId = Guid.NewGuid();
-    private readonly Guid _homeTeamId = Guid.NewGuid();
-    private readonly Guid _awayTeamId = Guid.NewGuid();
+    private readonly Guid groupId = Guid.NewGuid();
+    private readonly Guid homeTeamId = Guid.NewGuid();
+    private readonly Guid awayTeamId = Guid.NewGuid();
 
-    protected override IReadOnlyList<MatchPlayed> Events =>
+    protected override IReadOnlyList<MatchPlayedIntegrationEvent> Events =>
     [
-        new MatchPlayed(
-            GroupId: _groupId,
+        new(
+            GroupId: groupId,
             GroupName: "Group A",
             MatchId: Guid.NewGuid(),
-            HomeTeamId: _homeTeamId,
+            HomeTeamId: homeTeamId,
             HomeTeamName: "Team A",
             HomeTeamStrength: 80,
             HomeScore: 2,
-            AwayTeamId: _awayTeamId,
+            AwayTeamId: awayTeamId,
             AwayTeamName: "Team B",
             AwayTeamStrength: 70,
             AwayScore: 1,
@@ -38,11 +38,11 @@ public class WithFirstMatchInGroup : WhenAMatchIsPlayed
         using var scope = Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<SimulatorReadDbContext>();
         var result = await context.Set<MatchResultModel>()
-            .FirstOrDefaultAsync(m => m.GroupId == _groupId);
+            .FirstOrDefaultAsync(m => m.GroupId == groupId);
 
         result.ShouldNotBeNull();
-        result.HomeTeamId.ShouldBe(_homeTeamId);
-        result.AwayTeamId.ShouldBe(_awayTeamId);
+        result.HomeTeamId.ShouldBe(homeTeamId);
+        result.AwayTeamId.ShouldBe(awayTeamId);
         result.HomeScore.ShouldBe(2);
         result.AwayScore.ShouldBe(1);
     }
@@ -53,7 +53,7 @@ public class WithFirstMatchInGroup : WhenAMatchIsPlayed
         using var scope = Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<SimulatorReadDbContext>();
         var standings = await context.Set<GroupStandingsModel>()
-            .Where(s => s.GroupId == _groupId)
+            .Where(s => s.GroupId == groupId)
             .ToListAsync();
 
         standings.Count.ShouldBe(2);
@@ -65,7 +65,7 @@ public class WithFirstMatchInGroup : WhenAMatchIsPlayed
         using var scope = Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<SimulatorReadDbContext>();
         var standing = await context.Set<GroupStandingsModel>()
-            .FirstAsync(s => s.TeamId == _homeTeamId);
+            .FirstAsync(s => s.TeamId == homeTeamId);
 
         standing.Wins.ShouldBe(1);
         standing.Losses.ShouldBe(0);
@@ -80,7 +80,7 @@ public class WithFirstMatchInGroup : WhenAMatchIsPlayed
         using var scope = Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<SimulatorReadDbContext>();
         var standing = await context.Set<GroupStandingsModel>()
-            .FirstAsync(s => s.TeamId == _awayTeamId);
+            .FirstAsync(s => s.TeamId == awayTeamId);
 
         standing.Wins.ShouldBe(0);
         standing.Losses.ShouldBe(1);
@@ -95,7 +95,7 @@ public class WithFirstMatchInGroup : WhenAMatchIsPlayed
         using var scope = Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<SimulatorReadDbContext>();
         var standing = await context.Set<GroupStandingsModel>()
-            .FirstAsync(s => s.TeamId == _homeTeamId);
+            .FirstAsync(s => s.TeamId == homeTeamId);
 
         standing.Position.ShouldBe(1);
     }

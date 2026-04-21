@@ -14,7 +14,7 @@ public sealed class CorrelationIdMiddleware(RequestDelegate next)
                 : Guid.NewGuid();
 
         propagationContext.CorrelationId = correlationId;
-        propagationContext.CausationId   = correlationId;
+        propagationContext.CausationId = correlationId;
 
         httpContext.Response.OnStarting(() =>
         {

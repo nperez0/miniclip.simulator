@@ -2,7 +2,7 @@ using Miniclip.Core.Domain;
 
 namespace Miniclip.Core.EventSourcing;
 
-public interface IEventSerializer
+public interface IDomainEventSerializer
 {
     (string EventType, byte[] Data) Serialize(IDomainEvent @event);
 

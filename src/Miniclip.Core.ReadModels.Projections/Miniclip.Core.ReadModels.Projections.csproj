@@ -11,7 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Miniclip.Core.Domain\Miniclip.Core.Domain.csproj" />
+    <ProjectReference Include="..\Miniclip.Core.Messaging\Miniclip.Core.Messaging.csproj" />
   </ItemGroup>
 
 </Project>

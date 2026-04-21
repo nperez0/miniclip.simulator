@@ -1,4 +1,4 @@
-namespace Miniclip.Core;
+namespace Miniclip.Core.Messaging;
 
 public sealed class MessageTypeRegistry(IReadOnlyDictionary<string, Type> types) : IMessageTypeRegistry
 {

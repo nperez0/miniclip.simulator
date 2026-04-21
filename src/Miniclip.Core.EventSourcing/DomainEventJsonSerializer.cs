@@ -1,9 +1,9 @@
 using System.Text.Json;
 using Miniclip.Core.Domain;
 
-namespace Miniclip.Core.EventSourcing.EventStoreDB;
+namespace Miniclip.Core.EventSourcing;
 
-public sealed class DomainEventJsonSerializer(IMessageTypeRegistry registry) : IEventSerializer
+public sealed class DomainEventJsonSerializer(IDomainEventTypeRegistry registry) : IDomainEventSerializer
 {
     private static readonly JsonSerializerOptions Options = new(JsonSerializerDefaults.Web);
 

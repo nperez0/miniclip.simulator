@@ -12,21 +12,22 @@
 - [ ] Check LaunchDarkly for feature flags
 - [ ] How does a migration work using KurrentDB?
 - [ ] How can read models be rebuilt by replaying events from the beginning?
-- [ ] Create a separate project to manage teams
 - [ ] Check anti-patterns
 - [ ] Check magic string anti-pattern
-- [ ] Add global usings
 - [ ] Separate write requests from query requests?
 - [ ] Check performance on the write side
 - [ ] Graceful shutdown
 - [ ] Add useful OpenTelemetry tags and metrics (e.g. domain error counters, conflict rate)
 - [ ] Continue improving `Result<T>`
 - [ ] There some elements in Miniclip.Core.Application that I am not sure they should be there
+- [ ] Study using of mappers (e.g. AutoMapper, Mapster) in the context of DDD and CQRS. Should we use them to map between domain models, DTOs, and read models, or should we have explicit mapping logic in each layer? What are the trade-offs in terms of maintainability, performance, and testability?
+- [ ] Ask about core projects, should some things live in the infrastructure project?
 
 ## In Progress
 - [ ] Can we prevent receiving events that a read model is not interested in? Maybe using a different topic per aggregate?
 - [ ] Is it ok to publish domain events to be shared across different services, or should we have separate integration events that are published to Kafka and consumed by other services?
 - [ ] Use bags to send events instead of publishing one event at a time? This could improve performance by reducing the number of messages sent to Kafka, but it would also add complexity to the event handling logic.
+- [ ] Add global usings
 
 ## Completed
 - [x] Add health checks to the API (`/health` and `/alive` endpoints)
