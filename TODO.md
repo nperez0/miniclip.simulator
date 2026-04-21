@@ -25,8 +25,6 @@
 
 ## In Progress
 - [ ] Can we prevent receiving events that a read model is not interested in? Maybe using a different topic per aggregate?
-- [ ] Is it ok to publish domain events to be shared across different services, or should we have separate integration events that are published to Kafka and consumed by other services?
-- [ ] Use bags to send events instead of publishing one event at a time? This could improve performance by reducing the number of messages sent to Kafka, but it would also add complexity to the event handling logic.
 - [ ] Add global usings
 
 ## Completed
@@ -54,6 +52,7 @@
 - [x] How to trace events end-to-end across services
 - [x] The current IEventBus.PublishAsync takes a CommittedEvent, which is an EventStoreDB concept. Should we have a more generic event message that can be used across different bus implementations?
 - [x] The serializer should be one for the event bus, not for the event store. The event store should just store byte arrays, and the event bus should be responsible for serializing/deserializing events. This would allow us to use different serializers for different buses if needed.
+- [x] Use integration events for communication between services, and domain events for internal communication within a service. This would help to decouple the internal domain model from the external contracts, and allow us to evolve them independently.
 
 ## Notes
 - EventStoreDB was rebranded to **KurrentDB**; client library is `KurrentDB.Client`, Docker image is `kurrentplatform/kurrentdb`.
