@@ -1,8 +1,5 @@
 namespace Miniclip.Core.Messaging.Kafka;
 
-/// <summary>
-/// Kafka-specific configuration constants that are not message header keys.
-/// </summary>
 public static class KafkaConstants
 {
     public static class Headers
