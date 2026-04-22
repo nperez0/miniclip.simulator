@@ -48,7 +48,7 @@ The solution follows **Clean Architecture** combined with **CQRS**, **DDD**, **E
 
 Registration order (outermost first):
 1. `LoggingBehavior` — logs request name, elapsed time, and domain errors; tags the active OTel `Activity` on conflicts.
-2. `EventStoreCommandBehavior` — after the handler succeeds: calls `IEventStoreSession.CommitAsync()` then iterates `session.GetCommittedEvents()` and publishes each to `IEventBus` (Kafka).
+2. `EventStoreCommandBehavior` — after the handler succeeds: calls `IEventStoreSession.CommitAsync()` then iterates `session.GetCommittedEvents()` and calls `ICommittedEventPublisher.PublishAsync()` for each. `CommittedEventPublisher` maps each committed domain event to an `IIntegrationEvent` via `IIntegrationEventMapperRegistry`, then publishes it to `IEventBus` (Kafka). Events without a registered mapper are silently skipped.
 
 > `ReadModelUnitOfWorkBehavior` was removed in Phase 4 — the read side is now updated exclusively by the ReadModels WebJob.
 
@@ -64,7 +64,7 @@ Registration order (outermost first):
 |---|---|---|
 | `Miniclip.Core` | Shared Kernel | `Result<T>`, `ExceptionBase`, string/enumerable extensions |
 | `Miniclip.Core.Domain` | Domain Abstractions | `AggregateRoot`, `IAggregateRepository<T>`, `IDomainEvent` |
-| `Miniclip.Core.Application` | Application Abstractions | `ICommand`, `IQuery`, pipeline behaviour base types (`LoggingBehavior`, `EventStoreCommandBehavior`), `DomainEventJsonSerializer` |
+| `Miniclip.Core.Application` | Application Abstractions | `ICommand`, `IQuery`, pipeline behaviour base types (`LoggingBehavior`, `EventStoreCommandBehavior`), `ICommittedEventPublisher`, `CommittedEventPublisher`, `IIntegrationEventMapper<T>`, `IIntegrationEventMapperRegistry` |
 | `Miniclip.Core.ReadModels` | Read Abstractions | `IReadModelUnitOfWork`, projection handler base types |
 | `Miniclip.Core.ReadModels.Projections` | Projection Infrastructure | `[HandlerPriority]` attribute, `IProjectionDispatcher`, ordered projection execution |
 | `Miniclip.Core.EF` | EF Infrastructure | Generic EF Core base context |
@@ -77,12 +77,13 @@ Registration order (outermost first):
 | `Miniclip.Core.ServiceDefaults` | Service Defaults | `SerilogConfiguration.AddStructuredLogging()` — Serilog with OTLP sink |
 | `Miniclip.Simulator.Domain` | Domain | `Group`, `Team` aggregates, domain services, value objects |
 | `Miniclip.Simulator.Application.Commands` | Application – Write | `GenerateGroupCommand`, `SimulateGroupCommand` handlers |
-| `Miniclip.Simulator.Application.Queries` | Application – Read | `GroupStandingsQuery` handler |
+| `Miniclip.Simulator.Application.Queries` | Application – Read | `GroupStandingsQuery` handler — returns team standings + match results in a single `GroupStandingsDto` |
 | `Miniclip.Simulator.ReadModels` | Read Models | `GroupStandingsModel`, `MatchResultModel`, repository interfaces |
 | `Miniclip.Simulator.ReadModels.Projections` | Projections | `ProjectionMessageHandler<TEvent>`, `GroupStandingsProjection`, `MatchResultProjection`, `RecalculatePositionService` |
+| `Miniclip.Simulator.IntegrationEvents` | Integration Events | `MatchPlayedIntegrationEvent`, `MatchPlayedIntegrationEventMapper` — versioned integration event contracts published to Kafka |
 | `Miniclip.Simulator.Infrastructure.Read` | Infrastructure – Read | `SimulatorReadDbContext`, repository implementations |
 | `Miniclip.Simulator.Infrastructure.Write` | Infrastructure – Write | EF migrations only (empty model; legacy aggregate tables dropped) |
-| `Miniclip.Simulator.Api` | API | `GroupsController`, configuration wiring, `TeamDataSeeder` |
+| `Miniclip.Simulator.Api` | API | `GroupsController`, `CorrelationIdMiddleware`, configuration wiring, `TeamDataSeeder` |
 | `Miniclip.Simulator.ReadModels.WebJob` | ReadModels Worker | Worker Service; hosts all `ProjectionsConsumerService<TAggregate>` instances; runs read DB migrations |
 | `Miniclip.Simulator.AppHost` | Orchestration | .NET Aspire AppHost; provisions MySQL, KurrentDB, Kafka, API, WebJob |
 
@@ -109,7 +110,7 @@ Registration order (outermost first):
 | `GroupCreated` | `Group` | `group-{id}` | No |
 | `TeamAdded` | `Group` | `group-{id}` | No |
 | `MatchScheduled` | `Group` | `group-{id}` | No |
-| `MatchPlayed` | `Group` | `group-{id}` | **Yes** → `simulator.group` topic → WebJob projections |
+| `MatchPlayed` | `Group` | `group-{id}` | **Yes** → mapped to `MatchPlayedIntegrationEvent` → `simulator.group` topic → WebJob projections |
 
 ---
 
@@ -120,12 +121,12 @@ All operations return `Result` or `Result<T>` — **never throw exceptions for b
 
 ### CQRS
 - **Commands** modify state and live in `Miniclip.Simulator.Application.Commands`. They use `IAggregateRepository<T>`.
-- **Queries** read from denormalised read models in `Miniclip.Simulator.Application.Queries`.
+- **Queries** read from denormalised read models in `Miniclip.Simulator.Application.Queries`. The `GroupStandingsQueryHandler` handles `GroupStandingsQuery` and returns both team standings and match results in a single `GroupStandingsDto`.
 
 ### Domain Events
 - Aggregates enqueue events via `Enqueue(IDomainEvent)` (from `AggregateRoot`) AND set their state directly in the constructor/factory (so the aggregate is immediately usable after `Create`).
 - `Apply(IDomainEvent)` handles replay from KurrentDB only — it is not called during normal command processing.
-- Events are committed to **KurrentDB** and published to **Kafka** by `EventStoreCommandBehavior` (single behavior handles both steps).
+- Events are committed to **KurrentDB** and published to **Kafka** by `EventStoreCommandBehavior` (single behavior handles both steps). Domain events are not published directly to Kafka; instead, `CommittedEventPublisher` maps them to **integration events** via `IIntegrationEventMapperRegistry`. Only domain events that have a registered `IIntegrationEventMapper<T>` are forwarded to Kafka. This decouples the internal domain model from the external contract (`Miniclip.Simulator.IntegrationEvents`).
 - `KafkaConsumerHost` (in the **WebJob**) is a `BackgroundService` that subscribes to a Kafka topic and forwards each message through the `IMessagePipeline` (middleware chain: `TracingMiddleware` → `LoggingMiddleware` → `RetryMiddleware`).
 - `ProjectionMessageHandler<TEvent>` (registered as `IMessageHandler<TEvent>`) creates a **fresh DI scope per message**, checks idempotency, then dispatches to ordered `INotificationHandler<TDomainEvent>` projection handlers via `IProjectionDispatcher`.
 - Idempotency: the `ProcessedEvents` table records each `event-id` + consumer group ID before committing.
@@ -148,6 +149,9 @@ Uses the **Mediator** NuGet package (source-generated — **not MediatR**). Comm
 
 ### Versioning
 API is versioned with `Asp.Versioning`. All routes follow `api/v{version}/[controller]`. Current version: `v1`.
+
+### Correlation ID Propagation
+`CorrelationIdMiddleware` runs early in the ASP.NET Core pipeline. It reads the `X-Correlation-Id` header (generating a new `Guid` if absent) and stores both `CorrelationId` and `CausationId` on `IMutablePropagationContext`. The correlation ID is written back to the response header. This ensures every request and its downstream Kafka messages share a traceable ID.
 
 ### Error Mapping
 `ResultExtensions.ToActionResult()` maps `Result` failures to HTTP status codes (400 / 404 / 204).
@@ -191,7 +195,10 @@ Only the **read side** uses EF Core (`SimulatorReadDbContext`). The write `DbCon
 - [`docs/architecture.md`](docs/architecture.md) — Layer responsibilities, full request flow, dependency graph
 - [`docs/domain-model.md`](docs/domain-model.md) — Aggregates, business rules, simulation algorithm, read model schema
 - [`docs/observability.md`](docs/observability.md) — OpenTelemetry and Serilog setup
-- [`docs/adr/`](docs/adr/) — Architecture Decision Records
+- [`docs/adr/001-result-pattern.md`](docs/adr/001-result-pattern.md) — Result pattern ADR
+- [`docs/adr/002-cqrs-separate-dbcontexts.md`](docs/adr/002-cqrs-separate-dbcontexts.md) — CQRS separate DbContexts ADR
+- [`docs/adr/003-domain-events-post-commit.md`](docs/adr/003-domain-events-post-commit.md) — superseded; documents the original in-process dispatch approach and how it evolved to `EventStoreCommandBehavior` + Kafka
+- [`docs/adr/004-source-generated-mediator.md`](docs/adr/004-source-generated-mediator.md) — source-generated Mediator ADR
 - [`docs/event-sourcing/PLAN.md`](docs/event-sourcing/PLAN.md) — Event Sourcing migration phases (all complete)
 
 ---

@@ -8,15 +8,15 @@ public class WithNonExistentGroup : WhenSimulatingGroups
 {
     private Guid groupId;
 
-    protected override async Task GivenAsync()
+    protected override Task GivenScenarioAsync()
     {
-        await base.GivenAsync();
-
         groupId = Guid.NewGuid();
         Command = new SimulateGroupCommand(groupId);
 
         GroupRepository.FindAsync(groupId, CancellationToken.None)
             .ReturnsForAnyArgs((Group?)null);
+
+        return Task.CompletedTask;
     }
 
     [Test]

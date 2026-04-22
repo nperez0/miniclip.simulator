@@ -7,15 +7,15 @@ public class WithValidRequest : WhenCreatingGroups
 {
     private Guid groupId;
 
-    protected override async Task GivenAsync()
+    protected override Task GivenScenarioAsync()
     {
-        await base.GivenAsync();
-
         Request = new GenerateGroupRequest("Group A", 4);
         groupId = Guid.NewGuid();
 
         Mediator.Send(Arg.Any<GenerateGroupCommand>(), Arg.Any<CancellationToken>())
             .Returns(ValueTask.FromResult(Result.Success(groupId)));
+
+        return Task.CompletedTask;
     }
 
     [Test]
@@ -35,8 +35,8 @@ public class WithValidRequest : WhenCreatingGroups
     public void ShouldSendCommandToMediator()
     {
         Mediator.Received(1).Send(
-            Arg.Is<GenerateGroupCommand>(cmd => 
-                cmd.Name == "Group A" && 
+            Arg.Is<GenerateGroupCommand>(cmd =>
+                cmd.Name == "Group A" &&
                 cmd.Capacity == 4),
             Arg.Any<CancellationToken>());
     }

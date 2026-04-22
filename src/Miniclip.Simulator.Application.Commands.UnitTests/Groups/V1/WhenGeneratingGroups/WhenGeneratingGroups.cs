@@ -1,4 +1,3 @@
-using AutoFixture;
 using Miniclip.Core;
 using Miniclip.Core.Domain;
 using Miniclip.Simulator.Application.Commands.Groups.V1.Generation;
@@ -18,12 +17,15 @@ public abstract class WhenGeneratingGroups : AsyncTestBase<GenerateGroupCommandH
 
     protected override Task GivenAsync()
     {
-        GroupRepository = Fixture.Freeze<IAggregateRepository<Group>>();
-        TeamRepository = Fixture.Freeze<IAggregateRepository<Team>>();
-        FixtureSchedulerService = Fixture.Freeze<IFixtureSchedulerService>();
+        GroupRepository = Substitute.For<IAggregateRepository<Group>>();
+        TeamRepository = Substitute.For<IAggregateRepository<Team>>();
+        FixtureSchedulerService = Substitute.For<IFixtureSchedulerService>();
 
-        return Task.CompletedTask;
+        return GivenScenarioAsync();
     }
+
+    protected override GenerateGroupCommandHandler CreateSystemUnderTest()
+        => new(GroupRepository, TeamRepository, FixtureSchedulerService);
 
     protected override async Task WhenAsync()
     {

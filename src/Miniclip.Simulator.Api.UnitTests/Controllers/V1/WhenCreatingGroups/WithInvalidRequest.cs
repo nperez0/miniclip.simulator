@@ -5,10 +5,8 @@ namespace Miniclip.Simulator.Api.UnitTests.Controllers.V1.WhenCreatingGroups;
 
 public class WithInvalidRequest : WhenCreatingGroups
 {
-    protected override async Task GivenAsync()
+    protected override Task GivenScenarioAsync()
     {
-        await base.GivenAsync();
-
         Request = new GenerateGroupRequest("Group A", 10);
 
         var error = Error.Validation("GROUP_VALIDATION_FAILED", ["Group capacity must be between 2 and 6, but was 10."])
@@ -17,6 +15,8 @@ public class WithInvalidRequest : WhenCreatingGroups
         Mediator
             .Send(Arg.Any<GenerateGroupCommand>(), Arg.Any<CancellationToken>())
             .Returns(ValueTask.FromResult(Result.Failure<Guid>(error)));
+
+        return Task.CompletedTask;
     }
 
     [Test]

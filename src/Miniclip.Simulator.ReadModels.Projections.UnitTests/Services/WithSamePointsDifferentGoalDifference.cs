@@ -8,10 +8,8 @@ public class WithSamePointsDifferentGoalDifference : WhenRecalculatingPosition
     private GroupStandingsModel secondPlace = null!;
     private GroupStandingsModel thirdPlace = null!;
 
-    protected override void Given()
+    protected override Task GivenScenarioAsync()
     {
-        base.Given();
-
         GroupId = Guid.NewGuid();
 
         firstPlace = new GroupStandingsModel
@@ -52,8 +50,10 @@ public class WithSamePointsDifferentGoalDifference : WhenRecalculatingPosition
 
         Standings = [thirdPlace, secondPlace, firstPlace];
 
-        Repository.GetMatchResultsByGroupIdAsync(GroupId, default)
+        Repository.GetMatchResultsByGroupIdAsync(GroupId, CancellationToken.None)
             .ReturnsForAnyArgs([]);
+
+        return Task.CompletedTask;
     }
 
     [Test]

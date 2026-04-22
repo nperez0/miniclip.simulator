@@ -1,5 +1,3 @@
-﻿using AutoFixture;
-using AutoFixture.AutoNSubstitute;
 using NUnit.Framework;
 
 namespace Miniclip.Core.Tests;
@@ -11,11 +9,9 @@ public abstract class TestBase<TSut>
 
     protected TSut? Sut { get; private set; }
 
-    protected IFixture Fixture { get; private set; } = new Fixture().Customize(new AutoNSubstituteCustomization());
-
     protected Exception? ThrownException { get; private set; }
 
-    [OneTimeSetUp]
+    [SetUp]
     protected virtual void SetUp()
     {
         Given();
@@ -35,10 +31,14 @@ public abstract class TestBase<TSut>
         }
     }
 
-    protected virtual TSut CreateSystemUnderTest()
-        => Fixture.Create<TSut>();
+    protected abstract TSut CreateSystemUnderTest();
 
-    protected virtual void Given() { }
+    protected virtual void Given()
+    {
+        GivenScenario();
+    }
+
+    protected virtual void GivenScenario() { }
 
     protected virtual void When() { }
 

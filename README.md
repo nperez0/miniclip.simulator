@@ -45,7 +45,7 @@ Every state change is stored as an immutable domain event. Aggregates are rebuil
 
 Registration order (outermost first):
 1. `LoggingBehavior` — logs request timing and domain errors; tags the active OTel span on conflicts.
-2. `EventStoreCommandBehavior` — commits the `IEventStoreSession` after the handler succeeds, then publishes each committed event to `IEventBus` (Kafka).
+2. `EventStoreCommandBehavior` — commits the `IEventStoreSession` after the handler succeeds, then calls `ICommittedEventPublisher.PublishAsync()` for each committed event. `CommittedEventPublisher` maps domain events to integration events via `IIntegrationEventMapperRegistry` before publishing to `IEventBus` (Kafka). Events without a registered mapper are silently skipped.
 
 ### Read side — Projections (MySQL + Kafka)
 
@@ -84,9 +84,10 @@ src/
 ├── Miniclip.Simulator.ReadModels/              # Read model POCOs and repository interfaces
 ├── Miniclip.Simulator.ReadModels.Projections/  # ProjectionMessageHandler<TEvent>,
 │                                               #   GroupStandingsProjection, MatchResultProjection
+├── Miniclip.Simulator.IntegrationEvents/       # MatchPlayedIntegrationEvent, MatchPlayedIntegrationEventMapper
 ├── Miniclip.Simulator.Infrastructure.Read/     # EF read DbContext, repository implementations
 │
-├── Miniclip.Simulator.Api/                     # ASP.NET Core host — controllers, DI wiring, TeamDataSeeder
+├── Miniclip.Simulator.Api/                     # ASP.NET Core host — controllers, CorrelationIdMiddleware, DI wiring, TeamDataSeeder
 ├── Miniclip.Simulator.ReadModels.WebJob/       # Worker Service — projection consumers, read DB migrations
 └── Miniclip.Simulator.AppHost/                 # .NET Aspire orchestration (MySQL, KurrentDB, Kafka, services)
 ```
@@ -128,6 +129,10 @@ KafkaConsumerHost
 > **Consumer group:** `simulator-projections-{aggregate}` — e.g. `simulator-projections-group`
 
 > **Why `IServiceScopeFactory`?** `ProjectionMessageHandler<TEvent>` creates a **fresh DI scope per message**, giving each message its own `DbContext` and transactional boundary.
+
+### Correlation ID
+
+`CorrelationIdMiddleware` (ASP.NET Core) reads `X-Correlation-Id` from the request (or generates a fresh `Guid`) and stores it on `IMutablePropagationContext`. The ID propagates to all downstream Kafka messages, enabling end-to-end tracing across services. The correlation ID is echoed back in the response header.
 
 ### Observability
 
@@ -226,9 +231,9 @@ dotnet test
 | `Miniclip.Simulator.Domain.UnitTests` | Unit | Aggregate logic, fixture scheduling, simulation algorithm |
 | `Miniclip.Simulator.Application.Commands.UnitTests` | Unit | Command handler logic |
 | `Miniclip.Simulator.Application.Queries.UnitTests` | Unit | Query handler logic |
-| `Miniclip.Simulator.ReadModels.Projections.UnitTests` | Unit | `ProjectionsConsumerService` idempotency; projection handlers |
+| `Miniclip.Simulator.ReadModels.Projections.UnitTests` | Unit | `ProjectionMessageHandler` idempotency; projection handlers |
 | `Miniclip.Simulator.ReadModels.Projections.IntegrationTests` | Integration | Full projection pipeline against a real read DB |
-| `Miniclip.Core.Kafka.UnitTests` | Unit | `KafkaConsumerService` retry policy and DLQ routing |
+| `Miniclip.Core.Kafka.UnitTests` | Unit | _(empty — tests migrated to messaging projects)_ |
 | `Miniclip.Simulator.Api.UnitTests` | Unit | Controller / result extension behaviour |
 | `Miniclip.Simulator.Common.Tests` | Shared | Test helpers and builders |
 | `Miniclip.Core.Tests` | Unit | Shared kernel tests |

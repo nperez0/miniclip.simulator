@@ -7,10 +7,8 @@ public class WithExistingStandings : WhenGettingStandings
 {
     private GroupStandingsDto standingsDto = null!;
 
-    protected override async Task GivenAsync()
+    protected override Task GivenScenarioAsync()
     {
-        await base.GivenAsync();
-
         GroupId = Guid.NewGuid();
 
         standingsDto = new GroupStandingsDto
@@ -69,6 +67,8 @@ public class WithExistingStandings : WhenGettingStandings
 
         Mediator.Send(Arg.Any<GroupStandingsQuery>(), Arg.Any<CancellationToken>())
             .Returns(ValueTask.FromResult(Result.Success(standingsDto)));
+
+        return Task.CompletedTask;
     }
 
     [Test]

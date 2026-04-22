@@ -1,5 +1,3 @@
-using AutoFixture;
-using AutoFixture.AutoNSubstitute;
 using NUnit.Framework;
 
 namespace Miniclip.Core.Tests;
@@ -11,11 +9,9 @@ public abstract class AsyncTestBase<TSut>
 
     protected TSut? Sut { get; private set; }
 
-    protected IFixture Fixture { get; } = new Fixture().Customize(new AutoNSubstituteCustomization());
-
     protected Exception? ThrownException { get; private set; }
 
-    [OneTimeSetUp]
+    [SetUp]
     protected virtual async Task SetUp()
     {
         try
@@ -35,10 +31,14 @@ public abstract class AsyncTestBase<TSut>
         }
     }
 
-    protected virtual TSut CreateSystemUnderTest()
-        => Fixture.Create<TSut>();
+    protected abstract TSut CreateSystemUnderTest();
 
-    protected virtual Task GivenAsync()
+    protected virtual async Task GivenAsync()
+    {
+        await GivenScenarioAsync().ConfigureAwait(false);
+    }
+
+    protected virtual Task GivenScenarioAsync()
         => Task.CompletedTask;
 
     protected virtual Task WhenAsync()

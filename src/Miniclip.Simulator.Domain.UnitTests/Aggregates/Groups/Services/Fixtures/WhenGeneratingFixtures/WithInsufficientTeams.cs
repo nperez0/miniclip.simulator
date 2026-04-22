@@ -6,10 +6,8 @@ namespace Miniclip.Simulator.Domain.UnitTests.Aggregates.Groups.Services.Fixture
 
 public class WithInsufficientTeams : WhenGeneratingFixtures
 {
-    protected override void Given()
+    protected override void GivenScenario()
     {
-        base.Given();
-
         Capacity = 4;
 
         (Group, _) = GroupMother.WithTeams(2, Capacity);

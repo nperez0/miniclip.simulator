@@ -72,8 +72,8 @@ Key decisions:
 - Kafka message key = `AggregateId.ToString()`
 
 - [x] Kafka and Kafka UI containers visible in Aspire dashboard
-- [x] `MatchPlayed` events visible in `simulator.match-played` topic after simulation
-- [x] `DomainEventPublisherBehavior` publishes to Kafka via `IEventBus`
+- [x] `MatchPlayed` events published to `simulator.group` topic after simulation
+- [x] `EventStoreCommandBehavior` publishes via `ICommittedEventPublisher` → `IIntegrationEventMapperRegistry` → `IEventBus` (Kafka)
 - [x] All existing API behaviour unchanged
 
 ---
@@ -86,7 +86,7 @@ Key decisions:
 - `ProjectionsConsumerService<TEvent>` is a `BackgroundService` consuming a single topic
 - Idempotency: `ProcessedEvents` table records `event-id` + consumer group ID before commit
 - `IServiceScopeFactory` for per-message DI scope — avoids captive dependency with `DbContext`
-- Consumer group ID: `simulator-projections-{event-name}`
+- Consumer group ID: `simulator-projections-{aggregate}` (e.g. `simulator-projections-group`)
 
 - [x] `GroupStandingsProjection` and `MatchResultProjection` driven by Kafka consumers
 - [x] `ReadModelUnitOfWorkBehavior` removed from the Mediator pipeline

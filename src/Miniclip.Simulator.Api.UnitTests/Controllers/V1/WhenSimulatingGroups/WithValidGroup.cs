@@ -5,14 +5,14 @@ namespace Miniclip.Simulator.Api.UnitTests.Controllers.V1.WhenSimulatingGroups;
 
 public class WithValidGroup : WhenSimulatingGroups
 {
-    protected override async Task GivenAsync()
+    protected override Task GivenScenarioAsync()
     {
-        await base.GivenAsync();
-
         GroupId = Guid.NewGuid();
 
         Mediator.Send(Arg.Any<SimulateGroupCommand>(), Arg.Any<CancellationToken>())
             .Returns(ValueTask.FromResult(Result.Success()));
+
+        return Task.CompletedTask;
     }
 
     [Test]

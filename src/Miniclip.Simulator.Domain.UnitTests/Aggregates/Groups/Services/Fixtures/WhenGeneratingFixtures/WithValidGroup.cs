@@ -2,19 +2,16 @@ using Miniclip.Simulator.Domain.Aggregates.Groups.ValueObjects;
 
 namespace Miniclip.Simulator.Domain.UnitTests.Aggregates.Groups.Services.Fixtures.WhenGeneratingFixtures;
 
-public class WithValidGroup() : WhenGeneratingFixtures
+public class WithValidGroup : WhenGeneratingFixtures
 {
     private List<(TeamInfo HomeTeam, TeamInfo AwayTeam, int Round)> mockSchedule = null!;
 
-    protected override void Given()
+    protected override void GivenScenario()
     {
-        base.Given();
-
         Capacity = 4;
 
         (Group, var teams) = GroupMother.WithTeams(Capacity);
 
-        // Create mock schedule data
         mockSchedule = [];
         int matchCount = 0;
         for (int i = 0; i < teams.Length; i++)
@@ -26,7 +23,6 @@ public class WithValidGroup() : WhenGeneratingFixtures
             }
         }
 
-        // Setup mock scheduler to return our test data
         FixtureScheduler!.GenerateSchedule().Returns(mockSchedule);
     }
 
@@ -61,8 +57,8 @@ public class WithValidGroup() : WhenGeneratingFixtures
     {
         foreach (var (homeTeam, awayTeam, round) in mockSchedule)
         {
-            Group!.Matches.ShouldContain(m => 
-                m.HomeTeam == homeTeam && 
+            Group!.Matches.ShouldContain(m =>
+                m.HomeTeam == homeTeam &&
                 m.AwayTeam == awayTeam &&
                 m.Round == round);
         }

@@ -104,6 +104,7 @@ Infrastructure/
                    KafkaConfiguration, MediatorConfiguration,
                    DomainConfiguration, ApiVersioningConfiguration,
                    OpenTelemetryConfiguration, WebApplicationConfiguration
+  Middleware/      CorrelationIdMiddleware  (X-Correlation-Id header; propagates to Kafka messages)
   Seeding/         TeamDataSeeder  (seeds 10 teams to KurrentDB on startup)
 Startup.cs         ConfigureServices + Configure
 Program.cs         Host builder entry point
@@ -111,7 +112,7 @@ Program.cs         Host builder entry point
 
 **Mediator pipeline (write side):**
 1. `LoggingBehavior` (outermost) — logs request timing; tags active OTel span on domain errors.
-2. `EventStoreCommandBehavior` — commits `IEventStoreSession` then publishes committed events to Kafka.
+2. `EventStoreCommandBehavior` — commits `IEventStoreSession` then calls `ICommittedEventPublisher.PublishAsync()` per committed event. `CommittedEventPublisher` maps each domain event to an integration event via `IIntegrationEventMapperRegistry` and publishes to Kafka. Events without a mapper are silently skipped.
 
 ### ReadModels WebJob — `Miniclip.Simulator.ReadModels.WebJob`
 
@@ -250,6 +251,7 @@ Api
  ├── Core.Messaging.Kafka
  │    ├── Core.Messaging.Pipeline
  │    └── Core.Messaging
+ ├── Simulator.IntegrationEvents        (MatchPlayedIntegrationEvent, MatchPlayedIntegrationEventMapper)
  ├── Core.ServiceDefaults        (Serilog)
  └── Infrastructure.Read
 

@@ -1,20 +1,18 @@
+using Miniclip.Core;
+using Miniclip.Simulator.Domain.Aggregates.Groups.Services.Simulator;
 
 namespace Miniclip.Simulator.Domain.UnitTests.Aggregates.Groups.Services.Simulator.WhenSimulatingGroup;
 
 public class WithUnplayedMatches : WhenSimulatingGroup
 {
-    protected override void Given()
+    protected override void GivenScenario()
     {
-        base.Given();
-
         (Group, var teams) = GroupMother.WithTeams(3);
 
-        // Add matches
         Group!.AddMatch(Guid.NewGuid(), teams[0], teams[1], 1);
         Group!.AddMatch(Guid.NewGuid(), teams[0], teams[2], 2);
         Group!.AddMatch(Guid.NewGuid(), teams[1], teams[2], 3);
 
-        // Setup mocks
         MatchSimulator!.SimulateMatch(Arg.Any<int>(), Arg.Any<int>()).Returns((2, 1));
     }
 

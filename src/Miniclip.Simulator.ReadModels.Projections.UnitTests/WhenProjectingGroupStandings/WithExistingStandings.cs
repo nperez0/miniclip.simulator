@@ -11,10 +11,8 @@ public class WithExistingStandings : WhenProjectingGroupStandings
     private GroupStandingsModel existingHomeStanding = null!;
     private GroupStandingsModel existingAwayStanding = null!;
 
-    protected override void Given()
+    protected override Task GivenScenarioAsync()
     {
-        base.Given();
-
         groupId = Guid.NewGuid();
         homeTeamId = Guid.NewGuid();
         awayTeamId = Guid.NewGuid();
@@ -71,8 +69,10 @@ public class WithExistingStandings : WhenProjectingGroupStandings
         );
 
         Repository
-            .GetStandingsByGroupIdAsync(groupId, default)
+            .GetStandingsByGroupIdAsync(groupId, CancellationToken.None)
             .ReturnsForAnyArgs([existingHomeStanding, existingAwayStanding]);
+
+        return Task.CompletedTask;
     }
 
     [Test]

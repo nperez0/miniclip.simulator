@@ -5,15 +5,15 @@ namespace Miniclip.Simulator.Api.UnitTests.Controllers.V1.WhenSimulatingGroups;
 
 public class WithNonExistentGroup : WhenSimulatingGroups
 {
-    protected override async Task GivenAsync()
+    protected override Task GivenScenarioAsync()
     {
-        await base.GivenAsync();
-
         GroupId = Guid.NewGuid();
 
         var error = SimulateGroupErrors.GroupNotFound(GroupId);
         Mediator.Send(Arg.Any<SimulateGroupCommand>(), Arg.Any<CancellationToken>())
             .Returns(ValueTask.FromResult(Result.Failure(error)));
+
+        return Task.CompletedTask;
     }
 
     [Test]

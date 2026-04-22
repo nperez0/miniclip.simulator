@@ -1,4 +1,3 @@
-using AutoFixture;
 using Miniclip.Core;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Entities;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Services.Simulator;
@@ -17,15 +16,19 @@ public class WhenSimulatingGroup : TestBase<GroupSimulator>
 
     protected override void Given()
     {
-        MatchSimulatorFactory = Fixture.Freeze<IMatchSimulatorFactory>();
-        MatchSimulator = Fixture.Freeze<IMatchSimulator>();
+        MatchSimulatorFactory = Substitute.For<IMatchSimulatorFactory>();
+        MatchSimulator = Substitute.For<IMatchSimulator>();
 
         MatchSimulatorFactory!.Create(Arg.Any<Group>()).Returns(MatchSimulator);
+
+        GivenScenario();
     }
+
+    protected override GroupSimulator CreateSystemUnderTest()
+        => new(MatchSimulatorFactory!);
 
     protected override void When()
     {
         Result = Sut!.SimulateAllMatches(Group!);
     }
-
 }

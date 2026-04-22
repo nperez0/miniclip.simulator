@@ -5,13 +5,10 @@ namespace Miniclip.Simulator.Domain.UnitTests.Aggregates.Groups.Services.Simulat
 
 public class WithAllMatchesPlayed : WhenSimulatingGroup
 {
-    protected override void Given()
+    protected override void GivenScenario()
     {
-        base.Given();
-
         (Group, var teams) = GroupMother.WithTeams(2);
 
-        // Add and simulate match
         Group!.AddMatch(Guid.NewGuid(), teams[0], teams[1], 1);
         Group!.Matches.First().SimulateResult(2, 1);
     }

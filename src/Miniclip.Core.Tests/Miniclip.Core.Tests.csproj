@@ -4,8 +4,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AutoFixture.AutoNSubstitute" />
-    <PackageReference Include="AutoFixture.NUnit3" />
     <PackageReference Include="NUnit" />
   </ItemGroup>
 

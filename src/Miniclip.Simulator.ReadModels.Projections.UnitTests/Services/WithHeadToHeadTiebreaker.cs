@@ -9,10 +9,8 @@ public class WithHeadToHeadTiebreaker : WhenRecalculatingPosition
     private GroupStandingsModel teamA = null!;
     private GroupStandingsModel teamB = null!;
 
-    protected override void Given()
+    protected override Task GivenScenarioAsync()
     {
-        base.Given();
-
         GroupId = Guid.NewGuid();
         teamAId = Guid.NewGuid();
         teamBId = Guid.NewGuid();
@@ -73,8 +71,10 @@ public class WithHeadToHeadTiebreaker : WhenRecalculatingPosition
             }
         };
 
-        Repository.GetMatchResultsByGroupIdAsync(GroupId, default)
+        Repository.GetMatchResultsByGroupIdAsync(GroupId, CancellationToken.None)
             .ReturnsForAnyArgs(matches);
+
+        return Task.CompletedTask;
     }
 
     [Test]

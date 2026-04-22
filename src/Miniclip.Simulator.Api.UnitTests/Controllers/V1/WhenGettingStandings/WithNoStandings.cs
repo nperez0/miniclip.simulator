@@ -7,16 +7,16 @@ public class WithNoStandings : WhenGettingStandings
 {
     private GroupStandingsDto emptyDto = null!;
 
-    protected override async Task GivenAsync()
+    protected override Task GivenScenarioAsync()
     {
-        await base.GivenAsync();
-
         GroupId = Guid.NewGuid();
 
         emptyDto = new GroupStandingsDto();
 
         Mediator.Send(Arg.Any<GroupStandingsQuery>(), Arg.Any<CancellationToken>())
             .Returns(ValueTask.FromResult(Result.Success(emptyDto)));
+
+        return Task.CompletedTask;
     }
 
     [Test]

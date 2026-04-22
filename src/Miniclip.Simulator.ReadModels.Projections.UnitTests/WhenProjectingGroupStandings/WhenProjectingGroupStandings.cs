@@ -1,26 +1,28 @@
-using AutoFixture;
 using Miniclip.Simulator.IntegrationEvents.V1;
 using Miniclip.Simulator.ReadModels.Projections.Services;
 using Miniclip.Simulator.ReadModels.Repositories.Write;
 
 namespace Miniclip.Simulator.ReadModels.Projections.UnitTests.WhenProjectingGroupStandings;
 
-public abstract class WhenProjectingGroupStandings : TestBase<GroupStandingsProjection>
+public abstract class WhenProjectingGroupStandings : AsyncTestBase<GroupStandingsProjection>
 {
     protected IGroupStandingsRepository Repository { get; private set; } = null!;
     protected IRecalculatePositionService RecalculatePositionService { get; private set; } = null!;
     protected MatchPlayedIntegrationEvent Event { get; set; } = null!;
 
-    protected override void Given()
+    protected override Task GivenAsync()
     {
-        Repository = Fixture.Freeze<IGroupStandingsRepository>();
-        RecalculatePositionService = Fixture.Freeze<IRecalculatePositionService>();
+        Repository = Substitute.For<IGroupStandingsRepository>();
+        RecalculatePositionService = Substitute.For<IRecalculatePositionService>();
+
+        return GivenScenarioAsync();
     }
 
-    protected virtual void SetupRepositoryMock() { }
+    protected override GroupStandingsProjection CreateSystemUnderTest()
+        => new(Repository, RecalculatePositionService);
 
-    protected override void When()
+    protected override async Task WhenAsync()
     {
-        Sut!.HandleAsync(Event, CancellationToken.None).AsTask().Wait();
+        await Sut!.HandleAsync(Event, CancellationToken.None);
     }
 }

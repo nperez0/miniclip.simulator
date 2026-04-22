@@ -9,10 +9,8 @@ public class WithNewTeams : WhenProjectingGroupStandings
     private Guid homeTeamId;
     private Guid awayTeamId;
 
-    protected override void Given()
+    protected override Task GivenScenarioAsync()
     {
-        base.Given();
-
         groupId = Guid.NewGuid();
         homeTeamId = Guid.NewGuid();
         awayTeamId = Guid.NewGuid();
@@ -32,8 +30,10 @@ public class WithNewTeams : WhenProjectingGroupStandings
             Round: 1
         );
 
-        Repository.GetStandingsByGroupIdAsync(groupId, default)
+        Repository.GetStandingsByGroupIdAsync(groupId, CancellationToken.None)
             .ReturnsForAnyArgs([]);
+
+        return Task.CompletedTask;
     }
 
     [Test]

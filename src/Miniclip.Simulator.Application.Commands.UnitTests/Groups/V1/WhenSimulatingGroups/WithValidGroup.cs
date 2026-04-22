@@ -9,16 +9,13 @@ public class WithValidGroup : WhenSimulatingGroups
     private Guid groupId;
     private Group group = null!;
 
-    protected override async Task GivenAsync()
+    protected override Task GivenScenarioAsync()
     {
-        await base.GivenAsync();
-
         groupId = Guid.NewGuid();
         Command = new SimulateGroupCommand(groupId);
 
         (group, var teams) = GroupMother.WithTeams(4, id: groupId);
 
-        // Add unplayed matches
         group.AddMatch(Guid.NewGuid(), teams[0], teams[1], 1);
         group.AddMatch(Guid.NewGuid(), teams[2], teams[3], 1);
 
@@ -27,6 +24,8 @@ public class WithValidGroup : WhenSimulatingGroups
 
         GroupSimulator.SimulateAllMatches(group)
             .Returns(Result.Success());
+
+        return Task.CompletedTask;
     }
 
     [Test]

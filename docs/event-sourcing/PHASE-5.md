@@ -181,7 +181,7 @@ public void ShouldNotDeserializePayload()
 ### Definition of Done
 
 - [x] `processedEvents.ContainsAsync` is called before `serializer.Deserialize`
-- [x] `ConsumerGroupId` returns `"simulator-projections-match-played"` for `TEvent = MatchPlayed`
+- [x] `ConsumerGroupId` returns `"simulator-projections-group"` for `TEvent = MatchPlayedIntegrationEvent` (derived from aggregate type, not event type)
 - [x] `AndMessageAlreadyProcessed.ShouldNotDeserializePayload` test exists and passes
 - [x] All 14 consumer unit tests green
 
@@ -195,14 +195,14 @@ public void ShouldNotDeserializePayload()
 
 ```
 ReadModelUnitOfWorkBehavior     ← BeginTransaction (MySQL)
-  DomainEventPublisherBehavior  ← IEventBus.PublishAsync → Kafka
-    EventStoreCommandBehavior   ← IEventStoreSession.CommitAsync → EventStoreDB
-      CommandHandler
+  EventStoreCommandBehavior     ← IEventStoreSession.CommitAsync → KurrentDB
+    CommandHandler
+  → ICommittedEventPublisher.PublishAsync → IEventBus (Kafka)
   → SaveChanges  (no pending changes — no-op)
   → Commit       (empty transaction)
 ```
 
-Since Phase 3, `DomainEventPublisherBehavior` publishes to Kafka — not to the in-process
+Since Phase 3, `EventStoreCommandBehavior` publishes to Kafka via `ICommittedEventPublisher` — not to the in-process
 Mediator — so no projection handler runs during the HTTP request. Since Phase 4, the Kafka
 consumer manages its own `IReadModelUnitOfWork` transaction. The behavior adds two unnecessary
 MySQL roundtrips per command: `BeginTransaction` and `Commit`.

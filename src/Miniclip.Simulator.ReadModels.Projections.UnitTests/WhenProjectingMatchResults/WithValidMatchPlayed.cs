@@ -10,10 +10,8 @@ public class WithValidMatchPlayed : WhenProjectingMatchResults
     private Guid homeTeamId;
     private Guid awayTeamId;
 
-    protected override void Given()
+    protected override Task GivenScenarioAsync()
     {
-        base.Given();
-
         groupId = Guid.NewGuid();
         matchId = Guid.NewGuid();
         homeTeamId = Guid.NewGuid();
@@ -33,6 +31,8 @@ public class WithValidMatchPlayed : WhenProjectingMatchResults
             AwayScore: 1,
             Round: 1
         );
+
+        return Task.CompletedTask;
     }
 
     [Test]

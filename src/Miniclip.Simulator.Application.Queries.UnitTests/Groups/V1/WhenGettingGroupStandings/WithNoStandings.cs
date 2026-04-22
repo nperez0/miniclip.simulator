@@ -7,10 +7,8 @@ public class WithNoStandings : WhenGettingGroupStandings
 {
     private Guid groupId;
 
-    protected override async Task GivenAsync()
+    protected override Task GivenScenarioAsync()
     {
-        await base.GivenAsync();
-
         groupId = Guid.NewGuid();
         Query = new GroupStandingsQuery(groupId);
 
@@ -19,6 +17,8 @@ public class WithNoStandings : WhenGettingGroupStandings
 
         MatchResultsRepository.GetMatchResultsByGroupIdAsync(groupId, CancellationToken.None)
             .ReturnsForAnyArgs([]);
+
+        return Task.CompletedTask;
     }
 
     [Test]

@@ -1,4 +1,3 @@
-using AutoFixture;
 using Miniclip.Core;
 using Miniclip.Core.Domain;
 using Miniclip.Simulator.Application.Commands.Groups.V1.Simulation;
@@ -16,11 +15,14 @@ public abstract class WhenSimulatingGroups : AsyncTestBase<SimulateGroupCommandH
 
     protected override Task GivenAsync()
     {
-        GroupRepository = Fixture.Freeze<IAggregateRepository<Group>>();
-        GroupSimulator = Fixture.Freeze<IGroupSimulator>();
+        GroupRepository = Substitute.For<IAggregateRepository<Group>>();
+        GroupSimulator = Substitute.For<IGroupSimulator>();
 
-        return Task.CompletedTask;
+        return GivenScenarioAsync();
     }
+
+    protected override SimulateGroupCommandHandler CreateSystemUnderTest()
+        => new(GroupRepository, GroupSimulator);
 
     protected override async Task WhenAsync()
     {

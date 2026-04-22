@@ -6,10 +6,8 @@ namespace Miniclip.Simulator.Application.Commands.UnitTests.Groups.V1.WhenGenera
 
 public class WithValidCommand : WhenGeneratingGroups
 {
-    protected override async Task GivenAsync()
+    protected override Task GivenScenarioAsync()
     {
-        await base.GivenAsync();
-
         Command = new GenerateGroupCommand("Group A", 4);
 
         var availableTeams = new Team[]
@@ -27,6 +25,8 @@ public class WithValidCommand : WhenGeneratingGroups
 
         FixtureSchedulerService.GenerateFixtures(Arg.Any<Group>())
             .Returns(Core.Result.Success());
+
+        return Task.CompletedTask;
     }
 
     [Test]
@@ -44,15 +44,15 @@ public class WithValidCommand : WhenGeneratingGroups
     [Test]
     public void ShouldAddGroupToRepository()
     {
-        GroupRepository.Received(1).Add(Arg.Is<Group>(g => 
-            g.Name == "Group A" && 
+        GroupRepository.Received(1).Add(Arg.Is<Group>(g =>
+            g.Name == "Group A" &&
             g.Capacity == 4));
     }
 
     [Test]
     public void ShouldSelectCorrectNumberOfTeams()
     {
-        GroupRepository.Received(1).Add(Arg.Is<Group>(g => 
+        GroupRepository.Received(1).Add(Arg.Is<Group>(g =>
             g.Teams.Count() == 4));
     }
 

@@ -1,4 +1,3 @@
-using AutoFixture;
 using Miniclip.Core;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Entities;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Services.Fixtures;
@@ -19,15 +18,19 @@ public class WhenGeneratingFixtures : TestBase<FixtureSchedulerService>
 
     protected override void Given()
     {
-        FixtureSchedulerFactory = Fixture.Freeze<IFixtureSchedulerFactory>();
-        FixtureScheduler = Fixture.Freeze<IFixtureScheduler>();
+        FixtureSchedulerFactory = Substitute.For<IFixtureSchedulerFactory>();
+        FixtureScheduler = Substitute.For<IFixtureScheduler>();
 
         FixtureSchedulerFactory!.Create(Arg.Any<Group>()).Returns(FixtureScheduler);
+
+        GivenScenario();
     }
+
+    protected override FixtureSchedulerService CreateSystemUnderTest()
+        => new(FixtureSchedulerFactory!);
 
     protected override void When()
     {
         Result = Sut!.GenerateFixtures(Group!);
     }
-
 }

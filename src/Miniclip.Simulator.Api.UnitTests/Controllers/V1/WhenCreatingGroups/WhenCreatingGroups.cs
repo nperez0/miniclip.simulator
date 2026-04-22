@@ -1,4 +1,3 @@
-using AutoFixture;
 using Miniclip.Simulator.Api.Controllers.V1;
 using Miniclip.Simulator.Application.Commands.Groups.V1.Generation;
 
@@ -12,15 +11,13 @@ public abstract class WhenCreatingGroups : AsyncTestBase<GroupsController>
 
     protected override Task GivenAsync()
     {
-        Mediator = Fixture.Freeze<IMediator>();
+        Mediator = Substitute.For<IMediator>();
 
-        return Task.CompletedTask;
+        return GivenScenarioAsync();
     }
 
     protected override GroupsController CreateSystemUnderTest()
-    {
-        return new GroupsController(Mediator);
-    }
+        => new(Mediator);
 
     protected override async Task WhenAsync()
     {

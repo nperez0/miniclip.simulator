@@ -9,10 +9,8 @@ public class WithDifferentPoints : WhenRecalculatingPosition
     private GroupStandingsModel thirdPlace = null!;
     private GroupStandingsModel fourthPlace = null!;
 
-    protected override void Given()
+    protected override Task GivenScenarioAsync()
     {
-        base.Given();
-
         GroupId = Guid.NewGuid();
 
         firstPlace = new GroupStandingsModel
@@ -65,8 +63,10 @@ public class WithDifferentPoints : WhenRecalculatingPosition
 
         Standings = [thirdPlace, firstPlace, fourthPlace, secondPlace];
 
-        Repository.GetMatchResultsByGroupIdAsync(GroupId, default)
+        Repository.GetMatchResultsByGroupIdAsync(GroupId, CancellationToken.None)
             .ReturnsForAnyArgs([]);
+
+        return Task.CompletedTask;
     }
 
     [Test]

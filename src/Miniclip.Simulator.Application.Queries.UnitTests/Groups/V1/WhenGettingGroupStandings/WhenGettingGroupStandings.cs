@@ -1,4 +1,3 @@
-using AutoFixture;
 using Miniclip.Core;
 using Miniclip.Simulator.Application.Queries.Groups.V1.Standings;
 using Miniclip.Simulator.ReadModels.Repositories.Read;
@@ -14,11 +13,14 @@ public abstract class WhenGettingGroupStandings : AsyncTestBase<GroupStandingsQu
 
     protected override Task GivenAsync()
     {
-        StandingsRepository = Fixture.Freeze<IGroupStandingsRepository>();
-        MatchResultsRepository = Fixture.Freeze<IMatchResultsRepository>();
+        StandingsRepository = Substitute.For<IGroupStandingsRepository>();
+        MatchResultsRepository = Substitute.For<IMatchResultsRepository>();
 
-        return Task.CompletedTask;
+        return GivenScenarioAsync();
     }
+
+    protected override GroupStandingsQueryHandler CreateSystemUnderTest()
+        => new(StandingsRepository, MatchResultsRepository);
 
     protected override async Task WhenAsync()
     {

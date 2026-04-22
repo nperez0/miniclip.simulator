@@ -5,6 +5,12 @@
 > **Depends on:** Phase 2 complete ✅
 > **Must not break:** all existing API behaviour and tests must remain green during the transition
 
+> ⚠️ **Note:** This document describes the original Phase 3 design. Several details evolved during implementation:
+> - The topic naming convention changed from `simulator.{event-kebab-case}` (e.g. `simulator.match-played`) to `simulator.{aggregate-kebab-case}` (e.g. `simulator.group`). Only `MatchPlayed` is published to Kafka.
+> - `DomainEventPublisherBehavior` was merged into `EventStoreCommandBehavior` — a single behavior now handles both commit and publish.
+> - Integration events (`MatchPlayedIntegrationEvent`) were introduced as the Kafka contract. `CommittedEventPublisher` uses `IIntegrationEventMapperRegistry` to map domain events to integration events before publishing. Domain events are not sent to Kafka directly.
+> - `IEventBus` moved to `Miniclip.Core.Messaging` (not `Core.Application`).
+
 ---
 
 ## Goal
