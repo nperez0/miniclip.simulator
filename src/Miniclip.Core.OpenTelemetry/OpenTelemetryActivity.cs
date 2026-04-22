@@ -1,4 +1,3 @@
-using System.Diagnostics;
 
 namespace Miniclip.Core.OpenTelemetry;
 

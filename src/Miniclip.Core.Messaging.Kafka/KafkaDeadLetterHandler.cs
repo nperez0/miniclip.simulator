@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 using Confluent.Kafka;
 using Microsoft.Extensions.Logging;
 using Miniclip.Core.Extensions;

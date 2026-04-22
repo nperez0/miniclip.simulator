@@ -1,9 +1,6 @@
 using Miniclip.Core;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Entities;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Errors;
-using NSubstitute;
-using NUnit.Framework;
-using Shouldly;
 
 namespace Miniclip.Simulator.Domain.UnitTests.Aggregates.Groups.Services.Fixtures.WhenGeneratingFixtures;
 

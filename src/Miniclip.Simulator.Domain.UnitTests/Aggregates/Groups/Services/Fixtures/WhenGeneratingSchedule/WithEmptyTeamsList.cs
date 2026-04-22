@@ -1,5 +1,3 @@
-using Shouldly;
-using NUnit.Framework;
 
 namespace Miniclip.Simulator.Domain.UnitTests.Aggregates.Groups.Services.Fixtures.WhenGeneratingSchedule;
 

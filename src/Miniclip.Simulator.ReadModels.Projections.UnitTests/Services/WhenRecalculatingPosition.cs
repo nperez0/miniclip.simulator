@@ -1,9 +1,7 @@
-﻿using AutoFixture;
-using Miniclip.Core.Tests;
+using AutoFixture;
 using Miniclip.Simulator.ReadModels.Models;
 using Miniclip.Simulator.ReadModels.Projections.Services;
 using Miniclip.Simulator.ReadModels.Repositories.Write;
-using NSubstitute;
 
 namespace Miniclip.Simulator.ReadModels.Projections.UnitTests.Services;
 

@@ -1,0 +1,54 @@
+<Project>
+  <!--
+    == Shared PropertyGroup for all projects ===================================
+    Every project in this solution targets net10.0 with strict null checking and
+    C# 12+ implicit usings. Any project that needs to diverge (e.g. multi-target,
+    legacy framework) can override these locally in its .csproj.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+
+  <!--
+    ══ Reproducible builds ═══════════════════════════════════════════════════════
+    Byte-for-byte deterministic output across machines and CI agents.
+  -->
+  <PropertyGroup>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+
+  <!--
+    ══ Test project defaults ═════════════════════════════════════════════════════
+    Any project whose name contains "Tests" is never a publishable NuGet package.
+    IsTestProject signals dotnet test discovery tooling.
+  -->
+  <PropertyGroup Condition="$(MSBuildProjectName.Contains('Tests'))">
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <!--
+    ══ Shared global usings — all executable test projects ═══════════════════════
+    Covers *UnitTests* and *IntegrationTests*.
+        Note: Microsoft.Extensions.DependencyInjection is intentionally NOT listed
+    here. It is not in the .NET shared framework for Microsoft.NET.Sdk projects.
+    Add it per-project in GlobalUsings.cs where DI flows in via a transitive reference.
+  
+    Per-project GlobalUsings.cs adds project-specific namespaces on top.
+  -->
+  <ItemGroup Condition="$(MSBuildProjectName.Contains('UnitTests')) OR $(MSBuildProjectName.Contains('IntegrationTests'))">
+    <Using Include="NUnit.Framework" />
+    <Using Include="Shouldly" />
+  </ItemGroup>
+
+  <!--
+    NSubstitute is a unit-test-only concern; integration tests do not mock.
+  -->
+  <ItemGroup Condition="$(MSBuildProjectName.Contains('UnitTests'))">
+    <Using Include="NSubstitute" />
+  </ItemGroup>
+
+</Project>

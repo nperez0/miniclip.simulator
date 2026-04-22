@@ -1,4 +1,3 @@
-using Mediator;
 
 namespace Miniclip.Core.Application;
 

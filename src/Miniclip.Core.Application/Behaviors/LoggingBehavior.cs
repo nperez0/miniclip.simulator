@@ -1,4 +1,3 @@
-﻿using Mediator;
 using Microsoft.Extensions.Logging;
 using Miniclip.Core.OpenTelemetry.Extensions;
 using System.Diagnostics;

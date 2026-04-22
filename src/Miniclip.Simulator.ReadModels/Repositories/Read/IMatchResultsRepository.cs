@@ -1,4 +1,3 @@
-using Miniclip.Simulator.ReadModels.Models;
 
 namespace Miniclip.Simulator.ReadModels.Repositories.Read;
 

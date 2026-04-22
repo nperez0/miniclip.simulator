@@ -1,4 +1,3 @@
-using Miniclip.Core;
 using Miniclip.Core.Application;
 
 namespace Miniclip.Simulator.Application.Queries.Groups.V1.Standings;

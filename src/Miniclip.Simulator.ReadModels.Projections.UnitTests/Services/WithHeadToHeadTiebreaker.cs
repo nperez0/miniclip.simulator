@@ -1,7 +1,4 @@
-using Shouldly;
 using Miniclip.Simulator.ReadModels.Models;
-using NSubstitute;
-using NUnit.Framework;
 
 namespace Miniclip.Simulator.ReadModels.Projections.UnitTests.Services;
 

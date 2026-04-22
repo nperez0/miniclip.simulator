@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Miniclip.Simulator.Infrastructure.Read.Persistence;
 using Read = Miniclip.Simulator.ReadModels.Repositories.Read;
 using ReadRepo = Miniclip.Simulator.Infrastructure.Read.Persistence.Repositories.Read;

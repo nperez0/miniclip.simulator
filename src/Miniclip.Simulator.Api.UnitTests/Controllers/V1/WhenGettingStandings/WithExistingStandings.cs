@@ -1,10 +1,7 @@
-using Shouldly;
 using Mediator;
 using Microsoft.AspNetCore.Mvc;
 using Miniclip.Core;
 using Miniclip.Simulator.Application.Queries.Groups.V1.Standings;
-using NSubstitute;
-using NUnit.Framework;
 
 namespace Miniclip.Simulator.Api.UnitTests.Controllers.V1.WhenGettingStandings;
 

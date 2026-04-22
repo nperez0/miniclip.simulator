@@ -1,4 +1,4 @@
-﻿using KurrentDB.Client.Extensions.OpenTelemetry;
+using KurrentDB.Client.Extensions.OpenTelemetry;
 using Miniclip.Core.OpenTelemetry.Extensions;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;

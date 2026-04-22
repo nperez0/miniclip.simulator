@@ -1,4 +1,3 @@
-using Miniclip.Core.Domain;
 
 namespace Miniclip.Simulator.Domain.Aggregates.Groups.Events;
 

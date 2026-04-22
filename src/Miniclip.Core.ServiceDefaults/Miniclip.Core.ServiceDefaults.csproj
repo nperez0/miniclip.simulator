@@ -1,10 +1,7 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>net10.0</TargetFramework>
-		<Nullable>enable</Nullable>
-		<ImplicitUsings>enable</ImplicitUsings>
-		<IsAspireSharedProject>true</IsAspireSharedProject>
+					<IsAspireSharedProject>true</IsAspireSharedProject>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -15,7 +12,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\Miniclip.Core.OpenTelemetry\Miniclip.Core.OpenTelemetry.csproj" />
 	  <ProjectReference Include="..\Miniclip.Core\Miniclip.Core.csproj" />
 	</ItemGroup>
 

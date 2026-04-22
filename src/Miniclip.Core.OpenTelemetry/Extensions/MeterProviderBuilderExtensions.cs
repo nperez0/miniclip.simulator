@@ -1,4 +1,4 @@
-﻿using OpenTelemetry.Metrics;
+using OpenTelemetry.Metrics;
 using static Miniclip.Core.OpenTelemetry.OpenTelemetryConstants;
 
 namespace Miniclip.Core.OpenTelemetry.Extensions;

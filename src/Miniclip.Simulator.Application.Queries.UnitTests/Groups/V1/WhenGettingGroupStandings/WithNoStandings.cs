@@ -1,8 +1,5 @@
-using Shouldly;
 using Miniclip.Simulator.Application.Queries.Groups.V1.Standings;
 using Miniclip.Simulator.ReadModels.Models;
-using NSubstitute;
-using NUnit.Framework;
 
 namespace Miniclip.Simulator.Application.Queries.UnitTests.Groups.V1.WhenGettingGroupStandings;
 

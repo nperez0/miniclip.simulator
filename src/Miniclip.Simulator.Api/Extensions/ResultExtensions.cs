@@ -1,4 +1,3 @@
-﻿using Microsoft.AspNetCore.Mvc;
 using Miniclip.Core;
 
 namespace Miniclip.Simulator.Api.Extensions;

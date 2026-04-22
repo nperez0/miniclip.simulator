@@ -1,4 +1,4 @@
-﻿namespace Miniclip.Core.Application.Extensions;
+namespace Miniclip.Core.Application.Extensions;
 
 public static class ResultExtensions
 {

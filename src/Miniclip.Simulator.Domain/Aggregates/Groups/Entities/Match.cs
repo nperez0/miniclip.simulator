@@ -1,4 +1,4 @@
-﻿using Miniclip.Simulator.Domain.Aggregates.Groups.Errors;
+using Miniclip.Simulator.Domain.Aggregates.Groups.Errors;
 using Miniclip.Simulator.Domain.Aggregates.Groups.ValueObjects;
 
 namespace Miniclip.Simulator.Domain.Aggregates.Groups.Entities;

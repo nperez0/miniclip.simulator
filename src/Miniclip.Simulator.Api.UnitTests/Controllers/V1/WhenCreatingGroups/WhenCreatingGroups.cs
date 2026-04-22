@@ -1,7 +1,6 @@
-﻿using AutoFixture;
+using AutoFixture;
 using Mediator;
 using Microsoft.AspNetCore.Mvc;
-using Miniclip.Core.Tests;
 using Miniclip.Simulator.Api.Controllers.V1;
 using Miniclip.Simulator.Application.Commands.Groups.V1.Generation;
 

@@ -1,4 +1,4 @@
-﻿namespace Miniclip.Core.ReadModels.Projections.Attributes;
+namespace Miniclip.Core.ReadModels.Projections.Attributes;
 
 // Define a priority attribute
 [AttributeUsage(AttributeTargets.Class)]

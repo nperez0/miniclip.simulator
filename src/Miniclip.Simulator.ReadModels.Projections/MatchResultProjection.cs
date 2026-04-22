@@ -1,4 +1,3 @@
-using Miniclip.Core.ReadModels.Projections;
 using Miniclip.Core.ReadModels.Projections.Attributes;
 using Miniclip.Simulator.IntegrationEvents.V1;
 using Miniclip.Simulator.ReadModels.Models;

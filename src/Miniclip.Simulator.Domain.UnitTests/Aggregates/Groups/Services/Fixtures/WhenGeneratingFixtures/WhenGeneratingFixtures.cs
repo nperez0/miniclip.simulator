@@ -1,9 +1,7 @@
-﻿using AutoFixture;
+using AutoFixture;
 using Miniclip.Core;
-using Miniclip.Core.Tests;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Entities;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Services.Fixtures;
-using NSubstitute;
 
 namespace Miniclip.Simulator.Domain.UnitTests.Aggregates.Groups.Services.Fixtures.WhenGeneratingFixtures;
 

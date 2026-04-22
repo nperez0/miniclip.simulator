@@ -1,4 +1,3 @@
-﻿using Miniclip.Core.Domain;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Errors;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Events;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Validations;

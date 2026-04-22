@@ -1,4 +1,3 @@
-﻿using Miniclip.Core.Tests;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Services.Simulator;
 
 namespace Miniclip.Simulator.Domain.UnitTests.Aggregates.Groups.Services.Simulator.WhenSimulatingMatch;

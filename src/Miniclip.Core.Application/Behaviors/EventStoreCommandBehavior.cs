@@ -1,4 +1,3 @@
-﻿using Mediator;
 using Miniclip.Core.Application.Extensions;
 using Miniclip.Core.Application.Publishers;
 using Miniclip.Core.EventSourcing;

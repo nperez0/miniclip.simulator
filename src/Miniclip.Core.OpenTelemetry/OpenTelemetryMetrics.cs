@@ -1,4 +1,4 @@
-﻿using System.Diagnostics.Metrics;
+using System.Diagnostics.Metrics;
 
 namespace Miniclip.Core.OpenTelemetry;
 

@@ -1,4 +1,3 @@
-using Confluent.Kafka;
 
 namespace Miniclip.Core.Messaging.Kafka;
 

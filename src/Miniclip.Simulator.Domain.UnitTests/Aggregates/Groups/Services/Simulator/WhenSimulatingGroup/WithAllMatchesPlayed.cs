@@ -1,7 +1,4 @@
 using Miniclip.Core;
-using NSubstitute;
-using NUnit.Framework;
-using Shouldly;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Errors;
 
 namespace Miniclip.Simulator.Domain.UnitTests.Aggregates.Groups.Services.Simulator.WhenSimulatingGroup;

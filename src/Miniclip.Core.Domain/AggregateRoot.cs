@@ -1,6 +1,4 @@
-﻿using System.Text.Json.Serialization;
-
-namespace Miniclip.Core.Domain;
+﻿namespace Miniclip.Core.Domain;
 
 public abstract class AggregateRoot
 {

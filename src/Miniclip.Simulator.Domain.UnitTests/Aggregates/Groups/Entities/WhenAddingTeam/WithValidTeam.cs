@@ -1,6 +1,4 @@
 using Miniclip.Simulator.Domain.Aggregates.Groups.ValueObjects;
-using NUnit.Framework;
-using Shouldly;
 
 namespace Miniclip.Simulator.Domain.UnitTests.Aggregates.Groups.Entities.WhenAddingTeam;
 

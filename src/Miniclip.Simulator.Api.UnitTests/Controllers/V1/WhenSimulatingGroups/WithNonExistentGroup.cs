@@ -1,9 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Miniclip.Core;
 using Miniclip.Simulator.Application.Commands.Groups.V1.Simulation;
-using NSubstitute;
-using NUnit.Framework;
-using Shouldly;
 
 namespace Miniclip.Simulator.Api.UnitTests.Controllers.V1.WhenSimulatingGroups;
 

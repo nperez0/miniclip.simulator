@@ -1,4 +1,4 @@
-﻿namespace Miniclip.Core.Messaging.Kafka;
+namespace Miniclip.Core.Messaging.Kafka;
 
 public class ConsumerGroup(string id)
 {

@@ -1,4 +1,3 @@
-using Miniclip.Core.Tests;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Services.Fixtures;
 using Miniclip.Simulator.Domain.Aggregates.Groups.ValueObjects;
 

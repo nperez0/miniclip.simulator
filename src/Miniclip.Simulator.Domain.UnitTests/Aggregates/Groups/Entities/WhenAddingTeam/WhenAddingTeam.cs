@@ -1,5 +1,4 @@
 using Miniclip.Core;
-using Miniclip.Core.Tests;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Entities;
 using Miniclip.Simulator.Domain.Aggregates.Groups.ValueObjects;
 

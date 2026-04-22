@@ -1,4 +1,3 @@
-using Miniclip.Core.EventSourcing;
 
 namespace Miniclip.Core.EventSourcing.EventStoreDB;
 

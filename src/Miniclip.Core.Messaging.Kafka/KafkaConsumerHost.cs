@@ -1,4 +1,3 @@
-using Confluent.Kafka;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Miniclip.Core.Messaging.Inbound;

@@ -1,4 +1,4 @@
-﻿using Miniclip.Core.ReadModels;
+using Miniclip.Core.ReadModels;
 
 namespace Miniclip.Simulator.Infrastructure.Read.Persistence;
 

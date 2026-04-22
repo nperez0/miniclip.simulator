@@ -1,5 +1,4 @@
 using Microsoft.Extensions.Configuration;
-using Miniclip.Core.Tests;
 using Miniclip.Simulator.ReadModels.WebJob.Infrastructure.Configuration;
 
 namespace Miniclip.Simulator.ReadModels.WebJob.UnitTests.Infrastructure.Configuration;

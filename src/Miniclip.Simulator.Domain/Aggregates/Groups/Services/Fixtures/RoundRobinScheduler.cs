@@ -1,4 +1,4 @@
-﻿using Miniclip.Simulator.Domain.Aggregates.Groups.ValueObjects;
+using Miniclip.Simulator.Domain.Aggregates.Groups.ValueObjects;
 
 namespace Miniclip.Simulator.Domain.Aggregates.Groups.Services.Fixtures;
 

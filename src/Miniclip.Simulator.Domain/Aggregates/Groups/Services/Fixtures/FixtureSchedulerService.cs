@@ -1,4 +1,3 @@
-﻿using Miniclip.Core;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Entities;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Errors;
 

@@ -1,4 +1,3 @@
-using Miniclip.Core.Messaging;
 
 namespace Miniclip.Simulator.IntegrationEvents.V1;
 

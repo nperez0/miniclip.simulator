@@ -1,4 +1,4 @@
-﻿using Miniclip.Core.Domain;
+using Miniclip.Core.Domain;
 
 namespace Miniclip.Core.Messaging.Kafka;
 

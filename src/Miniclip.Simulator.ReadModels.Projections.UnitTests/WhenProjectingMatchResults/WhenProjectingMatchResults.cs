@@ -1,8 +1,6 @@
-﻿using AutoFixture;
-using Miniclip.Core.Tests;
+using AutoFixture;
 using Miniclip.Simulator.IntegrationEvents.V1;
 using Miniclip.Simulator.ReadModels.Repositories.Write;
-using NSubstitute;
 
 namespace Miniclip.Simulator.ReadModels.Projections.UnitTests.WhenProjectingMatchResults;
 

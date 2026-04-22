@@ -1,4 +1,3 @@
-﻿using Miniclip.Core.Domain;
 using Miniclip.Simulator.Domain.Aggregates.Teams.Events;
 using Miniclip.Simulator.Domain.Aggregates.Teams.Validations;
 

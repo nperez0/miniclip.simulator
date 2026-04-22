@@ -1,7 +1,6 @@
-﻿using AutoFixture;
+using AutoFixture;
 using Miniclip.Core;
 using Miniclip.Core.Domain;
-using Miniclip.Core.Tests;
 using Miniclip.Simulator.Application.Commands.Groups.V1.Simulation;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Entities;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Services.Simulator;

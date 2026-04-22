@@ -1,5 +1,4 @@
-﻿using Miniclip.Core;
-using Miniclip.Core.Tests;
+using Miniclip.Core;
 using Miniclip.Simulator.Domain.Aggregates.Teams.Entities;
 
 namespace Miniclip.Simulator.Domain.UnitTests.Aggregates.Teams.Entities.WhenCreatingTeam;

@@ -1,5 +1,3 @@
-using Microsoft.EntityFrameworkCore;
-using Miniclip.Core.ReadModels;
 using System.Linq.Expressions;
 
 namespace Miniclip.Core.EF;

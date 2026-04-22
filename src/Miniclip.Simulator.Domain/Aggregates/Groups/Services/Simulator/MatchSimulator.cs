@@ -1,4 +1,4 @@
-﻿namespace Miniclip.Simulator.Domain.Aggregates.Groups.Services.Simulator;
+namespace Miniclip.Simulator.Domain.Aggregates.Groups.Services.Simulator;
 
 public class MatchSimulator : IMatchSimulator
 {

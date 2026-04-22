@@ -2,8 +2,6 @@ using Miniclip.Core;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Errors;
 using Miniclip.Simulator.Domain.Aggregates.Groups.ValueObjects;
 using Miniclip.Simulator.Domain.Aggregates.Teams.Entities;
-using NUnit.Framework;
-using Shouldly;
 
 namespace Miniclip.Simulator.Domain.UnitTests.Aggregates.Groups.Entities.WhenCreatingMatch;
 

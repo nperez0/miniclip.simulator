@@ -1,6 +1,5 @@
-﻿using AutoFixture;
+using AutoFixture;
 using Miniclip.Core;
-using Miniclip.Core.Tests;
 using Miniclip.Simulator.Application.Queries.Groups.V1.Standings;
 using Miniclip.Simulator.ReadModels.Repositories.Read;
 

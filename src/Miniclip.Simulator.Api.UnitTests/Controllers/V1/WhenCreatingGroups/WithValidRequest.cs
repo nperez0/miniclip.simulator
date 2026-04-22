@@ -1,10 +1,7 @@
-using Shouldly;
 using Mediator;
 using Microsoft.AspNetCore.Mvc;
 using Miniclip.Core;
 using Miniclip.Simulator.Application.Commands.Groups.V1.Generation;
-using NSubstitute;
-using NUnit.Framework;
 
 namespace Miniclip.Simulator.Api.UnitTests.Controllers.V1.WhenCreatingGroups;
 

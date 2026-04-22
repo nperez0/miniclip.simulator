@@ -1,5 +1,3 @@
-using Miniclip.Core.Domain;
-using Miniclip.Core.Messaging;
 
 namespace Miniclip.Core.Application.IntegrationEvents;
 

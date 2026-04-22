@@ -1,4 +1,3 @@
-using Mediator;
 using Miniclip.Core.Application.Behaviors;
 
 namespace Miniclip.Simulator.Api.Infrastructure.Configuration;

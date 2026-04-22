@@ -1,6 +1,3 @@
-using Shouldly;
-using NSubstitute;
-using NUnit.Framework;
 
 namespace Miniclip.Simulator.Domain.UnitTests.Aggregates.Groups.Services.Simulator.WhenSimulatingGroup;
 

@@ -1,5 +1,3 @@
-using NUnit.Framework;
-using Shouldly;
 
 namespace Miniclip.Simulator.Domain.UnitTests.Aggregates.Groups.Entities.WhenCreatingMatch;
 

@@ -1,4 +1,4 @@
-﻿using OpenTelemetry.Trace;
+using OpenTelemetry.Trace;
 using static Miniclip.Core.OpenTelemetry.OpenTelemetryConstants;
 
 namespace Miniclip.Core.OpenTelemetry.Extensions;
