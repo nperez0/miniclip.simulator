@@ -1,6 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Miniclip.Core.Messaging.Inbound;
 
 namespace Miniclip.Core.Messaging.Pipeline.Inbound;
 

@@ -1,5 +1,3 @@
-using Miniclip.Simulator.ReadModels.Models;
-
 namespace Miniclip.Simulator.Application.Queries.Groups.V1.Standings;
 
 public class GroupStandingsDto

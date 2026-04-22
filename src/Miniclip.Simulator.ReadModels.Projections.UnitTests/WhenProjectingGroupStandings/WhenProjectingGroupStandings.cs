@@ -11,7 +11,7 @@ public abstract class WhenProjectingGroupStandings : TestBase<GroupStandingsProj
     protected IRecalculatePositionService RecalculatePositionService { get; private set; } = null!;
     protected MatchPlayedIntegrationEvent Event { get; set; } = null!;
 
-    override protected void Given()
+    protected override void Given()
     {
         Repository = Fixture.Freeze<IGroupStandingsRepository>();
         RecalculatePositionService = Fixture.Freeze<IRecalculatePositionService>();

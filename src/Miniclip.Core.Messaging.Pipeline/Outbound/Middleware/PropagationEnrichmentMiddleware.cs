@@ -1,5 +1,4 @@
 using Miniclip.Core.Extensions;
-using Miniclip.Core.Messaging.Outbound;
 using System.Diagnostics;
 
 namespace Miniclip.Core.Messaging.Pipeline.Outbound.Middleware;

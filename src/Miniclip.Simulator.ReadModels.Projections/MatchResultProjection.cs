@@ -1,7 +1,5 @@
 using Miniclip.Core.ReadModels.Projections.Attributes;
 using Miniclip.Simulator.IntegrationEvents.V1;
-using Miniclip.Simulator.ReadModels.Models;
-using Miniclip.Simulator.ReadModels.Repositories.Write;
 
 namespace Miniclip.Simulator.ReadModels.Projections;
 

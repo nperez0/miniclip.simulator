@@ -1,4 +1,3 @@
-using Miniclip.Core;
 using Miniclip.Simulator.Application.Commands.Groups.V1.Generation;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Entities;
 using Miniclip.Simulator.Domain.Aggregates.Teams.Entities;

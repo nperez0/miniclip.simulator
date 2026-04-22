@@ -1,6 +1,5 @@
 using System.Diagnostics;
 using Miniclip.Core.Extensions;
-using Miniclip.Core.Messaging.Inbound;
 using Miniclip.Core.OpenTelemetry;
 
 namespace Miniclip.Core.Messaging.Pipeline.Inbound.Middleware;

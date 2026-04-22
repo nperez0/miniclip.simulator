@@ -1,19 +1,12 @@
 namespace Miniclip.Simulator.Domain.Aggregates.Groups.Services.Simulator;
 
-public class MatchSimulator : IMatchSimulator
+public class MatchSimulator(Random random) : IMatchSimulator
 {
     private const double HomeAdvantage = 1.1;
     private const double BaseExpectedGoals = 3.5; // Base expected goals between 0-4
     private const int MaxGoals = 10;
 
-    private readonly Random random;
-
     public MatchSimulator() : this(Random.Shared) { }
-
-    public MatchSimulator(Random random)
-    {
-        this.random = random;
-    }
 
     public (int homeScore, int awayScore) SimulateMatch(int homeTeamStrength, int awayTeamStrength)
     {

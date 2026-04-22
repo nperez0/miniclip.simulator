@@ -3,8 +3,6 @@ using Microsoft.Extensions.Logging;
 using Miniclip.Core.Messaging;
 using Miniclip.Core.Messaging.Inbound;
 using Miniclip.Core.ReadModels;
-using Miniclip.Core.ReadModels.Projections;
-using Miniclip.Simulator.ReadModels.Repositories.Write;
 
 namespace Miniclip.Simulator.ReadModels.Projections;
 

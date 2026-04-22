@@ -1,6 +1,6 @@
 
 namespace Miniclip.Core.Application;
 
-public interface IQuery<TResult> : IRequest<TResult>
+public interface IQuery<out TResult> : IRequest<TResult>
 {
 }

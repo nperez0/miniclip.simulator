@@ -1,6 +1,4 @@
 using Asp.Versioning;
-using Mediator;
-using Microsoft.AspNetCore.Mvc;
 using Miniclip.Simulator.Api.Extensions;
 using Miniclip.Simulator.Application.Commands.Groups.V1.Generation;
 using Miniclip.Simulator.Application.Commands.Groups.V1.Simulation;

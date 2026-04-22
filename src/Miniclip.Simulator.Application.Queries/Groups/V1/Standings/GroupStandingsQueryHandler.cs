@@ -1,5 +1,4 @@
 using Mediator;
-using Miniclip.Core;
 using Miniclip.Simulator.ReadModels.Repositories.Read;
 
 namespace Miniclip.Simulator.Application.Queries.Groups.V1.Standings;

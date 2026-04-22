@@ -1,5 +1,3 @@
-using Mediator;
-using Microsoft.AspNetCore.Mvc;
 using Miniclip.Core;
 using Miniclip.Simulator.Application.Commands.Groups.V1.Simulation;
 

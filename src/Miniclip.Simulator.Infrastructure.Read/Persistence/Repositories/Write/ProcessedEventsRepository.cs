@@ -1,5 +1,3 @@
-using Miniclip.Simulator.Infrastructure.Read.Persistence;
-using Miniclip.Simulator.ReadModels.Models;
 using Miniclip.Simulator.ReadModels.Repositories.Write;
 
 namespace Miniclip.Simulator.Infrastructure.Read.Persistence.Repositories.Write;

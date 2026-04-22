@@ -1,7 +1,6 @@
 using Miniclip.Core.Application.IntegrationEvents;
 using Miniclip.Core.EventSourcing;
 using Miniclip.Core.Extensions;
-using Miniclip.Core.Messaging;
 
 namespace Miniclip.Core.Application.Publishers;
 

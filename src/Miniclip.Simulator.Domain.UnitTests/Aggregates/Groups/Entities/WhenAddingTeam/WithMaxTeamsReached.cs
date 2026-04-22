@@ -1,6 +1,5 @@
 using Miniclip.Core;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Errors;
-using Miniclip.Simulator.Domain.Aggregates.Groups.ValueObjects;
 
 namespace Miniclip.Simulator.Domain.UnitTests.Aggregates.Groups.Entities.WhenAddingTeam;
 

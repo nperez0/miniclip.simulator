@@ -1,6 +1,4 @@
 using AutoFixture;
-using Mediator;
-using Microsoft.AspNetCore.Mvc;
 using Miniclip.Simulator.Api.Controllers.V1;
 
 namespace Miniclip.Simulator.Api.UnitTests.Controllers.V1.WhenGettingStandings;

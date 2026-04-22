@@ -1,7 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Miniclip.Core.Reflection;
-using Miniclip.Core.Domain;
-using Miniclip.Core.Reflection;
 
 namespace Miniclip.Core.EventSourcing.EventStoreDB.Configuration;
 

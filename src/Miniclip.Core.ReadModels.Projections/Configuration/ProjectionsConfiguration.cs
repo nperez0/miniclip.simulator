@@ -1,6 +1,5 @@
 using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
-using Miniclip.Core.Messaging;
 using Miniclip.Core.ReadModels.Projections.Attributes;
 
 namespace Miniclip.Core.ReadModels.Projections.Configuration;

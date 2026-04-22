@@ -1,5 +1,3 @@
-using Miniclip.Core.Domain;
-
 namespace Miniclip.Core.EventSourcing;
 
 public class AggregateRepository<T>(IEventStore<T> eventStore) : IAggregateRepository<T>

@@ -1,5 +1,3 @@
-using Miniclip.Simulator.Domain.Aggregates.Groups.ValueObjects;
-
 namespace Miniclip.Simulator.Domain.UnitTests.Aggregates.Groups.Entities.WhenAddingTeam;
 
 public class WithValidTeam : WhenAddingTeam

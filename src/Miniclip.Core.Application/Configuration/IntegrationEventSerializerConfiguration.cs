@@ -1,5 +1,4 @@
 using Microsoft.Extensions.DependencyInjection;
-using Miniclip.Core.Messaging;
 using Miniclip.Core.Reflection;
 
 namespace Miniclip.Core.Application.Configuration;

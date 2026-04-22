@@ -1,6 +1,5 @@
 using System.Collections.Frozen;
 using System.Reflection;
-using Miniclip.Core.Messaging.Inbound;
 
 namespace Miniclip.Core.Messaging.Pipeline.Inbound;
 

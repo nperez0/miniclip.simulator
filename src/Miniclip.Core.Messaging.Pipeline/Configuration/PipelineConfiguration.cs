@@ -1,6 +1,4 @@
 using System.Reflection;
-using Miniclip.Core.Messaging.Inbound;
-using Miniclip.Core.Messaging.Outbound;
 using Microsoft.Extensions.DependencyInjection;
 using Miniclip.Core.Messaging.Pipeline.Inbound;
 using Miniclip.Core.Messaging.Pipeline.Inbound.Middleware;

@@ -1,5 +1,4 @@
 using Miniclip.Core.Application.IntegrationEvents;
-using Miniclip.Core.Messaging;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Events;
 
 namespace Miniclip.Simulator.IntegrationEvents.V1;

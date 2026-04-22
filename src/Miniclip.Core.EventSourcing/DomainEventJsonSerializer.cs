@@ -1,5 +1,4 @@
 using System.Text.Json;
-using Miniclip.Core.Domain;
 
 namespace Miniclip.Core.EventSourcing;
 
