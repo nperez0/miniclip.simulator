@@ -1,12 +1,12 @@
-using Miniclip.Core.Application.IntegrationEvents;
+﻿using Miniclip.Core.Application.IntegrationEvents;
 using Miniclip.Simulator.Domain.Aggregates.Groups.Events;
 
 namespace Miniclip.Simulator.IntegrationEvents.V1;
 
-public sealed class MatchPlayedIntegrationEventMapper : IIntegrationEventMapper<MatchPlayed>
+public sealed class MatchPlayedIntegrationEventMapper : IIntegrationEventMapper<MatchPlayed, MatchPlayedIntegrationEvent>
 {
-    public IIntegrationEvent Map(MatchPlayed domainEvent) =>
-        new MatchPlayedIntegrationEvent(
+    public MatchPlayedIntegrationEvent Map(MatchPlayed domainEvent) =>
+        new(
             GroupId: domainEvent.GroupId,
             GroupName: domainEvent.GroupName,
             MatchId: domainEvent.MatchId,

@@ -1,21 +1,23 @@
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Miniclip.Core.Messaging.Pipeline.Inbound;
 
 namespace Miniclip.Core.Messaging.Kafka;
 
 public sealed partial class KafkaConsumerHost(
-    IKafkaConsumerConfig config,
-    ConsumerBuilder<string, byte[]> consumerBuilder,
+    KafkaConsumerDescriptor descriptor,
+    ConsumerBuilder<string, string> consumerBuilder,
     IInboundPipeline pipeline,
+    IMessageHandlerRegistry registry,
     IDeadLetterHandler deadLetterHandler,
     ILogger<KafkaConsumerHost> logger) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         using var consumer = consumerBuilder.Build();
-        consumer.Subscribe(config.Topics);
+        consumer.Subscribe(descriptor.Topics);
 
-        LogStarted(logger, config.ConsumerGroup.Id, config.Topics);
+        LogStarted(logger, descriptor.Subscription.SubscriptionId, descriptor.Topics);
 
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -28,16 +30,16 @@ public sealed partial class KafkaConsumerHost(
 
                 var envelope = KafkaMessageMapper.ToEnvelope(consumeResult);
 
-                if (!pipeline.CanHandle(envelope.MessageType))
+                if (registry.TryGet(envelope.MessageType) is null)
                 {
                     consumer.Commit(consumeResult);
-                    LogSkipped(logger, envelope.MessageType, config.ConsumerGroup.Id);
+                    LogSkipped(logger, envelope.MessageType, descriptor.Subscription.SubscriptionId);
                     continue;
                 }
 
                 var result = await pipeline.ProcessAsync(
                     envelope,
-                    config.ConsumerGroup.Id,
+                    descriptor.Subscription.SubscriptionId,
                     stoppingToken);
 
                 if (result.ShouldDeadLetter)
@@ -58,18 +60,13 @@ public sealed partial class KafkaConsumerHost(
             }
             catch (ConsumeException ex)
             {
-                LogConsumeError(logger, ex, config.ConsumerGroup.Id);
+                LogConsumeError(logger, ex, descriptor.Subscription.SubscriptionId);
             }
         }
 
         consumer.Close();
-        LogStopped(logger, config.ConsumerGroup.Id);
+        LogStopped(logger, descriptor.Subscription.SubscriptionId);
     }
-
-    [LoggerMessage(LogLevel.Debug,
-        "Message type '{MessageType}' skipped — no handler registered in consumer group {ConsumerGroup}")]
-    static partial void LogSkipped(
-        ILogger logger, string MessageType, string ConsumerGroup);
 
     [LoggerMessage(LogLevel.Information,
         "Kafka consumer {ConsumerGroup} started, subscribing to topics: {Topics}")]
@@ -81,13 +78,18 @@ public sealed partial class KafkaConsumerHost(
     static partial void LogCommitted(
         ILogger logger, string MessageId);
 
-    [LoggerMessage(LogLevel.Error,
-        "Kafka consume error in consumer group {ConsumerGroup}")]
-    static partial void LogConsumeError(
-        ILogger logger, Exception ex, string ConsumerGroup);
-
     [LoggerMessage(LogLevel.Information,
         "Kafka consumer {ConsumerGroup} stopped")]
     static partial void LogStopped(
         ILogger logger, string ConsumerGroup);
+
+    [LoggerMessage(LogLevel.Warning,
+        "Message type '{MessageType}' skipped — no handler registered in consumer group {ConsumerGroup}")]
+    static partial void LogSkipped(
+        ILogger logger, string MessageType, string ConsumerGroup);
+
+    [LoggerMessage(LogLevel.Error,
+        "Kafka consume error in consumer group {ConsumerGroup}")]
+    static partial void LogConsumeError(
+        ILogger logger, Exception ex, string ConsumerGroup);
 }

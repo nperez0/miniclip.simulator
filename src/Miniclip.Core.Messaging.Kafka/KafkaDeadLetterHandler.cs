@@ -5,7 +5,7 @@ using Miniclip.Core.Extensions;
 namespace Miniclip.Core.Messaging.Kafka;
 
 public sealed partial class KafkaDeadLetterHandler(
-    IProducer<string, byte[]> producer,
+    IProducer<string, string> producer,
     ILogger<KafkaDeadLetterHandler> logger) : IDeadLetterHandler
 {
     public async Task HandleAsync(
@@ -33,10 +33,10 @@ public sealed partial class KafkaDeadLetterHandler(
             headers.Add(MessageHeaders.ExceptionMessage, Encoding.UTF8.GetBytes(exception.Message));
         }
 
-        var message = new Message<string, byte[]>
+        var message = new Message<string, string>
         {
             Key = envelope.MessageId,
-            Value = envelope.Payload.ToArray(),
+            Value = envelope.Payload,
             Headers = headers
         };
 

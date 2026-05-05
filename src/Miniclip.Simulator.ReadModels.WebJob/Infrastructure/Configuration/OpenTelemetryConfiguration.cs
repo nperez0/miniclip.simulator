@@ -1,4 +1,5 @@
-﻿using Miniclip.Core.Messaging.Kafka;
+using Miniclip.Core.Messaging.Kafka;
+using Miniclip.Core.Messaging.Pipeline.Inbound;
 using Miniclip.Core.OpenTelemetry.Extensions;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
@@ -24,18 +25,18 @@ public static class OpenTelemetryConfiguration
 
             services.ConfigureOpenTelemetryMeterProvider((sp, metrics) =>
             {
-                metrics.AddKafkaProducerInstrumentation<string, byte[]>();
+                metrics.AddKafkaProducerInstrumentation<string, string>();
 
-                foreach (var group in sp.GetServices<ConsumerGroup>())
-                    metrics.AddKafkaConsumerInstrumentation<string, byte[]>(group.Id);
+                foreach (var subscription in sp.GetServices<ConsumerSubscription>())
+                    metrics.AddKafkaConsumerInstrumentation<string, string>(subscription.SubscriptionId);
             });
 
             services.ConfigureOpenTelemetryTracerProvider((sp, tracing) =>
             {
-                tracing.AddKafkaProducerInstrumentation<string, byte[]>();
+                tracing.AddKafkaProducerInstrumentation<string, string>();
 
-                foreach (var group in sp.GetServices<ConsumerGroup>())
-                    tracing.AddKafkaConsumerInstrumentation<string, byte[]>(group.Id);
+                foreach (var subscription in sp.GetServices<ConsumerSubscription>())
+                    tracing.AddKafkaConsumerInstrumentation<string, string>(subscription.SubscriptionId);
             });
 
             return services;

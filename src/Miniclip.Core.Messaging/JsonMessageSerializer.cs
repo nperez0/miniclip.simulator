@@ -6,14 +6,14 @@ public sealed class JsonMessageSerializer(IMessageTypeRegistry registry) : IMess
 {
     private static readonly JsonSerializerOptions Options = new(JsonSerializerDefaults.Web);
 
-    public byte[] Serialize(object @event)
-        => JsonSerializer.SerializeToUtf8Bytes(@event, @event.GetType(), Options);
+    public string Serialize(object @event)
+        => JsonSerializer.Serialize(@event, @event.GetType(), Options);
 
-    public object Deserialize(string messageType, ReadOnlyMemory<byte> payload)
+    public object Deserialize(string messageType, string payload)
     {
         var type = registry.Resolve(messageType)
             ?? throw new InvalidOperationException($"Unknown message type '{messageType}'.");
 
-        return JsonSerializer.Deserialize(payload.Span, type, Options)!;
+        return JsonSerializer.Deserialize(payload, type, Options)!;
     }
 }

@@ -1,15 +1,20 @@
 using System.Collections.Frozen;
 using System.Reflection;
+using Miniclip.Core.Messaging;
 
 namespace Miniclip.Core.Messaging.Pipeline.Inbound;
 
 public sealed class MessageHandlerRegistry : IMessageHandlerRegistry
 {
     private readonly FrozenDictionary<string, CompiledMessageHandler> handlers;
-
+        
     internal MessageHandlerRegistry(IEnumerable<CompiledMessageHandler> compiled)
     {
-        handlers = compiled.ToFrozenDictionary(h => h.MessageType.FullName!);
+        var compiledMessageHandlers = compiled as CompiledMessageHandler[] ?? compiled.ToArray();
+
+        MessageHandlerRegistryGuard.Validate(compiledMessageHandlers);
+
+        handlers = compiledMessageHandlers.ToFrozenDictionary(h => h.MessageType.GetMessageTypeName());
     }
 
     public CompiledMessageHandler? TryGet(string messageTypeName) =>
@@ -26,7 +31,7 @@ public sealed class MessageHandlerRegistry : IMessageHandlerRegistry
         return (Func<object, object, IMessageContext, CancellationToken, Task<MessageHandlerResult>>)field.GetValue(null)!;
     }
 
-    // CLR generic type system acts as the cache — Invoke is compiled exactly once per (THandler, TMessage) pair.
+    // CLR generic type system acts as the cache - Invoke is compiled exactly once per (THandler, TMessage) pair.
     private static class HandlerInvoker<THandler, TMessage>
         where THandler : class, IMessageHandler<TMessage>
     {

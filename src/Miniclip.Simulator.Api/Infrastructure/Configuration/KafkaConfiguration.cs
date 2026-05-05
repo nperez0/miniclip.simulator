@@ -1,5 +1,7 @@
 using Miniclip.Core.Application.Configuration;
 using Miniclip.Core.Messaging.Kafka.Configuration;
+using Miniclip.Simulator.IntegrationEvents;
+using Miniclip.Simulator.IntegrationEvents.V1;
 
 namespace Miniclip.Simulator.Api.Infrastructure.Configuration;
 
@@ -14,7 +16,10 @@ public static class KafkaConfiguration
             services.AddIntegrationEventMappers();
             services.AddIntegrationEventSerializer();
 
-            services.AddOutboundKafkaInfrastructure(bootstrapServers);
+            services.AddOutboundKafkaInfrastructure(bootstrapServers, topics =>
+            {
+                topics.MapTopic<MatchPlayedIntegrationEvent>(SimulatorTopics.Group);
+            });
 
             return services;
         }

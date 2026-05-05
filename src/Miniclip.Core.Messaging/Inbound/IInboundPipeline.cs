@@ -6,6 +6,4 @@ public interface IInboundPipeline
         IMessageEnvelope envelope,
         string subscriptionId,
         CancellationToken cancellationToken);
-
-    bool CanHandle(string messageType);
 }

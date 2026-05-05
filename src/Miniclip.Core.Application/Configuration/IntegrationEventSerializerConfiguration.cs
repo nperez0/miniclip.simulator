@@ -11,10 +11,11 @@ public static class IntegrationEventSerializerConfiguration
 
         var types = AssemblyScanner
             .GetImplementationsOf<IIntegrationEvent>()
-            .ToDictionary(t => t.Name, StringComparer.Ordinal);
+            .ToDictionary(
+                t => t.GetMessageTypeName(),
+                StringComparer.Ordinal);
 
         services.AddSingleton<IMessageTypeRegistry>(new MessageTypeRegistry(types));
-
         services.AddSingleton<IMessageSerializer, JsonMessageSerializer>();
 
         return services;

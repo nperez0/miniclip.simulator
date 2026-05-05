@@ -1,18 +1,19 @@
 using Miniclip.Core.Extensions;
+using Miniclip.Core.Messaging;
 
 namespace Miniclip.Core.Messaging.Pipeline.Outbound;
 
 public sealed class OutboundPipeline(
-    IEnumerable<IOutboundMiddleware> middlewares, 
-    IEventDispatcher dispatcher) 
+    IEnumerable<IOutboundMiddleware> middlewares,
+    IEventDispatcher dispatcher)
     : IEventBus
 {
     private readonly IOutboundMiddleware[] middlewares = middlewares.ToArray();
 
     public async Task PublishAsync(
-        object @event, 
-        string? messageGroupId = null, 
-        IReadOnlyDictionary<string, string?>? headers = null, 
+        object @event,
+        string? messageGroupId = null,
+        IReadOnlyDictionary<string, string?>? headers = null,
         CancellationToken cancellationToken = default)
     {
         var envelope = new OutboundEnvelope(@event, messageGroupId, GetDefaultHeaders(@event, messageGroupId, headers));
@@ -34,7 +35,7 @@ public sealed class OutboundPipeline(
         var envelopeHeaders = headers?.ToDictionary() ?? new Dictionary<string, string?>();
 
         envelopeHeaders[MessageHeaders.MessageId] = Guid.NewGuid().ToString();
-        envelopeHeaders[MessageHeaders.MessageType] = @event.GetType().FullName!;
+        envelopeHeaders[MessageHeaders.MessageType] = @event.GetType().GetMessageTypeName();
         envelopeHeaders[MessageHeaders.MessageGroupId] = messageGroupId;
         envelopeHeaders[MessageHeaders.OriginTimestamp] = DateTimeOffset.UtcNow.ToRoundTripString();
 

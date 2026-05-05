@@ -1,11 +1,10 @@
 using System.Text;
-using Miniclip.Core.Extensions;
 
 namespace Miniclip.Core.Messaging.Kafka;
 
 public static class KafkaMessageMapper
 {
-    public static MessageEnvelope ToEnvelope(ConsumeResult<string, byte[]> result)
+    public static MessageEnvelope ToEnvelope(ConsumeResult<string, string> result)
     {
         var headers = result.Message.Headers
             .GroupBy(h => h.Key)

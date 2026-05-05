@@ -1,6 +1,6 @@
-
 namespace Miniclip.Simulator.IntegrationEvents.V1;
 
+[MessageType("miniclip.simulator.match-played.v1")]
 public sealed record MatchPlayedIntegrationEvent(
     Guid GroupId,
     string GroupName,

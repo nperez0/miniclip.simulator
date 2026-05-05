@@ -1,4 +1,5 @@
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Miniclip.Core.Application.IntegrationEvents;
 using Miniclip.Core.Reflection;
 
 namespace Miniclip.Core.Application.Configuration;
@@ -9,7 +10,7 @@ public static class IntegrationEventMapperRegistryConfiguration
     {
         AssemblyLoader.EnsureReferencedAssembliesLoaded();
 
-        var mapperInterface = typeof(IntegrationEvents.IIntegrationEventMapper<>);
+        var mapperInterface = typeof(IIntegrationEventMapper<,>);
 
         var entries = AssemblyScanner
             .GetClosedImplementationsOf(mapperInterface)
@@ -17,16 +18,19 @@ public static class IntegrationEventMapperRegistryConfiguration
             {
                 var (mapperType, typeArgs) = x;
                 var domainEventType = typeArgs[0];
+                var integrationEventType = typeArgs[1];
+                var integrationEventMessageTypeName = integrationEventType.GetMessageTypeName();
                 var mapperInstance = Activator.CreateInstance(mapperType)!;
-                var method = mapperType.GetMethod(nameof(IntegrationEvents.IIntegrationEventMapper<IDomainEvent>.Map))!;
+                var method = mapperType.GetMethod(nameof(IIntegrationEventMapper<,>.Map))!;
 
-                return (domainEventType, (Func<IDomainEvent, IIntegrationEvent>)Invoke);
+                return (domainEventType, integrationEventMessageTypeName, (Func<IDomainEvent, IIntegrationEvent>)Invoke);
 
                 IIntegrationEvent Invoke(IDomainEvent domainEvent) => (IIntegrationEvent)method.Invoke(mapperInstance, [domainEvent])!;
             });
 
-        services.AddSingleton<IntegrationEvents.IIntegrationEventMapperRegistry>(
-            new IntegrationEvents.IntegrationEventMapperRegistry(entries));
+        var registry = new IntegrationEventMapperRegistry(entries);
+
+        services.AddSingleton<IIntegrationEventMapperRegistry>(registry);
 
         return services;
     }

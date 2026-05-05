@@ -1,83 +1,61 @@
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 namespace Miniclip.Core.Messaging.Pipeline.Inbound;
 
 public sealed class MessagePipeline(
+    IEnumerable<IInboundMiddleware> middlewares,
     IMessageHandlerRegistry registry,
     IMessageSerializer serializer,
-    IServiceScopeFactory scopeFactory,
-    ILogger<MessagePipeline> logger) : IInboundPipeline
+    IServiceScopeFactory scopeFactory) : IInboundPipeline
 {
-    public bool CanHandle(string messageType) =>
-        registry.TryGet(messageType) is not null;
+    private readonly IInboundMiddleware[] middlewares = middlewares.ToArray();
 
     public async Task<PipelineResult> ProcessAsync(
         IMessageEnvelope envelope,
         string subscriptionId,
         CancellationToken cancellationToken)
     {
-        var context = new MessageContext(
-            envelope.MessageId,
-            subscriptionId,
-            envelope.Headers);
+        var compiled = registry.TryGet(envelope.MessageType);
 
-        // Create a single scope for the entire message -- middlewares and handler share it.
-        using var scope = scopeFactory.CreateScope();
-        var services = scope.ServiceProvider;
-        var scopedMiddlewares = services.GetServices<IInboundMiddleware>().ToArray();
+        if (compiled is null)
+            return new PipelineResult(IsSuccess: true, ShouldDeadLetter: false, ErrorMessage: null);
 
-        // Build the middleware chain -- first registered is outermost.
-        var handler = () => InvokeHandlerAsync(envelope, context, services, cancellationToken);
+        await using var scope = scopeFactory.CreateAsyncScope();
 
-        foreach (var middleware in scopedMiddlewares.Reverse())
+        var handler = scope.ServiceProvider.GetRequiredService(compiled.HandlerType);
+        var message = serializer.Deserialize(envelope.MessageType, envelope.Payload);
+        var context = new MessageContext(envelope.MessageId, subscriptionId, envelope.Headers);
+
+        var pipeline = () => compiled.InvokeAsync(handler, message, context, cancellationToken);
+
+        foreach (var middleware in middlewares.Reverse())
         {
-            var next = handler;
+            var next = pipeline;
             var current = middleware;
-            handler = () => current.InvokeAsync(envelope, context, next, cancellationToken);
+            pipeline = () => current.InvokeAsync(envelope, context, next, cancellationToken);
         }
 
-        var result = await handler();
-
-        return new PipelineResult(
-            result.IsSuccess,
-            result is { IsSuccess: false, ShouldRetry: false },
-            result.ErrorMessage);
-    }
-
-    private async Task<MessageHandlerResult> InvokeHandlerAsync(
-        IMessageEnvelope envelope,
-        IMessageContext context,
-        IServiceProvider services,
-        CancellationToken cancellationToken)
-    {
         try
         {
-            var handler = registry.TryGet(envelope.MessageType);
+            var result = await pipeline();
 
-            if (handler is null)
-            {
-                var errorMsg = $"No handler registered for message type {envelope.MessageType}";
-                logger.LogWarning("{Error}", errorMsg);
-                return MessageHandlerResult.PermanentFailure(errorMsg);
-            }
-
-            var message = serializer.Deserialize(envelope.MessageType, envelope.Payload);
-
-            var handlerInstance = services.GetRequiredService(handler.HandlerType);
-
-            return await handler.InvokeAsync(handlerInstance, message, context, cancellationToken);
+            return result.IsSuccess
+                ? new PipelineResult(IsSuccess: true, ShouldDeadLetter: false, ErrorMessage: null)
+                : new PipelineResult(IsSuccess: false, ShouldDeadLetter: true, ErrorMessage: result.ErrorMessage);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error invoking handler for message {MessageId} ({MessageType})",
-                envelope.MessageId, envelope.MessageType);
-            return MessageHandlerResult.PermanentFailure(ex.Message);
+            return new PipelineResult(IsSuccess: false, ShouldDeadLetter: true, ErrorMessage: ex.Message);
         }
     }
 }
 
-internal sealed record MessageContext(
-    string MessageId,
-    string SubscriptionId,
-    IReadOnlyDictionary<string, string> Headers) : IMessageContext;
+file sealed class MessageContext(
+    string messageId,
+    string subscriptionId,
+    IReadOnlyDictionary<string, string> headers) : IMessageContext
+{
+    public string MessageId { get; } = messageId;
+    public string SubscriptionId { get; } = subscriptionId;
+    public IReadOnlyDictionary<string, string> Headers { get; } = headers;
+}

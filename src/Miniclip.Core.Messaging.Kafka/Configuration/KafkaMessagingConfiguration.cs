@@ -1,7 +1,8 @@
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Miniclip.Core.Messaging.Outbound;
 using Miniclip.Core.Messaging.Pipeline.Configuration;
+using Miniclip.Core.Messaging.Pipeline.Inbound;
 
 namespace Miniclip.Core.Messaging.Kafka.Configuration;
 
@@ -9,70 +10,81 @@ public static class KafkaMessagingConfiguration
 {
     extension(IServiceCollection services)
     {
-        public IServiceCollection AddFullKafkaInfrastructure(
-            string bootstrapServers,
-            Action<PipelineOptions>? configurePipeline = null)
+        public IServiceCollection AddInboundKafkaInfrastructure(Action<PipelineOptions>? configurePipeline = null)
         {
-            var config = new ProducerConfig
-            {
-                BootstrapServers = bootstrapServers
-            };
-
             services.AddInboundPipeline(configurePipeline);
-            services.AddOutboundPipeline();
-
             services.AddMessageHandlers();
-
-            services.AddSingleton(new InstrumentedProducerBuilder<string, byte[]>(config));
-
-            services.AddSingleton<IProducer<string, byte[]>>(sp =>
-                sp.GetRequiredService<InstrumentedProducerBuilder<string, byte[]>>().Build());
 
             services.AddSingleton<IDeadLetterHandler, KafkaDeadLetterHandler>();
 
+            return services;
+        }
+
+        public IServiceCollection AddOutboundKafkaInfrastructure(
+            string bootstrapServers, 
+            Action<OutboundTopicMappingBuilder>? configureTopics = null)
+        {
+            var config = new ProducerConfig { BootstrapServers = bootstrapServers };
+
+            services.AddOutboundPipeline();
+
+            services.AddSingleton(new InstrumentedProducerBuilder<string, string>(config));
+            services.AddSingleton<IProducer<string, string>>(sp =>
+                sp.GetRequiredService<InstrumentedProducerBuilder<string, string>>().Build());
+
+            var mappingBuilder = new OutboundTopicMappingBuilder();
+            configureTopics?.Invoke(mappingBuilder);
+            var topicMap = mappingBuilder.Build();
+
+            services.AddSingleton<IOutboundTopicRegistry>(new OutboundTopicRegistry(topicMap));
+            services.AddSingleton<IDestinationResolver, KafkaDestinationResolver>();
             services.AddScoped<IEventDispatcher, KafkaEventDispatcher>();
 
             return services;
         }
 
-        public IServiceCollection AddOutboundKafkaInfrastructure(string bootstrapServers)
+        public IServiceCollection AddKafkaConsumer(
+            string bootstrapServers,
+            Action<KafkaConsumerSubscriptionBuilder> configure)
         {
-            var config = new ProducerConfig
+            var builder = new KafkaConsumerSubscriptionBuilder();
+            configure(builder);
+            var descriptor = builder.Build();
+
+            var consumerConfig = new ConsumerConfig
             {
-                BootstrapServers = bootstrapServers
+                BootstrapServers = bootstrapServers,
+                GroupId = descriptor.Subscription.SubscriptionId,
+                AutoOffsetReset = AutoOffsetReset.Earliest,
+                EnableAutoCommit = false
             };
 
-            services.AddOutboundPipeline();
+            // Registered as singleton so OTel can enumerate all descriptors
+            // via IEnumerable<ConsumerSubscription> to wire consumer instrumentation.
+            services.AddSingleton(descriptor.Subscription);
 
-            services.AddSingleton(new InstrumentedProducerBuilder<string, byte[]>(config));
+            // One InstrumentedConsumerBuilder per consumer group, keyed by subscription ID
+            // so OTel resolves it via AddKafkaConsumerInstrumentation(subscriptionId).
+            var consumerBuilder = new InstrumentedConsumerBuilder<string, string>(consumerConfig);
+            services.AddKeyedSingleton(descriptor.Subscription.SubscriptionId, consumerBuilder);
 
-            services.AddSingleton<IProducer<string, byte[]>>(sp =>
-                sp.GetRequiredService<InstrumentedProducerBuilder<string, byte[]>>().Build());
-            
-            services.AddSingleton<IEventDispatcher, KafkaEventDispatcher>();
-
-            return services;
-        }
-
-        public IServiceCollection AddKafkaConsumer(IKafkaConsumerConfig config)
-        {
-            // One builder per consumer group — keyed so OTel can resolve it via
-            // AddKafkaConsumerInstrumentation(group.Id) in the OTel configuration.
-            var consumerBuilder = new InstrumentedConsumerBuilder<string, byte[]>(config.ConsumerConfig);
-            services.AddKeyedSingleton(config.ConsumerGroup.Id, consumerBuilder);
-            services.AddSingleton(config.ConsumerGroup);
-
-            // Register ConsumerCount hosted service instances, each sharing the same
-            // builder but calling .Build() independently — safe because the builder
-            // is stateless config; each .Build() produces a fresh IConsumer.
-            for (var i = 0; i < config.ConsumerCount; i++)
+            for (var i = 0; i < descriptor.Subscription.ConsumerCount; i++)
             {
-                services.AddHostedService(sp => new KafkaConsumerHost(
-                    config,
-                    sp.GetRequiredKeyedService<InstrumentedConsumerBuilder<string, byte[]>>(config.ConsumerGroup.Id),
-                    sp.GetRequiredService<IInboundPipeline>(),
-                    sp.GetRequiredService<IDeadLetterHandler>(),
-                    sp.GetRequiredService<ILogger<KafkaConsumerHost>>()));
+                services.AddHostedService(sp =>
+                {
+                    var allHandlers = sp.GetServices<CompiledMessageHandler>();
+                    var registry = PipelineConfiguration.BuildFilteredRegistry(
+                        descriptor.Subscription,
+                        allHandlers);
+
+                    return new KafkaConsumerHost(
+                        descriptor,
+                        consumerBuilder,
+                        sp.GetRequiredService<IInboundPipeline>(),
+                        registry,
+                        sp.GetRequiredService<IDeadLetterHandler>(),
+                        sp.GetRequiredService<ILogger<KafkaConsumerHost>>());
+                });
             }
 
             return services;

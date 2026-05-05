@@ -26,7 +26,11 @@ public static class PipelineConfiguration
             services.AddSingleton<IInboundPipeline, MessagePipeline>();
 
             services.AddSingleton<IMessageHandlerRegistry>(sp =>
-                new MessageHandlerRegistry(sp.GetServices<CompiledMessageHandler>()));
+            {
+                var handlers = sp.GetServices<CompiledMessageHandler>().ToArray();
+                
+                return new MessageHandlerRegistry(handlers);
+            });
 
             return services;
         }
@@ -104,10 +108,25 @@ public static class PipelineConfiguration
             return services;
         }
     }
+
+    // Builds a registry scoped to only the message types declared in the subscription.
+    // Called by transport-specific wiring (e.g. AddKafkaConsumer) to give each
+    // consumer host its own filtered view of the global handler pool.
+    public static IMessageHandlerRegistry BuildFilteredRegistry(
+        ConsumerSubscription subscription,
+        IEnumerable<CompiledMessageHandler> allHandlers)
+    {
+        var declared = subscription.MessageTypes.ToHashSet();
+
+        var filtered = allHandlers
+            .Where(h => declared.Contains(h.MessageType))
+            .ToArray();
+
+        return new MessageHandlerRegistry(filtered);
+    }
 }
 
 public class PipelineOptions
 {
     public IRetryPolicy RetryPolicy { get; set; } = new ExponentialBackoffRetryPolicy(maxAttempts: 3);
 }
-

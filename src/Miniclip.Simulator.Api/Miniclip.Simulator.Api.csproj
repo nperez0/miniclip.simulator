@@ -43,6 +43,7 @@
     <ProjectReference Include="..\Miniclip.Simulator.Infrastructure.Read\Miniclip.Simulator.Infrastructure.Read.csproj" />
     <ProjectReference Include="..\Miniclip.Simulator.ReadModels\Miniclip.Simulator.ReadModels.csproj" />
     <ProjectReference Include="..\Miniclip.Simulator.Domain\Miniclip.Simulator.Domain.csproj" />
+    <ProjectReference Include="..\Miniclip.Simulator.IntegrationEvents\Miniclip.Simulator.IntegrationEvents.csproj" />
     <ProjectReference Include="..\Miniclip.Core.Application\Miniclip.Core.Application.csproj" />
   </ItemGroup>
 
