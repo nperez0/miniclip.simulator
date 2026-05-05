@@ -1,4 +1,4 @@
-# Event Sourcing Migration Plan
+﻿# Event Sourcing Migration Plan
 
 ## Goal
 
@@ -64,6 +64,8 @@ Key decisions:
 
 ## Phase 3 — Kafka: Event Bus
 
+> ⚠️ **Implementation diverged from original design.** `DomainEventPublisherBehavior` was merged into `EventStoreCommandBehavior`. `KafkaEventBus` was replaced by `KafkaEventDispatcher` + `OutboundPipeline`. `IEventBus` lives in `Miniclip.Core.Messaging`. Integration events (`MatchPlayedIntegrationEvent`) are the Kafka contract — domain events are not sent directly.
+
 **Goal:** Replace in-process Mediator publishing with Kafka.
 
 Key decisions:
@@ -83,10 +85,10 @@ Key decisions:
 **Goal:** Projections become Kafka consumer hosted services; `ReadModelUnitOfWorkBehavior` removed.
 
 Key decisions:
-- `ProjectionsConsumerService<TEvent>` is a `BackgroundService` consuming a single topic
+- `KafkaConsumerHost` is a `BackgroundService` consuming registered topics; `ProjectionMessageHandler<TEvent>` handles individual message types
 - Idempotency: `ProcessedEvents` table records `event-id` + consumer group ID before commit
 - `IServiceScopeFactory` for per-message DI scope — avoids captive dependency with `DbContext`
-- Consumer group ID: `simulator-projections-{aggregate}` (e.g. `simulator-projections-group`)
+- Consumer group ID: `simulator-readmodels-webjob-group` (single group for all projections in the WebJob)
 
 - [x] `GroupStandingsProjection` and `MatchResultProjection` driven by Kafka consumers
 - [x] `ReadModelUnitOfWorkBehavior` removed from the Mediator pipeline
@@ -104,7 +106,7 @@ Key deliverables:
 - **Retry policy:** `ExponentialBackoffRetryPolicy` (configurable max attempts and base delay)
 - **Dead-letter routing:** Permanently failed messages passed to `OnDeadLetterAsync` and committed
 - **Idempotency correctness:** Duplicate-check before deserialization
-- **`KafkaConsumerService` refactor:** Consumer built internally via abstract `BuildConsumer(ConsumerConfig)`; `IServiceScopeFactory` injected for per-message scoping; factory lambda in `AddHostedService` eliminated
+- **`KafkaConsumerHost` refactor:** Consumer built and owned internally via `KafkaConsumerDescriptor` + `ConsumerBuilder<string,string>`; `IServiceScopeFactory` injected for per-message scoping via `ProjectionMessageHandler<TEvent>`
 - **Configuration split:** `DatabaseConfiguration` decomposed into `ReadModelsConfiguration`, `EventStoreDbConfiguration`, `KafkaConfiguration`
 - **Integration tests:** Full projection pipeline tested end-to-end against an in-memory read DB
 - **Team migration:** `Team` aggregate moved from MySQL to EventStoreDB; `TeamDataSeeder` seeds 10 teams on startup; all legacy write-side tables (Groups, GroupTeams, Matches, Teams) dropped via migration
@@ -112,6 +114,6 @@ Key deliverables:
 - [x] Integration tests cover the full projection pipeline
 - [x] Dead-letter routing on permanent failure
 - [x] Exponential backoff retry policy
-- [x] `KafkaConsumerService` owns its own `IConsumer` lifecycle
+- [x] `KafkaConsumerHost` owns its own `IConsumer` lifecycle
 - [x] Scoped services resolved per message via `IServiceScopeFactory`
 - [x] `Team` stored in EventStoreDB; MySQL write-side tables fully removed

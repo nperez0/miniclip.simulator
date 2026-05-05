@@ -70,9 +70,9 @@ Registration order (outermost first):
 | `Miniclip.Core.EF` | EF Infrastructure | Generic EF Core base context |
 | `Miniclip.Core.EventSourcing` | Event Sourcing Abstractions | `IEventStore<T>`, `IEventStoreSession`, `AggregateRepository<T>` |
 | `Miniclip.Core.EventSourcing.EventStoreDB` | Event Sourcing Infrastructure | `EventStoreDbEventStore<T>`, `EventStoreSession`, `SystemTextJsonEventSerializer` |
-| `Miniclip.Core.Messaging` | Messaging Abstractions | `IEventBus`, `IMessagePipeline`, `IMessageHandler<T>`, `IMessageMiddleware`, `IMessageSerializer`, `IMessageContext`, `IMessageEnvelope`, `IRetryPolicy`, `IDeadLetterHandler`, `ExponentialBackoffRetryPolicy`, `MessageHeaders`, `PipelineResult`, `MessageHandlerResult` |
-| `Miniclip.Core.Messaging.Pipeline` | Messaging Pipeline | `MessagePipeline`, `TracingMiddleware`, `LoggingMiddleware`, `RetryMiddleware`, `IMessageHandlerRegistry`, `MessageHandlerRegistry`, `CompiledMessageHandler` |
-| `Miniclip.Core.Messaging.Kafka` | Kafka Infrastructure | `KafkaConsumerHost`, `KafkaEventBus`, `KafkaDeadLetterHandler`, `TopicNaming`, `ConsumerGroupIdNaming`, `KafkaConsumerConfig`, `KafkaMessageMapper`, `KafkaConstants` |
+| `Miniclip.Core.Messaging` | Messaging Abstractions | `IEventBus`, `IInboundPipeline`, `IMessageHandler<T>`, `IInboundMiddleware`, `IMessageSerializer`, `IMessageContext`, `IMessageEnvelope`, `IRetryPolicy`, `IDeadLetterHandler`, `ExponentialBackoffRetryPolicy`, `MessageHeaders`, `PipelineResult`, `MessageHandlerResult` |
+| `Miniclip.Core.Messaging.Pipeline` | Messaging Pipeline | `MessagePipeline` (inbound), `OutboundPipeline`, `TracingMiddleware`, `LoggingMiddleware`, `RetryMiddleware`, `PropagationMiddleware`, `IMessageHandlerRegistry`, `MessageHandlerRegistry`, `CompiledMessageHandler` |
+| `Miniclip.Core.Messaging.Kafka` | Kafka Infrastructure | `KafkaConsumerHost`, `KafkaEventDispatcher`, `KafkaDeadLetterHandler`, `KafkaMessageMapper`, `KafkaConstants`, `KafkaDestinationResolver`, `IOutboundTopicRegistry`, `KafkaConsumerDescriptor` |
 | `Miniclip.Core.OpenTelemetry` | Observability | `OpenTelemetryActivity`, `OpenTelemetryMetrics`, OTel builder extension methods |
 | `Miniclip.Core.ServiceDefaults` | Service Defaults | `SerilogConfiguration.AddStructuredLogging()` — Serilog with OTLP sink |
 | `Miniclip.Simulator.Domain` | Domain | `Group`, `Team` aggregates, domain services, value objects |
@@ -82,9 +82,8 @@ Registration order (outermost first):
 | `Miniclip.Simulator.ReadModels.Projections` | Projections | `ProjectionMessageHandler<TEvent>`, `GroupStandingsProjection`, `MatchResultProjection`, `RecalculatePositionService` |
 | `Miniclip.Simulator.IntegrationEvents` | Integration Events | `MatchPlayedIntegrationEvent`, `MatchPlayedIntegrationEventMapper` — versioned integration event contracts published to Kafka |
 | `Miniclip.Simulator.Infrastructure.Read` | Infrastructure – Read | `SimulatorReadDbContext`, repository implementations |
-| `Miniclip.Simulator.Infrastructure.Write` | Infrastructure – Write | EF migrations only (empty model; legacy aggregate tables dropped) |
 | `Miniclip.Simulator.Api` | API | `GroupsController`, `CorrelationIdMiddleware`, configuration wiring, `TeamDataSeeder` |
-| `Miniclip.Simulator.ReadModels.WebJob` | ReadModels Worker | Worker Service; hosts all `ProjectionsConsumerService<TAggregate>` instances; runs read DB migrations |
+| `Miniclip.Simulator.ReadModels.WebJob` | ReadModels Worker | Worker Service; hosts `KafkaConsumerHost` instances; `ProjectionMessageHandler<TEvent>` handles each message type; runs read DB migrations |
 | `Miniclip.Simulator.AppHost` | Orchestration | .NET Aspire AppHost; provisions MySQL, KurrentDB, Kafka, API, WebJob |
 
 ---
@@ -126,16 +125,16 @@ All operations return `Result` or `Result<T>` — **never throw exceptions for b
 - Aggregates enqueue events via `Enqueue(IDomainEvent)` AND set their state directly in the constructor/factory.
 - `Apply(IDomainEvent)` handles replay from KurrentDB only — not called during normal command processing.
 - Events are committed to **KurrentDB** and published to **Kafka** by `EventStoreCommandBehavior` (single behavior handles both steps). Domain events are not published directly to Kafka; instead, `CommittedEventPublisher` maps them to **integration events** via `IIntegrationEventMapperRegistry`. Only domain events that have a registered `IIntegrationEventMapper<T>` are forwarded to Kafka. This decouples the internal domain model from the external contract (`Miniclip.Simulator.IntegrationEvents`).
-- `KafkaConsumerHost` (in the **WebJob**) is a `BackgroundService` that subscribes to a Kafka topic and forwards each message through the `IMessagePipeline` (middleware chain: `TracingMiddleware` → `LoggingMiddleware` → `RetryMiddleware`).
+- `KafkaConsumerHost` (in the **WebJob**) is a `BackgroundService` that subscribes to a Kafka topic and forwards each message through the `IInboundPipeline` (middleware chain: `TracingMiddleware` → `LoggingMiddleware` → `RetryMiddleware`).
 - `ProjectionMessageHandler<TEvent>` (registered as `IMessageHandler<TEvent>`) creates a **fresh DI scope per message**, checks idempotency, then dispatches to ordered projection handlers via `IProjectionDispatcher`.
 - Idempotency: the `ProcessedEvents` table records each `event-id` + consumer group ID before committing.
 
 ### Kafka Topic & Consumer Group Naming
 - **Topics:** `simulator.{aggregate-kebab-case}` — e.g. `Group` → `simulator.group`
-- **Consumer groups:** `simulator-projections-{aggregate}` — e.g. `simulator-projections-group`
+- **Consumer groups:** a single group `simulator-readmodels-webjob-group` handles all projections in the WebJob
 
 ### Messaging Pipeline & Kafka Consumer Lifecycle
-`KafkaConsumerHost` (`BackgroundService`) subscribes to one or more Kafka topics and processes each message through `IMessagePipeline`. The pipeline is a middleware chain registered outermost-first:
+`KafkaConsumerHost` (`BackgroundService`) subscribes to one or more Kafka topics and processes each message through `IInboundPipeline`. The pipeline is a middleware chain registered outermost-first:
 1. `TracingMiddleware` — starts an OTel span per message; tags `message-id`, `message-type`, `subscription-id`, and `correlation-id`; records errors on the span.
 2. `LoggingMiddleware` — logs message receipt and outcome.
 3. `RetryMiddleware` — retries transient failures using `IRetryPolicy` (`ExponentialBackoffRetryPolicy` by default); permanently fails messages that exhaust all attempts.
@@ -187,7 +186,7 @@ Only the **read side** uses EF Core (`SimulatorReadDbContext`). Read DB migratio
 | `Miniclip.Simulator.ReadModels.Projections.UnitTests` | `ProjectionMessageHandler` idempotency; projection handlers |
 | `Miniclip.Simulator.ReadModels.Projections.IntegrationTests` | Full projection pipeline against a real read DB |
 | `Miniclip.Simulator.ReadModels.WebJob.UnitTests` | WebJob infrastructure configuration (health checks, etc.) |
-| `Miniclip.Core.Kafka.UnitTests` | _(empty — tests migrated to messaging projects)_ |
+| `Miniclip.Core.Messaging.Kafka.UnitTests` | _(empty — tests migrated to messaging projects)_ |
 | `Miniclip.Simulator.Api.UnitTests` | Controller / result extension behaviour |
 | `Miniclip.Simulator.Common.Tests` | Shared test helpers and builders |
 | `Miniclip.Core.Tests` | Shared kernel tests |

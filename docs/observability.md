@@ -61,8 +61,8 @@ Activity.Current.NoticeError(failed.Error.Code);
 | ASP.NET Core | `AddAspNetCoreInstrumentation()` (API only) |
 | HTTP client | `AddHttpClientInstrumentation()` (API only) |
 | KurrentDB client | `AddKurrentDBClientInstrumentation()` (API only) |
-| Kafka producer | `AddKafkaProducerInstrumentation()` (API only) |
-| Kafka consumer | `AddKafkaConsumerInstrumentation()` (WebJob only) |
+| Kafka producer | `AddKafkaProducerInstrumentation<string, string>()` (API only) |
+| Kafka consumer | `AddKafkaConsumerInstrumentation<string, string>()` (WebJob only) |
 | MySQL (MySqlData) | `AddMySqlData()` |
 | MySQL (MySqlConnector) | `AddMySqlConnector()` |
 
@@ -81,11 +81,7 @@ All traces are exported via OTLP (`AddOtlpExporter()`).
 | `kafka.retry.attempts` | Counter | Total message processing retry attempts |
 | `kafka.messages.failed` | Counter | Messages that permanently failed after all retries |
 
-Usage inside `KafkaConsumerService`:
-```csharp
-OpenTelemetryMetrics.RecordRetryAttempt();   // on each transient failure
-OpenTelemetryMetrics.RecordMessageFailed();  // when MaxAttempts exhausted
-```
+> The `Miniclip.Simulator.Kafka` meter name is defined in `OpenTelemetryConstants.Metrics.SimulatorMetricName` and registered via `AddSimulator()` in both the API and WebJob.
 
 ### Instrumented meters
 
@@ -94,8 +90,8 @@ OpenTelemetryMetrics.RecordMessageFailed();  // when MaxAttempts exhausted
 | `Miniclip.Simulator.Kafka` (custom) | `AddSimulator()` |
 | ASP.NET Core | `AddAspNetCoreInstrumentation()` (API only) |
 | HTTP client | `AddHttpClientInstrumentation()` (API only) |
-| Kafka producer | `AddKafkaProducerInstrumentation()` (API only) |
-| Kafka consumer | `AddKafkaConsumerInstrumentation()` (WebJob only) |
+| Kafka producer | `AddKafkaProducerInstrumentation<string, string>()` (API only) |
+| Kafka consumer | `AddKafkaConsumerInstrumentation<string, string>()` (WebJob only) |
 
 All metrics are exported via OTLP (`AddOtlpExporter()`).
 
@@ -113,13 +109,13 @@ services.AddOpenTelemetry()
         .AddAspNetCoreInstrumentation()
         .AddHttpClientInstrumentation()
         .AddOtlpExporter()
-        .AddKafkaProducerInstrumentation<string, byte[]>()
+        .AddKafkaProducerInstrumentation<string, string>()
         .AddSimulator())
     .WithTracing(t => t
         .AddAspNetCoreInstrumentation()
         .AddHttpClientInstrumentation()
         .AddOtlpExporter()
-        .AddKafkaProducerInstrumentation<string, byte[]>()
+        .AddKafkaProducerInstrumentation<string, string>()
         .AddMySqlData()
         .AddMySqlConnector()
         .AddKurrentDBClientInstrumentation()
@@ -132,14 +128,16 @@ services.AddOpenTelemetry()
 services.AddOpenTelemetry()
     .WithMetrics(m => m
         .AddOtlpExporter()
-        .AddKafkaConsumerInstrumentation<string, byte[]>(TopicNaming.ForAggregate<Group>())
         .AddSimulator())
     .WithTracing(t => t
         .AddOtlpExporter()
-        .AddKafkaConsumerInstrumentation<string, byte[]>(TopicNaming.ForAggregate<Group>())
         .AddMySqlData()
         .AddMySqlConnector()
         .AddSimulator());
+
+// Kafka instrumentation is wired dynamically per registered ConsumerSubscription:
+// services.ConfigureOpenTelemetryMeterProvider((sp, m) => ...)
+// services.ConfigureOpenTelemetryTracerProvider((sp, t) => ...)
 ```
 
 ---

@@ -132,7 +132,7 @@ Program.cs         Host builder entry point (AddStructuredLogging)
 The WebJob starts before the API in Aspire (`WaitFor(webjob)`):
 1. Runs EF Core read-DB migrations via `host.InitializeDatabases()`.
 2. Registers `KafkaConsumerHost` (for `Group`) as a hosted service.
-3. On `ExecuteAsync`, the host subscribes to `simulator.group` and processes each message through the `IMessagePipeline`.
+3. On `ExecuteAsync`, the host subscribes to `simulator.group` and processes each message through the `IInboundPipeline`.
 
 ### Orchestration — `Miniclip.Simulator.AppHost`
 
@@ -207,7 +207,7 @@ EventStoreCommandBehavior
         ▼
 KafkaConsumerHost  (WebJob — BackgroundService)
   ├── receives message from simulator.group topic
-  ├── IMessagePipeline.ProcessAsync(envelope, consumerGroupId)
+  ├── IInboundPipeline.ProcessAsync(envelope, context)
   │     ├── TracingMiddleware   → starts OTel span
   │     ├── LoggingMiddleware   → logs receipt
   │     └── RetryMiddleware     → wraps handler with exponential back-off

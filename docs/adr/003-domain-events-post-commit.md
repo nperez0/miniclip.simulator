@@ -12,7 +12,7 @@ Status: **Superseded by EventStoreDB + Kafka (Phase 3/4)** | Date: 2026-02
 
 1. `EventStoreCommandBehavior` calls `IEventStoreSession.CommitAsync()` — appends events to KurrentDB atomically.
 2. `EventStoreCommandBehavior` then calls `ICommittedEventPublisher.PublishAsync()` for each committed event. `CommittedEventPublisher` maps domain events to integration events via `IIntegrationEventMapperRegistry` and publishes them to Kafka via `IEventBus`. Only domain events with a registered `IIntegrationEventMapper<T>` are forwarded; the rest are silently skipped.
-3. `ProjectionsConsumerService<TAggregate>` (in the ReadModels WebJob) consumes each event from Kafka and updates the read DB in a separate transaction, with idempotency via the `ProcessedEvents` table.
+3. `KafkaConsumerHost` (in the ReadModels WebJob) consumes each event from Kafka and passes it through the inbound pipeline to `ProjectionMessageHandler<TEvent>`, which updates the read DB in a separate transaction with idempotency via the `ProcessedEvents` table.
 
 ## Consequences
 

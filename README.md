@@ -1,4 +1,4 @@
-# Miniclip Simulator
+﻿# Miniclip Simulator
 
 A football group-stage simulator built with **.NET 10** using **CQRS**, **Event Sourcing**, and **read-model projections via Kafka**.
 
@@ -49,7 +49,7 @@ Registration order (outermost first):
 
 ### Read side — Projections (MySQL + Kafka)
 
-Projection consumers run in a separate **ReadModels WebJob** (`Miniclip.Simulator.ReadModels.WebJob`). Each `ProjectionsConsumerService<TAggregate>` subscribes to its aggregate topic, scales to the topic's partition count, and dispatches deserialized events to ordered `INotificationHandler` handlers that update the MySQL read DB.
+Projection consumers run in a separate **ReadModels WebJob** (`Miniclip.Simulator.ReadModels.WebJob`). A single `KafkaConsumerHost` instance subscribes to each aggregate topic; `ProjectionMessageHandler<TEvent>` dispatches deserialized events to ordered `INotificationHandler` handlers that update the MySQL read DB.
 
 Idempotency is guaranteed by recording each processed `event-id` + consumer group ID in a `ProcessedEvents` table before committing the read-side transaction.
 
@@ -126,7 +126,7 @@ KafkaConsumerHost
 ```
 
 > **Topic naming:** `simulator.{aggregate-kebab-case}` — e.g. `Group` → `simulator.group`  
-> **Consumer group:** `simulator-projections-{aggregate}` — e.g. `simulator-projections-group`
+> **Consumer group:** `simulator-readmodels-webjob-group` (single group handles all projection topics)
 
 > **Why `IServiceScopeFactory`?** `ProjectionMessageHandler<TEvent>` creates a **fresh DI scope per message**, giving each message its own `DbContext` and transactional boundary.
 
@@ -233,7 +233,7 @@ dotnet test
 | `Miniclip.Simulator.Application.Queries.UnitTests` | Unit | Query handler logic |
 | `Miniclip.Simulator.ReadModels.Projections.UnitTests` | Unit | `ProjectionMessageHandler` idempotency; projection handlers |
 | `Miniclip.Simulator.ReadModels.Projections.IntegrationTests` | Integration | Full projection pipeline against a real read DB |
-| `Miniclip.Core.Kafka.UnitTests` | Unit | _(empty — tests migrated to messaging projects)_ |
+| `Miniclip.Core.Messaging.Kafka.UnitTests` | Unit | _(empty — tests migrated to messaging projects)_ |
 | `Miniclip.Simulator.Api.UnitTests` | Unit | Controller / result extension behaviour |
 | `Miniclip.Simulator.Common.Tests` | Shared | Test helpers and builders |
 | `Miniclip.Core.Tests` | Unit | Shared kernel tests |

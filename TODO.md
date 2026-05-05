@@ -3,7 +3,6 @@
 ## Projects & Ideas
 - [ ] Outbox pattern for reliable message publishing
 - [ ] In the deadletter handler copy all headers and properties of the original message to the new one, so we don't lose any information that could be useful for debugging
-- [ ] Review configuration, kafka configuration looks a bit messy
 - [ ] Improve retry policy — could use Polly for more advanced strategies
 - [ ] Create messaging logic that uses AWS SQS/SNS
 - [ ] Review read models strategy
@@ -26,7 +25,7 @@
 - [ ] Ask about core projects, should some things live in the infrastructure project?
 
 ## In Progress
-- [ ] Can we prevent receiving events that a read model is not interested in? Maybe using a different topic per aggregate?
+
 
 ## Completed
 - [x] Add health checks to the API (`/health` and `/alive` endpoints)
@@ -55,6 +54,8 @@
 - [x] The serializer should be one for the event bus, not for the event store. The event store should just store byte arrays, and the event bus should be responsible for serializing/deserializing events. This would allow us to use different serializers for different buses if needed.
 - [x] Use integration events for communication between services, and domain events for internal communication within a service. This would help to decouple the internal domain model from the external contracts, and allow us to evolve them independently.
 - [x] Add global usings
+- [x] Can we prevent receiving events that a read model is not interested in? Maybe using a different topic per aggregate?
+- [x] Review configuration, kafka configuration looks a bit messy
 
 ## Notes
 - EventStoreDB was rebranded to **KurrentDB**; client library is `KurrentDB.Client`, Docker image is `kurrentplatform/kurrentdb`.

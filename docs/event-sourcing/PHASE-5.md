@@ -1,4 +1,4 @@
-# Phase 5 — Testing & Hardening
+﻿# Phase 5 — Testing & Hardening
 
 > **Status:** ✅ Done
 > **Branch:** `feat/phase-5-hardening`
@@ -13,6 +13,14 @@ test project that verifies the full projection seam — from `MatchPlayed` notif
 persisted read model rows — without requiring a running Kafka broker.
 
 ---
+
+> ⚠️ **Note> ⚠️ **Note:** This document uses names from the original design that changed during implementation:
+> - `Miniclip.Core.Kafka` → `Miniclip.Core.Messaging.Kafka`
+> - Abstract `KafkaConsumerService` → `KafkaConsumerHost` (concrete `BackgroundService`)
+> - `Miniclip.Simulator.Infrastructure.Write` was dropped; no EF write-side migrations exist in the final solution
+> - Per-aggregate consumer groups (`simulator-projections-{aggregate}`) → single group `simulator-readmodels-webjob-group`
+> - Retry/dead-letter abstractions (`IRetryPolicy`, `IDeadLetterHandler`, `ExponentialBackoffRetryPolicy`) live in `Miniclip.Core.Messaging`
+
 
 ## Issues Addressed
 
@@ -312,13 +320,11 @@ protected override async ValueTask WhenAsync()
 
 These items were implemented as part of Phase 5 but were not in the original workstream spec.
 
-### `KafkaConsumerService` Refactor
+### `KafkaConsumerHost` Refactor
 
-`KafkaConsumerService` was made abstract; `IConsumer<string,byte[]>` is now built internally
-via `BuildConsumer(ConsumerConfig)` (abstract) and `ConsumerGroupId` (abstract property).
-`IConfiguration` is injected to build the consumer config at startup. This eliminates the
-factory lambda in `AddHostedService` that previously required scoped services to be resolved
-from the root provider.
+`KafkaConsumerHost` was refactored; `IConsumer<string,string>` is now built internally
+via `KafkaConsumerDescriptor` and `ConsumerBuilder<string,string>`.
+`IConfiguration` is injected via the builder to configure consumer settings at startup.
 
 ### Configuration Split
 
@@ -328,7 +334,7 @@ from the root provider.
 |---|---|
 | `ReadModelsConfiguration` | `SimulatorReadDbContext`, read/write repositories, `IReadModelUnitOfWork` |
 | `EventStoreDbConfiguration` | EventStoreDB client, `IAggregateRepository<T>`, `TeamDataSeeder` |
-| `KafkaConfiguration` | `KafkaEventBus`, `ProjectionsConsumerService<MatchPlayed>` |
+| `KafkaConfiguration` | `KafkaEventDispatcher`, `KafkaConsumerHost` (via `AddKafka()` builder) |
 
 ### Team → EventStoreDB Migration
 
@@ -357,11 +363,11 @@ from the root provider.
 
 | Project | Workstream | Change |
 |---|---|---|
-| `Miniclip.Core.Kafka` | A + Extra | `IConsumerRetryPolicy`, `ExponentialBackoffRetryPolicy`; abstract `BuildConsumer`/`ConsumerGroupId`; retry loop with `OnDeadLetterAsync` |
-| `Miniclip.Core.Kafka.UnitTests` | A | Retry loop unit tests |
-| `Miniclip.Simulator.ReadModels.Projections` | B + Extra | Reordered `HandleAsync`; per-type `ConsumerGroupId`; `IServiceScopeFactory` per-message scoping |
+| `Miniclip.Core.Messaging.Kafka` | A + Extra | `ExponentialBackoffRetryPolicy`; `KafkaConsumerHost`; `IDeadLetterHandler`/`KafkaDeadLetterHandler`; retry loop in `RetryMiddleware` |
+| `Miniclip.Core.Messaging.Kafka.UnitTests` | A | _(empty — retry tests live in messaging pipeline projects)_ |
+| `Miniclip.Simulator.ReadModels.Projections` | B + Extra | Reordered `HandleAsync`; `ProjectionMessageHandler<TEvent>` handles scoping + idempotency; `IProjectionDispatcher` dispatches to ordered handlers |
 | `Miniclip.Simulator.ReadModels.Projections.UnitTests` | B | `ShouldNotDeserializePayload` assertion added to `AndMessageAlreadyProcessed` |
 | `Miniclip.Simulator.Api` | C + Extra | Removed `ReadModelUnitOfWorkBehavior` registration; config split into `ReadModelsConfiguration`, `EventStoreDbConfiguration`, `KafkaConfiguration` |
 | `Miniclip.Simulator.ReadModels.Projections.IntegrationTests` | D | New integration test project |
 | `Miniclip.Simulator.Domain` | Extra | `TeamRegistered` event; `Team.cs` made event-sourced |
-| `Miniclip.Simulator.Infrastructure.Write` | Extra | EF migration dropping all legacy write-side aggregate tables |
+| ~~`Miniclip.Simulator.Infrastructure.Write`~~ | Extra | *(project not created — write-side EF migrations were dropped; no legacy tables to remove)* |
