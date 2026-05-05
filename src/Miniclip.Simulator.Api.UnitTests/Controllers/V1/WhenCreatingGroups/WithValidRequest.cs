@@ -7,7 +7,7 @@ public class WithValidRequest : WhenCreatingGroups
 {
     private Guid groupId;
 
-    protected override Task GivenScenarioAsync()
+    protected override Task SetupScenarioAsync()
     {
         Request = new GenerateGroupRequest("Group A", 4);
         groupId = Guid.NewGuid();

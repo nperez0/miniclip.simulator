@@ -9,7 +9,7 @@ public class WithHeadToHeadTiebreaker : WhenRecalculatingPosition
     private GroupStandingsModel teamA = null!;
     private GroupStandingsModel teamB = null!;
 
-    protected override Task GivenScenarioAsync()
+    protected override Task SetupScenarioAsync()
     {
         GroupId = Guid.NewGuid();
         teamAId = Guid.NewGuid();

@@ -21,7 +21,7 @@ public class WhenSimulatingGroup : TestBase<GroupSimulator>
 
         MatchSimulatorFactory!.Create(Arg.Any<Group>()).Returns(MatchSimulator);
 
-        GivenScenario();
+        SetupScenario();
     }
 
     protected override GroupSimulator CreateSystemUnderTest()

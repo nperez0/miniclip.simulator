@@ -6,7 +6,7 @@ namespace Miniclip.Simulator.Domain.UnitTests.Aggregates.Groups.Services.Fixture
 
 public class WithInsufficientTeams : WhenGeneratingFixtures
 {
-    protected override void GivenScenario()
+    protected override void SetupScenario()
     {
         Capacity = 4;
 

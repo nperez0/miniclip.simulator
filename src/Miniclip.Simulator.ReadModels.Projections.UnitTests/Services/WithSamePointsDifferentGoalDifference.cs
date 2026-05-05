@@ -8,7 +8,7 @@ public class WithSamePointsDifferentGoalDifference : WhenRecalculatingPosition
     private GroupStandingsModel secondPlace = null!;
     private GroupStandingsModel thirdPlace = null!;
 
-    protected override Task GivenScenarioAsync()
+    protected override Task SetupScenarioAsync()
     {
         GroupId = Guid.NewGuid();
 

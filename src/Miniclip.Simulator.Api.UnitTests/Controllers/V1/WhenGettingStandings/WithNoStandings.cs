@@ -7,7 +7,7 @@ public class WithNoStandings : WhenGettingStandings
 {
     private GroupStandingsDto emptyDto = null!;
 
-    protected override Task GivenScenarioAsync()
+    protected override Task SetupScenarioAsync()
     {
         GroupId = Guid.NewGuid();
 

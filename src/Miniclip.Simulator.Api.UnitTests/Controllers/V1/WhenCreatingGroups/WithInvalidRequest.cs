@@ -5,7 +5,7 @@ namespace Miniclip.Simulator.Api.UnitTests.Controllers.V1.WhenCreatingGroups;
 
 public class WithInvalidRequest : WhenCreatingGroups
 {
-    protected override Task GivenScenarioAsync()
+    protected override Task SetupScenarioAsync()
     {
         Request = new GenerateGroupRequest("Group A", 10);
 

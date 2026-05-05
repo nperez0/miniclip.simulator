@@ -9,7 +9,7 @@ public class WithValidGroup : WhenSimulatingGroups
     private Guid groupId;
     private Group group = null!;
 
-    protected override Task GivenScenarioAsync()
+    protected override Task SetupScenarioAsync()
     {
         groupId = Guid.NewGuid();
         Command = new SimulateGroupCommand(groupId);

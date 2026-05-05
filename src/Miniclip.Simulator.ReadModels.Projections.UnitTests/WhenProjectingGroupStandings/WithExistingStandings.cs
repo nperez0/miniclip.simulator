@@ -11,7 +11,7 @@ public class WithExistingStandings : WhenProjectingGroupStandings
     private GroupStandingsModel existingHomeStanding = null!;
     private GroupStandingsModel existingAwayStanding = null!;
 
-    protected override Task GivenScenarioAsync()
+    protected override Task SetupScenarioAsync()
     {
         groupId = Guid.NewGuid();
         homeTeamId = Guid.NewGuid();

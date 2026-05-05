@@ -6,7 +6,7 @@ namespace Miniclip.Simulator.Application.Commands.UnitTests.Groups.V1.WhenGenera
 
 public class WithInvalidCapacity : WhenGeneratingGroups
 {
-    protected override Task GivenScenarioAsync()
+    protected override Task SetupScenarioAsync()
     {
         Command = new GenerateGroupCommand("Group A", 10);
 

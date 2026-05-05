@@ -9,7 +9,7 @@ public class WithDifferentPoints : WhenRecalculatingPosition
     private GroupStandingsModel thirdPlace = null!;
     private GroupStandingsModel fourthPlace = null!;
 
-    protected override Task GivenScenarioAsync()
+    protected override Task SetupScenarioAsync()
     {
         GroupId = Guid.NewGuid();
 

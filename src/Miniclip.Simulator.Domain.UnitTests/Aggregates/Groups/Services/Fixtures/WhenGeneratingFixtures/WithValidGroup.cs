@@ -6,7 +6,7 @@ public class WithValidGroup : WhenGeneratingFixtures
 {
     private List<(TeamInfo HomeTeam, TeamInfo AwayTeam, int Round)> mockSchedule = null!;
 
-    protected override void GivenScenario()
+    protected override void SetupScenario()
     {
         Capacity = 4;
 

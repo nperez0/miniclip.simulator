@@ -15,7 +15,7 @@ public abstract class WhenProjectingGroupStandings : AsyncTestBase<GroupStanding
         Repository = Substitute.For<IGroupStandingsRepository>();
         RecalculatePositionService = Substitute.For<IRecalculatePositionService>();
 
-        return GivenScenarioAsync();
+        return SetupScenarioAsync();
     }
 
     protected override GroupStandingsProjection CreateSystemUnderTest()

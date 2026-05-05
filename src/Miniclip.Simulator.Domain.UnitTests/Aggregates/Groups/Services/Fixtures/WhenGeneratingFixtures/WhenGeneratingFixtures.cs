@@ -23,7 +23,7 @@ public class WhenGeneratingFixtures : TestBase<FixtureSchedulerService>
 
         FixtureSchedulerFactory!.Create(Arg.Any<Group>()).Returns(FixtureScheduler);
 
-        GivenScenario();
+        SetupScenario();
     }
 
     protected override FixtureSchedulerService CreateSystemUnderTest()

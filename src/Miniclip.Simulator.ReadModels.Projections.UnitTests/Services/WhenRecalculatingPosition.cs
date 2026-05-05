@@ -14,7 +14,7 @@ public abstract class WhenRecalculatingPosition : AsyncTestBase<RecalculatePosit
     {
         Repository = Substitute.For<IMatchResultsRepository>();
 
-        return GivenScenarioAsync();
+        return SetupScenarioAsync();
     }
 
     protected override RecalculatePositionService CreateSystemUnderTest()

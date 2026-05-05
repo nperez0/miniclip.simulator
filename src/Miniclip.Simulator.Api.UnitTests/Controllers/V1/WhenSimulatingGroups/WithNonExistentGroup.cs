@@ -5,7 +5,7 @@ namespace Miniclip.Simulator.Api.UnitTests.Controllers.V1.WhenSimulatingGroups;
 
 public class WithNonExistentGroup : WhenSimulatingGroups
 {
-    protected override Task GivenScenarioAsync()
+    protected override Task SetupScenarioAsync()
     {
         GroupId = Guid.NewGuid();
 

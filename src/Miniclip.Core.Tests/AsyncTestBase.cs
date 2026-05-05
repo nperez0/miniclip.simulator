@@ -35,10 +35,10 @@ public abstract class AsyncTestBase<TSut>
 
     protected virtual async Task GivenAsync()
     {
-        await GivenScenarioAsync().ConfigureAwait(false);
+        await SetupScenarioAsync().ConfigureAwait(false);
     }
 
-    protected virtual Task GivenScenarioAsync()
+    protected virtual Task SetupScenarioAsync()
         => Task.CompletedTask;
 
     protected virtual Task WhenAsync()

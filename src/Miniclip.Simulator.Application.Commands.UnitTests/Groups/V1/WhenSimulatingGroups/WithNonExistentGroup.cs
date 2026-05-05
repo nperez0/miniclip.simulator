@@ -8,7 +8,7 @@ public class WithNonExistentGroup : WhenSimulatingGroups
 {
     private Guid groupId;
 
-    protected override Task GivenScenarioAsync()
+    protected override Task SetupScenarioAsync()
     {
         groupId = Guid.NewGuid();
         Command = new SimulateGroupCommand(groupId);

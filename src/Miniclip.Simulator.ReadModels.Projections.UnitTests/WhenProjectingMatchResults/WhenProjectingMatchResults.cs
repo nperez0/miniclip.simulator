@@ -12,7 +12,7 @@ public abstract class WhenProjectingMatchResults : AsyncTestBase<MatchResultProj
     {
         Repository = Substitute.For<IMatchResultsRepository>();
 
-        return GivenScenarioAsync();
+        return SetupScenarioAsync();
     }
 
     protected override MatchResultProjection CreateSystemUnderTest()

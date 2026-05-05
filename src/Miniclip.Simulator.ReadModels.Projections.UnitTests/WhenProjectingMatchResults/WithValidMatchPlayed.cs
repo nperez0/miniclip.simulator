@@ -10,7 +10,7 @@ public class WithValidMatchPlayed : WhenProjectingMatchResults
     private Guid homeTeamId;
     private Guid awayTeamId;
 
-    protected override Task GivenScenarioAsync()
+    protected override Task SetupScenarioAsync()
     {
         groupId = Guid.NewGuid();
         matchId = Guid.NewGuid();

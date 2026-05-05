@@ -1,7 +1,9 @@
 # TODO List
 
 ## Projects & Ideas
+- [ ] Outbox pattern for reliable message publishing
 - [ ] In the deadletter handler copy all headers and properties of the original message to the new one, so we don't lose any information that could be useful for debugging
+- [ ] Review configuration, kafka configuration looks a bit messy
 - [ ] Improve retry policy — could use Polly for more advanced strategies
 - [ ] Create messaging logic that uses AWS SQS/SNS
 - [ ] Review read models strategy

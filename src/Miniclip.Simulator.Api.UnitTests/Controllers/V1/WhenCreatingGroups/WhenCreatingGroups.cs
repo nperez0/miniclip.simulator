@@ -13,7 +13,7 @@ public abstract class WhenCreatingGroups : AsyncTestBase<GroupsController>
     {
         Mediator = Substitute.For<IMediator>();
 
-        return GivenScenarioAsync();
+        return SetupScenarioAsync();
     }
 
     protected override GroupsController CreateSystemUnderTest()

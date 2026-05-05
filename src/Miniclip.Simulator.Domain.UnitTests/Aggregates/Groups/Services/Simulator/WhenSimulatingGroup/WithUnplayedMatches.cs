@@ -5,7 +5,7 @@ namespace Miniclip.Simulator.Domain.UnitTests.Aggregates.Groups.Services.Simulat
 
 public class WithUnplayedMatches : WhenSimulatingGroup
 {
-    protected override void GivenScenario()
+    protected override void SetupScenario()
     {
         (Group, var teams) = GroupMother.WithTeams(3);
 

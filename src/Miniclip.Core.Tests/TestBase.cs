@@ -5,7 +5,7 @@ namespace Miniclip.Core.Tests;
 public abstract class TestBase<TSut>
     where TSut : class
 {
-    private bool recordException = false;
+    private bool recordException;
 
     protected TSut? Sut { get; private set; }
 
@@ -35,10 +35,10 @@ public abstract class TestBase<TSut>
 
     protected virtual void Given()
     {
-        GivenScenario();
+        SetupScenario();
     }
 
-    protected virtual void GivenScenario() { }
+    protected virtual void SetupScenario() { }
 
     protected virtual void When() { }
 

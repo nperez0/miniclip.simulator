@@ -16,7 +16,7 @@ public abstract class WhenGettingGroupStandings : AsyncTestBase<GroupStandingsQu
         StandingsRepository = Substitute.For<IGroupStandingsRepository>();
         MatchResultsRepository = Substitute.For<IMatchResultsRepository>();
 
-        return GivenScenarioAsync();
+        return SetupScenarioAsync();
     }
 
     protected override GroupStandingsQueryHandler CreateSystemUnderTest()

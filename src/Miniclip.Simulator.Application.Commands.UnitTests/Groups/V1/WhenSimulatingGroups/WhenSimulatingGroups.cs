@@ -18,7 +18,7 @@ public abstract class WhenSimulatingGroups : AsyncTestBase<SimulateGroupCommandH
         GroupRepository = Substitute.For<IAggregateRepository<Group>>();
         GroupSimulator = Substitute.For<IGroupSimulator>();
 
-        return GivenScenarioAsync();
+        return SetupScenarioAsync();
     }
 
     protected override SimulateGroupCommandHandler CreateSystemUnderTest()

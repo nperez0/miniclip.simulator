@@ -7,7 +7,7 @@ public class WithExistingStandings : WhenGettingGroupStandings
 {
     private Guid groupId;
 
-    protected override Task GivenScenarioAsync()
+    protected override Task SetupScenarioAsync()
     {
         groupId = Guid.NewGuid();
         Query = new GroupStandingsQuery(groupId);

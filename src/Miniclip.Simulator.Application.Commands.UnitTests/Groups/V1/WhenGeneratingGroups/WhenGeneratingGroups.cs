@@ -21,7 +21,7 @@ public abstract class WhenGeneratingGroups : AsyncTestBase<GenerateGroupCommandH
         TeamRepository = Substitute.For<IAggregateRepository<Team>>();
         FixtureSchedulerService = Substitute.For<IFixtureSchedulerService>();
 
-        return GivenScenarioAsync();
+        return SetupScenarioAsync();
     }
 
     protected override GenerateGroupCommandHandler CreateSystemUnderTest()
