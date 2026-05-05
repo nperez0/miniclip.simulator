@@ -8,8 +8,6 @@ public static class IntegrationEventMapperRegistryConfiguration
 {
     public static IServiceCollection AddIntegrationEventMappers(this IServiceCollection services)
     {
-        AssemblyLoader.EnsureReferencedAssembliesLoaded();
-
         var mapperInterface = typeof(IIntegrationEventMapper<,>);
 
         var entries = AssemblyScanner

@@ -1,6 +1,5 @@
 using System.Collections.Frozen;
 using System.Reflection;
-using Miniclip.Core.Messaging;
 
 namespace Miniclip.Core.Messaging.Pipeline.Inbound;
 
@@ -8,7 +7,7 @@ public sealed class MessageHandlerRegistry : IMessageHandlerRegistry
 {
     private readonly FrozenDictionary<string, CompiledMessageHandler> handlers;
         
-    internal MessageHandlerRegistry(IEnumerable<CompiledMessageHandler> compiled)
+    public MessageHandlerRegistry(IEnumerable<CompiledMessageHandler> compiled)
     {
         var compiledMessageHandlers = compiled as CompiledMessageHandler[] ?? compiled.ToArray();
 

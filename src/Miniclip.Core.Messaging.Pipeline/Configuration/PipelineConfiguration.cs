@@ -4,6 +4,7 @@ using Miniclip.Core.Messaging.Pipeline.Inbound;
 using Miniclip.Core.Messaging.Pipeline.Inbound.Middleware;
 using Miniclip.Core.Messaging.Pipeline.Outbound;
 using Miniclip.Core.Messaging.Pipeline.Outbound.Middleware;
+using Miniclip.Core.Reflection;
 
 namespace Miniclip.Core.Messaging.Pipeline.Configuration;
 
@@ -11,6 +12,20 @@ public static class PipelineConfiguration
 {
     extension(IServiceCollection services)
     {
+        public IServiceCollection AddOutboundPipeline()
+        {
+            // Propagation context (scoped - one per message scope)
+            services.AddScoped<PropagationContext>();
+            services.AddScoped<IPropagationContext>(sp => sp.GetRequiredService<PropagationContext>());
+            services.AddScoped<IMutablePropagationContext>(sp => sp.GetRequiredService<PropagationContext>());
+
+            // Outbound middleware (outermost first). PropagationEnrichmentMiddleware is Scoped; OutboundTracingMiddleware is Singleton.
+            services.AddScoped<IOutboundMiddleware, PropagationEnrichmentMiddleware>();
+            services.AddSingleton<IOutboundMiddleware, OutboundTracingMiddleware>();
+
+            return services;
+        }
+
         public IServiceCollection AddInboundPipeline(Action<PipelineOptions>? configure = null)
         {
             var options = new PipelineOptions();
@@ -35,33 +50,16 @@ public static class PipelineConfiguration
             return services;
         }
 
-        public IServiceCollection AddOutboundPipeline()
-        {
-            // Propagation context (scoped - one per message scope)
-            services.AddScoped<PropagationContext>();
-            services.AddScoped<IPropagationContext>(sp => sp.GetRequiredService<PropagationContext>());
-            services.AddScoped<IMutablePropagationContext>(sp => sp.GetRequiredService<PropagationContext>());
-
-            // Outbound middleware (outermost first). PropagationEnrichmentMiddleware is Scoped; OutboundTracingMiddleware is Singleton.
-            services.AddScoped<IOutboundMiddleware, PropagationEnrichmentMiddleware>();
-            services.AddSingleton<IOutboundMiddleware, OutboundTracingMiddleware>();
-
-            // IEventBus is Scoped so it resolves IOutboundMiddleware (and Scoped PropagationEnrichmentMiddleware) from the caller's scope.
-            services.AddScoped<IEventBus, OutboundPipeline>();
-
-            return services;
-        }
-
         public IServiceCollection AddMessageHandlers(params Assembly[] assemblies)
         {
-            if (assemblies.Length == 0)
-                assemblies = AppDomain.CurrentDomain.GetAssemblies()
-                    .Where(a => a.GetName().Name?.StartsWith("Miniclip") == true)
-                    .ToArray();
+            var concreteTypes = assemblies.Length > 0
+                ? assemblies
+                    .SelectMany(a => a.GetTypes())
+                    .Where(t => t is { IsAbstract: false, IsInterface: false, IsGenericTypeDefinition: false })
+                    .ToArray()
+                : AssemblyScanner.GetConcreteTypes().ToArray();
 
             var handlerInterface = typeof(IMessageHandler<>);
-            var allTypes = assemblies.SelectMany(a => a.GetTypes()).ToList();
-            var concreteTypes = allTypes.Where(t => t is { IsAbstract: false, IsInterface: false }).ToList();
 
             foreach (var type in concreteTypes)
             {
@@ -76,7 +74,7 @@ public static class PipelineConfiguration
                         continue;
 
                     var constraints = type.GetGenericArguments()[0].GetGenericParameterConstraints();
-                    var concreteMessageTypes = allTypes
+                    var concreteMessageTypes = concreteTypes
                         .Where(t => t is { IsAbstract: false, IsInterface: false, IsGenericTypeDefinition: false }
                                     && constraints.All(c => c.IsAssignableFrom(t)));
 
@@ -109,21 +107,6 @@ public static class PipelineConfiguration
         }
     }
 
-    // Builds a registry scoped to only the message types declared in the subscription.
-    // Called by transport-specific wiring (e.g. AddKafkaConsumer) to give each
-    // consumer host its own filtered view of the global handler pool.
-    public static IMessageHandlerRegistry BuildFilteredRegistry(
-        ConsumerSubscription subscription,
-        IEnumerable<CompiledMessageHandler> allHandlers)
-    {
-        var declared = subscription.MessageTypes.ToHashSet();
-
-        var filtered = allHandlers
-            .Where(h => declared.Contains(h.MessageType))
-            .ToArray();
-
-        return new MessageHandlerRegistry(filtered);
-    }
 }
 
 public class PipelineOptions

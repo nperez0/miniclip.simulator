@@ -14,11 +14,11 @@ public static class KafkaConfiguration
             var bootstrapServers = configuration.GetConnectionString("kafka")!;
 
             services.AddIntegrationEventMappers();
-            services.AddIntegrationEventSerializer();
 
-            services.AddOutboundKafkaInfrastructure(bootstrapServers, topics =>
+            services.AddKafka(bootstrapServers, kafka =>
             {
-                topics.MapTopic<MatchPlayedIntegrationEvent>(SimulatorTopics.Group);
+                kafka.ConfigureOutbound(outbound =>
+                    outbound.MapTopic<MatchPlayedIntegrationEvent>(SimulatorTopics.Group));
             });
 
             return services;

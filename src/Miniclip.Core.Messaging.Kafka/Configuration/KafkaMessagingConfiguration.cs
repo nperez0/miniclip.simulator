@@ -1,8 +1,9 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Miniclip.Core.Messaging.Outbound;
 using Miniclip.Core.Messaging.Pipeline.Configuration;
 using Miniclip.Core.Messaging.Pipeline.Inbound;
+using Miniclip.Core.Messaging.Pipeline.Outbound;
 
 namespace Miniclip.Core.Messaging.Kafka.Configuration;
 
@@ -10,18 +11,19 @@ public static class KafkaMessagingConfiguration
 {
     extension(IServiceCollection services)
     {
-        public IServiceCollection AddInboundKafkaInfrastructure(Action<PipelineOptions>? configurePipeline = null)
+        public IServiceCollection AddKafka(string bootstrapServers, Action<KafkaBuilder> configure)
         {
-            services.AddInboundPipeline(configurePipeline);
-            services.AddMessageHandlers();
+            var builder = new KafkaBuilder(services, bootstrapServers);
 
-            services.AddSingleton<IDeadLetterHandler, KafkaDeadLetterHandler>();
+            configure(builder);
+
+            builder.Build();
 
             return services;
         }
 
-        public IServiceCollection AddOutboundKafkaInfrastructure(
-            string bootstrapServers, 
+        internal IServiceCollection AddOutboundKafkaInfrastructure(
+            string bootstrapServers,
             Action<OutboundTopicMappingBuilder>? configureTopics = null)
         {
             var config = new ProducerConfig { BootstrapServers = bootstrapServers };
@@ -39,11 +41,22 @@ public static class KafkaMessagingConfiguration
             services.AddSingleton<IOutboundTopicRegistry>(new OutboundTopicRegistry(topicMap));
             services.AddSingleton<IDestinationResolver, KafkaDestinationResolver>();
             services.AddScoped<IEventDispatcher, KafkaEventDispatcher>();
+            services.AddScoped<IEventBus, OutboundPipeline>();
 
             return services;
         }
 
-        public IServiceCollection AddKafkaConsumer(
+        internal IServiceCollection AddInboundKafkaInfrastructure(Action<PipelineOptions>? configurePipeline = null)
+        {
+            services.AddInboundPipeline(configurePipeline);
+            services.AddMessageHandlers();
+
+            services.AddSingleton<IDeadLetterHandler, KafkaDeadLetterHandler>();
+
+            return services;
+        }
+
+        internal IServiceCollection AddKafkaConsumer(
             string bootstrapServers,
             Action<KafkaConsumerSubscriptionBuilder> configure)
         {
@@ -73,7 +86,7 @@ public static class KafkaMessagingConfiguration
                 services.AddHostedService(sp =>
                 {
                     var allHandlers = sp.GetServices<CompiledMessageHandler>();
-                    var registry = PipelineConfiguration.BuildFilteredRegistry(
+                    var registry = BuildFilteredRegistry(
                         descriptor.Subscription,
                         allHandlers);
 
@@ -90,4 +103,19 @@ public static class KafkaMessagingConfiguration
             return services;
         }
     }
+
+    private static IMessageHandlerRegistry BuildFilteredRegistry(
+        ConsumerSubscription subscription,
+        IEnumerable<CompiledMessageHandler> allHandlers)
+    {
+        var declared = subscription.MessageTypes.ToHashSet();
+
+        var filtered = allHandlers
+            .Where(h => declared.Contains(h.MessageType))
+            .ToArray();
+
+        return new MessageHandlerRegistry(filtered);
+    }
 }
+
+

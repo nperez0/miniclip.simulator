@@ -7,8 +7,6 @@ public static class EventSourcingConfiguration
 {
     public static IServiceCollection AddEventStoreInfrastructure(this IServiceCollection services)
     {
-        AssemblyLoader.EnsureReferencedAssembliesLoaded();
-
         var types = AssemblyScanner
             .GetImplementationsOf<IDomainEvent>()
             .ToDictionary(t => t.Name, StringComparer.Ordinal);

@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Miniclip.Core.ReadModels;
 using Miniclip.Simulator.Infrastructure.Read.Persistence;
-using Write = Miniclip.Simulator.ReadModels.Repositories.Write;
-using WriteRepo = Miniclip.Simulator.Infrastructure.Read.Persistence.Repositories.Write;
+using Miniclip.Simulator.Infrastructure.Read.Persistence.Repositories.Write;
+using Miniclip.Simulator.ReadModels.Repositories.Write;
 
 namespace Miniclip.Simulator.ReadModels.WebJob.Infrastructure.Configuration;
 
@@ -16,8 +16,10 @@ public static class ReadModelsConfiguration
             options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
 
         services.AddScoped<IReadModelUnitOfWork, SimulatorReadModelUnitOfWork>();
-        services.AddScoped<Write.IGroupStandingsRepository, WriteRepo.GroupStandingsRepository>();
-        services.AddScoped<Write.IMatchResultsRepository, WriteRepo.MatchResultsRepository>();
+        services.AddScoped<IGroupStandingsRepository, GroupStandingsRepository>();
+        services.AddScoped<IMatchResultsRepository, MatchResultsRepository>();
+
+        services.AddScoped<IProcessedEventsRepository, ProcessedEventsRepository>();
 
         return services;
     }
