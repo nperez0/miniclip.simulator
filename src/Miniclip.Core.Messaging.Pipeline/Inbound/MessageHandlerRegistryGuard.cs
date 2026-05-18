@@ -1,5 +1,3 @@
-using Miniclip.Core.Messaging;
-
 namespace Miniclip.Core.Messaging.Pipeline.Inbound;
 
 internal static class MessageHandlerRegistryGuard

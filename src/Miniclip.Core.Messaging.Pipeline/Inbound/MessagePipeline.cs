@@ -5,7 +5,7 @@ namespace Miniclip.Core.Messaging.Pipeline.Inbound;
 public sealed class MessagePipeline(
     IEnumerable<IInboundMiddleware> middlewares,
     IMessageHandlerRegistry registry,
-    IMessageSerializer serializer,
+    IMessageDeserializer deserializer,
     IServiceScopeFactory scopeFactory) : IInboundPipeline
 {
     private readonly IInboundMiddleware[] middlewares = middlewares.ToArray();
@@ -23,7 +23,7 @@ public sealed class MessagePipeline(
         await using var scope = scopeFactory.CreateAsyncScope();
 
         var handler = scope.ServiceProvider.GetRequiredService(compiled.HandlerType);
-        var message = serializer.Deserialize(envelope.MessageType, envelope.Payload);
+        var message = deserializer.Deserialize(envelope.MessageType, envelope.Payload);
         var context = new MessageContext(envelope.MessageId, subscriptionId, envelope.Headers);
 
         var pipeline = () => compiled.InvokeAsync(handler, message, context, cancellationToken);

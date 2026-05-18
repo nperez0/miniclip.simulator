@@ -13,8 +13,6 @@ public static class KafkaConfiguration
         {
             var bootstrapServers = configuration.GetConnectionString("kafka")!;
 
-            services.AddIntegrationEventMappers();
-
             services.AddKafka(bootstrapServers, kafka =>
             {
                 kafka.ConfigureOutbound(outbound =>

@@ -2,7 +2,7 @@ using System.Text.Json;
 
 namespace Miniclip.Core.Messaging;
 
-public sealed class JsonMessageSerializer(IMessageTypeRegistry registry) : IMessageSerializer
+public sealed class JsonMessageSerializer(IMessageTypeRegistry registry) : IMessageSerializer, IMessageDeserializer
 {
     private static readonly JsonSerializerOptions Options = new(JsonSerializerDefaults.Web);
 

@@ -1,4 +1,4 @@
-namespace Miniclip.Core.Messaging.Kafka.Configuration;
+namespace Miniclip.Core.Messaging.Kafka.Configuration.Builders;
 
 public sealed class OutboundTopicMappingBuilder
 {

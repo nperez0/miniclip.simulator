@@ -26,7 +26,7 @@ public sealed class OutboundTracingMiddleware : IOutboundMiddleware
 
     private static void SetTag(
         OpenTelemetryActivity activity,
-        Dictionary<string, string> headers,
+        Dictionary<string, string?> headers,
         string headerKey,
         string tagKey)
     {

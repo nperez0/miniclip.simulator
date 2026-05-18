@@ -25,6 +25,7 @@ public static class KafkaConfiguration
                         initialDelayMs: 100,
                         backoffMultiplier: 2.0,
                         maxDelayMs: 5000))
+                    .UseKafkaDeadLetter()
                     .AddConsumer(consumer => consumer
                         .WithConsumerGroup(GroupConsumerId)
                         .WithTopics(SimulatorTopics.Group)
