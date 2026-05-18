@@ -3,7 +3,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Miniclip.Core.Messaging.Configuration;
 using Miniclip.Core.Messaging.Pipeline.Inbound;
-using Miniclip.Core.Reflection;
 
 namespace Miniclip.Core.Messaging.Pipeline.Configuration.Components;
 
@@ -11,17 +10,21 @@ public sealed class MessageHandlersComponent(params Assembly[] assemblies) : IMe
 {
     public void Register(IServiceCollection services)
     {
-        var concreteTypes = assemblies.Length > 0
-            ? assemblies
-                .SelectMany(a => a.GetTypes())
-                .Where(t => t is { IsAbstract: false, IsInterface: false, IsGenericTypeDefinition: false })
-                .ToArray()
-            : AssemblyScanner.GetConcreteTypes().ToArray();
+        var allTypes = assemblies.Length > 0
+            ? assemblies.SelectMany(a => a.GetTypes()).ToArray()
+            : AppDomain.CurrentDomain.GetAssemblies().SelectMany(a => a.GetTypes()).ToArray();
+
+        var concreteTypes = allTypes
+            .Where(t => t is { IsAbstract: false, IsInterface: false, IsGenericTypeDefinition: false })
+            .ToArray();
 
         var handlerInterface = typeof(IMessageHandler<>);
 
-        foreach (var type in concreteTypes)
+        foreach (var type in allTypes)
         {
+            if (type is { IsAbstract: true } or { IsInterface: true })
+                continue;
+
             if (type.IsGenericTypeDefinition)
             {
                 var openHandlerInterface = type.GetInterfaces()
@@ -32,8 +35,7 @@ public sealed class MessageHandlersComponent(params Assembly[] assemblies) : IMe
 
                 var constraints = type.GetGenericArguments()[0].GetGenericParameterConstraints();
                 var concreteMessageTypes = concreteTypes
-                    .Where(t => t is { IsAbstract: false, IsInterface: false, IsGenericTypeDefinition: false }
-                                && constraints.All(c => c.IsAssignableFrom(t)));
+                    .Where(t => constraints.All(c => c.IsAssignableFrom(t)));
 
                 foreach (var concreteMessageType in concreteMessageTypes)
                 {

@@ -4,7 +4,7 @@ using Miniclip.Core.Messaging.Configuration;
 
 namespace Miniclip.Core.Messaging.Pipeline.Configuration.Components;
 
-public sealed class OutboundPipelineComponent(IReadOnlyList<Type> middlewareChain) : IMessagingComponent
+public sealed class OutboundPipelineComponent(Type[] middlewareChain) : IMessagingComponent
 {
     public void Register(IServiceCollection services)
     {

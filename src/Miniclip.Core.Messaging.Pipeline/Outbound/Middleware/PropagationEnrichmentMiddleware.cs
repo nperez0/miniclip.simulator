@@ -8,7 +8,7 @@ public sealed class PropagationEnrichmentMiddleware(IPropagationContext propagat
     public async Task InvokeAsync(OutboundEnvelope envelope, Func<Task> next, CancellationToken cancellationToken)
     {
         envelope.Headers[MessageHeaders.CorrelationId] = propagationContext.CorrelationId.ToString();
-        envelope.Headers[MessageHeaders.CausationId]   = propagationContext.CausationId.ToString();
+        envelope.Headers[MessageHeaders.CausationId] = propagationContext.CausationId.ToString();
 
         var current = Activity.Current;
         if (current is not null)

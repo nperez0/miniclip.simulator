@@ -3,13 +3,11 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Miniclip.Core.Messaging.Pipeline.Inbound;
 
 public sealed class MessagePipeline(
-    IEnumerable<IInboundMiddleware> middlewares,
+    IReadOnlyList<Type> middlewareTypes,
     IMessageHandlerRegistry registry,
     IMessageDeserializer deserializer,
     IServiceScopeFactory scopeFactory) : IInboundPipeline
 {
-    private readonly IInboundMiddleware[] middlewares = middlewares.ToArray();
-
     public async Task<PipelineResult> ProcessAsync(
         IMessageEnvelope envelope,
         string subscriptionId,
@@ -21,6 +19,10 @@ public sealed class MessagePipeline(
             return new PipelineResult(IsSuccess: true, ShouldDeadLetter: false, ErrorMessage: null);
 
         await using var scope = scopeFactory.CreateAsyncScope();
+
+        var middlewares = middlewareTypes
+            .Select(t => (IInboundMiddleware)scope.ServiceProvider.GetRequiredService(t))
+            .ToArray();
 
         var handler = scope.ServiceProvider.GetRequiredService(compiled.HandlerType);
         var message = deserializer.Deserialize(envelope.MessageType, envelope.Payload);

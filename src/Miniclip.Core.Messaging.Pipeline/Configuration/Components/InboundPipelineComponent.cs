@@ -7,14 +7,19 @@ namespace Miniclip.Core.Messaging.Pipeline.Configuration.Components;
 
 public sealed class InboundPipelineComponent(
     InboundPipelineOptions options,
-    IReadOnlyList<Type> middlewareChain) : IMessagingComponent
+    Type[] middlewareChain) : IMessagingComponent
 {
     public void Register(IServiceCollection services)
     {
         foreach (var middlewareType in middlewareChain)
-            services.TryAddEnumerable(ServiceDescriptor.Scoped(typeof(IInboundMiddleware), middlewareType));
+            services.TryAddScoped(middlewareType);
 
         services.TryAddSingleton(options.RetryPolicy);
-        services.TryAddSingleton<IInboundPipeline, MessagePipeline>();
+        services.TryAddSingleton<IInboundPipeline>(sp =>
+            new MessagePipeline(
+                middlewareChain,
+                sp.GetRequiredService<IMessageHandlerRegistry>(),
+                sp.GetRequiredService<IMessageDeserializer>(),
+                sp.GetRequiredService<IServiceScopeFactory>()));
     }
 }

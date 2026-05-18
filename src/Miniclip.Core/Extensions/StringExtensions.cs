@@ -8,11 +8,11 @@ public static class StringExtensions
         => string.IsNullOrEmpty(value);
 
     public static bool IsNotNullOrEmpty([NotNullWhen(true)] this string? value)
-        => string.IsNullOrEmpty(value);
+        => !string.IsNullOrEmpty(value);
 
     public static bool IsNullOrWhiteSpace([NotNullWhen(false)] this string? value)
         => string.IsNullOrWhiteSpace(value);
 
     public static bool IsNotNullOrWhiteSpace([NotNullWhen(true)] this string? value)
-        => string.IsNullOrWhiteSpace(value);
+        => !string.IsNullOrWhiteSpace(value);
 }

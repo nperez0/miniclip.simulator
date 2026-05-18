@@ -58,7 +58,7 @@ public sealed class OutboundKafkaBuilder
 
         return
         [
-            new OutboundPipelineComponent(chain),
+            new OutboundPipelineComponent(chain.ToArray()),
             serializerSlot,
             new KafkaEventBusComponent(bootstrapServers, topicMappingBuilder),
         ];

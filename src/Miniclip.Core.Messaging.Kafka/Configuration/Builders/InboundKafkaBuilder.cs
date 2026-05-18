@@ -85,7 +85,7 @@ public sealed class InboundKafkaBuilder
 
         var components = new List<IMessagingComponent>
         {
-            new InboundPipelineComponent(pipelineOptions, chain),
+            new InboundPipelineComponent(pipelineOptions, chain.ToArray()),
             deserializerSlot,
             handlerScanningSlot,
             deadLetterSlot,
