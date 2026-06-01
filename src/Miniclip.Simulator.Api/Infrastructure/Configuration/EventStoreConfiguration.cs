@@ -1,5 +1,4 @@
 using KurrentDB.Client;
-using Miniclip.Core.Application.Publishers;
 using Miniclip.Core.Domain;
 using Miniclip.Core.EventSourcing;
 using Miniclip.Core.EventSourcing.EventStoreDB.Configuration;
@@ -21,11 +20,9 @@ public static class EventStoreConfiguration
         services.AddSingleton(_ => new KurrentDBClient(settings));
 
         services.AddEventStoreInfrastructure();
-        
+
         services.AddScoped<IAggregateRepository<Group>, AggregateRepository<Group>>();
         services.AddScoped<IAggregateRepository<Team>, AggregateRepository<Team>>();
-
-        services.AddScoped<ICommittedEventPublisher, CommittedEventPublisher>();
 
         services.AddHostedService<TeamDataSeeder>();
 

@@ -1,11 +1,15 @@
+using System.Diagnostics;
+using System.Text.Json;
 using KurrentDB.Client;
+using Miniclip.Core.Propagation;
 
 namespace Miniclip.Core.EventSourcing.EventStoreDB;
 
 public sealed class EventStoreDbEventStore<T>(
     KurrentDBClient client,
     IDomainEventSerializer serializer,
-    IEventStoreSession session) : IEventStore<T>
+    IEventStoreSession session,
+    IPropagationContext propagationContext) : IEventStore<T>
     where T : AggregateRoot
 {
     public void Track(T aggregate)
@@ -116,7 +120,14 @@ public sealed class EventStoreDbEventStore<T>(
     private EventData ToEventData(IDomainEvent @event)
     {
         var (eventType, data) = serializer.Serialize(@event);
-        return new EventData(Uuid.NewUuid(), eventType, data);
+        var current = Activity.Current;
+        var metadata = JsonSerializer.SerializeToUtf8Bytes(
+            new EventMetadata(
+                propagationContext.CorrelationId,
+                propagationContext.CausationId,
+                TraceParent: current?.Id,
+                TraceState: current?.TraceStateString));
+        return new EventData(Uuid.NewUuid(), eventType, data, metadata);
     }
 
     private static string GetStreamName(Guid aggregateId)

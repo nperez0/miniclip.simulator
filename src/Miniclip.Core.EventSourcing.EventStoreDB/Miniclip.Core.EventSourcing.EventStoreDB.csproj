@@ -11,6 +11,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Miniclip.Core.EventSourcing\Miniclip.Core.EventSourcing.csproj" />
     <ProjectReference Include="..\Miniclip.Core\Miniclip.Core.csproj" />
+    <ProjectReference Include="..\Miniclip.Core.Propagation\Miniclip.Core.Propagation.csproj" />
   </ItemGroup>
 
 </Project>

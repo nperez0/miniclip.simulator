@@ -32,12 +32,20 @@ var webjob = builder.AddProject<Projects.Miniclip_Simulator_ReadModels_WebJob>("
     .WithHttpEndpoint(port: 8081, targetPort: 18081, name: "health")
     .WithEnvironment("HEALTHCHECK_HTTP_PORT_LISTENER", "18081");
 
+var eventRelayWebjob = builder.AddProject<Projects.Miniclip_Simulator_EventRelay_WebJob>("simulator-eventrelay-webjob")
+    .WithReference(kafka)
+    .WaitFor(eventStore)
+    .WaitFor(kafkaTopics)
+    .WithHttpEndpoint(port: 8082, targetPort: 18082, name: "health")
+    .WithEnvironment("HEALTHCHECK_HTTP_PORT_LISTENER", "18082");
+
 builder.AddProject<Projects.Miniclip_Simulator_Api>("simulator-api")
     .WithReference(readDb)
     .WithReference(kafka)
     .WaitFor(eventStore)
     .WaitFor(readDb)
     .WaitFor(kafkaTopics)
-    .WaitFor(webjob);
+    .WaitFor(webjob)
+    .WaitFor(eventRelayWebjob);
 
 builder.Build().Run();

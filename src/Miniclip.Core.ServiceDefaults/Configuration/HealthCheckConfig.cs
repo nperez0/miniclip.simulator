@@ -1,4 +1,4 @@
-namespace Miniclip.Simulator.ReadModels.WebJob.Infrastructure;
+namespace Miniclip.Core.ServiceDefaults.Configuration;
 
 public sealed record HealthCheckConfig
 {

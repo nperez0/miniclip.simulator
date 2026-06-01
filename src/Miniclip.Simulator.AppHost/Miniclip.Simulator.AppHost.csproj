@@ -13,6 +13,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Miniclip.Simulator.Api\Miniclip.Simulator.Api.csproj" />
     <ProjectReference Include="..\Miniclip.Simulator.ReadModels.WebJob\Miniclip.Simulator.ReadModels.WebJob.csproj" />
+    <ProjectReference Include="..\Miniclip.Simulator.EventRelay.WebJob\Miniclip.Simulator.EventRelay.WebJob.csproj" />
   </ItemGroup>
 
 </Project>

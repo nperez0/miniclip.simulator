@@ -1,5 +1,5 @@
 using Microsoft.Extensions.Diagnostics.HealthChecks;
-using Miniclip.Simulator.ReadModels.WebJob.Infrastructure;
+using Miniclip.Core.ServiceDefaults.HealthChecks;
 
 namespace Miniclip.Simulator.ReadModels.WebJob.UnitTests.Infrastructure.Configuration;
 

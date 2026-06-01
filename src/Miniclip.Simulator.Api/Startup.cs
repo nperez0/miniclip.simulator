@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Miniclip.Core.Propagation.Configuration;
 using Miniclip.Simulator.Api.Infrastructure.Middleware;
 using Miniclip.Simulator.Api.Infrastructure.Configuration;
 using Serilog;
@@ -25,11 +26,11 @@ public class Startup(IConfiguration configuration)
         services.AddHealthChecks()
             .AddCheck("self", () => HealthCheckResult.Healthy(), ["live"]);
 
-        services.AddKafkaDependencies(configuration);
         services.AddMediatorDependencies();
         services.AddEventStoreDependencies(configuration);
         services.AddReadModelsDbDependencies(configuration);
         services.AddDomainDependencies();
+        services.AddPropagationContext();
 
         services.AddOpenTelemetryDependencies();
     }

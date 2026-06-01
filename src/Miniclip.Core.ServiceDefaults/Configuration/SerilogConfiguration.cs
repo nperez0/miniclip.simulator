@@ -1,9 +1,9 @@
-using Miniclip.Core.Extensions;
 using Microsoft.Extensions.Hosting;
+using Miniclip.Core.Extensions;
 using Serilog;
 using Serilog.Sinks.OpenTelemetry;
 
-namespace Miniclip.Core.ServiceDefaults;
+namespace Miniclip.Core.ServiceDefaults.Configuration;
 
 public static class SerilogConfiguration
 {

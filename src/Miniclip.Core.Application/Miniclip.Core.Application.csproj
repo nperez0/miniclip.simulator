@@ -16,4 +16,8 @@
     <ProjectReference Include="..\Miniclip.Core\Miniclip.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Publishers\" />
+  </ItemGroup>
+
 </Project>

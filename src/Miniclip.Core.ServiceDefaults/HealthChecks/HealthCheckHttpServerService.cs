@@ -2,8 +2,11 @@ using System.Net;
 using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Miniclip.Core.ServiceDefaults.Configuration;
 
-namespace Miniclip.Simulator.ReadModels.WebJob.Infrastructure;
+namespace Miniclip.Core.ServiceDefaults.HealthChecks;
 
 public sealed partial class HealthCheckHttpServerService(
     HealthCheckService healthCheckService,
@@ -21,7 +24,7 @@ public sealed partial class HealthCheckHttpServerService(
         {
             listener.Start();
         }
-        catch (HttpListenerException ex)
+        catch (HttpListenerException)
         {
             LogFailedToStartHealthCheckHttpListenerOnPort(logger, port!);
             throw;

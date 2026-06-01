@@ -1,5 +1,4 @@
 using Miniclip.Core.Application.Behaviors;
-using Miniclip.Core.Application.Configuration;
 
 namespace Miniclip.Simulator.Api.Infrastructure.Configuration;
 
@@ -16,8 +15,6 @@ public static class MediatorConfiguration
 
         services.AddScoped(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
         services.AddScoped(typeof(IPipelineBehavior<,>), typeof(EventStoreCommandBehavior<,>));
-
-        services.AddIntegrationEventMappers();
 
         return services;
     }

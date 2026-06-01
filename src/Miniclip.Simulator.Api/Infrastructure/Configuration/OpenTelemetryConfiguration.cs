@@ -18,7 +18,6 @@ public static class OpenTelemetryConfiguration
                         .AddAspNetCoreInstrumentation()
                         .AddHttpClientInstrumentation()
                         .AddOtlpExporter()
-                        .AddKafkaProducerInstrumentation<string, string>()
                         .AddMeter(Mediator.Mediator.MeterName)
                         .AddSimulator();
                 })
@@ -28,7 +27,6 @@ public static class OpenTelemetryConfiguration
                         .AddAspNetCoreInstrumentation()
                         .AddHttpClientInstrumentation()
                         .AddOtlpExporter()
-                        .AddKafkaProducerInstrumentation<string, string>()
                         .AddSource(Mediator.Mediator.ActivitySourceName)
                         .AddMySqlData()
                         .AddMySqlConnector()

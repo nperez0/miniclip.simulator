@@ -1,4 +1,4 @@
-using Miniclip.Core.Messaging;
+using Miniclip.Core.Propagation;
 
 namespace Miniclip.Simulator.Api.Infrastructure.Middleware;
 

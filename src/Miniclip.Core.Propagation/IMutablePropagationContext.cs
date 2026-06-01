@@ -1,4 +1,4 @@
-namespace Miniclip.Core.Messaging;
+namespace Miniclip.Core.Propagation;
 
 public interface IMutablePropagationContext : IPropagationContext
 {

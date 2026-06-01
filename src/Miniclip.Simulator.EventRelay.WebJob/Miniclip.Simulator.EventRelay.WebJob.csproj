@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Worker">
+
+  <PropertyGroup>
+    <UserSecretsId>dotnet-Miniclip.Simulator.EventRelay.WebJob-a1b2c3d4-e5f6-7890-abcd-ef1234567890</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" />
+    <PackageReference Include="OpenTelemetry.Extensions.Hosting" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Miniclip.Core.EventSourcing.EventStoreDB\Miniclip.Core.EventSourcing.EventStoreDB.csproj" />
+    <ProjectReference Include="..\Miniclip.Core.Messaging.Kafka\Miniclip.Core.Messaging.Kafka.csproj" />
+    <ProjectReference Include="..\Miniclip.Core.Propagation\Miniclip.Core.Propagation.csproj" />
+    <ProjectReference Include="..\Miniclip.Core.ServiceDefaults\Miniclip.Core.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\Miniclip.Simulator.Domain\Miniclip.Simulator.Domain.csproj" />
+    <ProjectReference Include="..\Miniclip.Simulator.IntegrationEvents\Miniclip.Simulator.IntegrationEvents.csproj" />
+  </ItemGroup>
+
+</Project>

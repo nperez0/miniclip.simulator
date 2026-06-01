@@ -1,4 +1,5 @@
 using Miniclip.Core.ServiceDefaults;
+using Miniclip.Core.ServiceDefaults.Configuration;
 using Miniclip.Simulator.Api;
 using Miniclip.Simulator.Api.Infrastructure.Configuration;
 
