@@ -49,7 +49,7 @@ Registration order (outermost first):
 
 ### Read side — Projections (MySQL + Kafka)
 
-Projection consumers run in a separate **ReadModels WebJob** (`Miniclip.Simulator.ReadModels.WebJob`). A single `KafkaConsumerHost` instance subscribes to each aggregate topic; `ProjectionMessageHandler<TEvent>` dispatches deserialized events to ordered `INotificationHandler` handlers that update the MySQL read DB.
+Projection consumers run in a separate **ReadModels WebJob** (`Miniclip.Simulator.ReadModels.WebJob`). A single `KafkaConsumerHost` instance subscribes to each aggregate topic; `ProjectionMessageHandler<TEvent>` dispatches deserialized events to ordered `IProjectionHandler<TEvent>` handlers via `IProjectionDispatcher` to update the MySQL read DB.
 
 Idempotency is guaranteed by recording each processed `event-id` + consumer group ID in a `ProcessedEvents` table before committing the read-side transaction.
 
@@ -61,7 +61,7 @@ Idempotency is guaranteed by recording each processed `event-id` + consumer grou
 src/
 ├── Miniclip.Core/                              # Primitives: Result<T>, extension methods
 ├── Miniclip.Core.Domain/                       # AggregateRoot, IAggregateRepository<T>, IDomainEvent
-├── Miniclip.Core.Application/                  # ICommand, IQuery, pipeline behaviours, DomainEventJsonSerializer
+├── Miniclip.Core.Application/                  # ICommand, IQuery, pipeline behaviours, integration event mapper abstractions
 ├── Miniclip.Core.EF/                           # EF Core base types (IReadModelUnitOfWork)
 ├── Miniclip.Core.EventSourcing/                # IEventStore<T>, IEventStoreSession, AggregateRepository<T>
 ├── Miniclip.Core.EventSourcing.EventStoreDB/   # EventStoreDbEventStore<T>, SystemTextJsonEventSerializer
@@ -80,7 +80,7 @@ src/
 │
 ├── Miniclip.Simulator.Domain/                  # Group + Team aggregates, domain services, value objects
 ├── Miniclip.Simulator.Application.Commands/    # Command handlers: GenerateGroup, SimulateGroup
-├── Miniclip.Simulator.Application.Queries/     # Query handlers: GetGroupStandings, GetMatchResults
+├── Miniclip.Simulator.Application.Queries/     # Query handlers: GroupStandingsQuery (standings + match results)
 ├── Miniclip.Simulator.ReadModels/              # Read model POCOs and repository interfaces
 ├── Miniclip.Simulator.ReadModels.Projections/  # ProjectionMessageHandler<TEvent>,
 │                                               #   GroupStandingsProjection, MatchResultProjection
@@ -89,6 +89,7 @@ src/
 │
 ├── Miniclip.Simulator.Api/                     # ASP.NET Core host — controllers, CorrelationIdMiddleware, DI wiring, TeamDataSeeder
 ├── Miniclip.Simulator.ReadModels.WebJob/       # Worker Service — projection consumers, read DB migrations
+├── Miniclip.Simulator.EventRelay.WebJob/       # Worker Service — forwards mapped integration events from KurrentDB to Kafka
 └── Miniclip.Simulator.AppHost/                 # .NET Aspire orchestration (MySQL, KurrentDB, Kafka, services)
 ```
 
@@ -103,9 +104,13 @@ Command
   └▶ LoggingBehavior                        ← logs timing; tags OTel span on domain errors
        └▶ EventStoreCommandBehavior
             ├── session.CommitAsync()        ← appends events to KurrentDB
-            ├── eventBus.PublishAsync()      ← publishes committed events to Kafka
             └▶ CommandHandler
                  └▶ AggregateRepository.Add(aggregate)   ← tracks uncommitted events
+
+KurrentDbForwarderService (EventRelay WebJob)
+  └▶ persistent subscription from KurrentDB
+       ├── mapperRegistry.TryMap(domainEvent)   ← domain → integration event
+       └── eventBus.PublishAsync()              ← publishes to Kafka
 ```
 
 ### Kafka messaging pipeline (read side)
@@ -136,7 +141,7 @@ KafkaConsumerHost
 
 ### Observability
 
-- **Structured logs** — both the API and WebJob use `builder.AddStructuredLogging()` (Serilog, console JSON, optional OTLP sink).
+- **Structured logs** — API, ReadModels WebJob, and EventRelay WebJob use `builder.AddStructuredLogging()` (Serilog, console JSON, optional OTLP sink).
 - **Distributed traces** — `OpenTelemetryActivity.StartActivity` wraps each Kafka message. KurrentDB, ASP.NET Core, MySQL, and Kafka instrumentation all emit spans.
 - **Metrics** — `kafka.retry.attempts` and `kafka.messages.failed` counters from the `Miniclip.Simulator.Kafka` meter, exported via OTLP.
 
@@ -233,6 +238,7 @@ dotnet test
 | `Miniclip.Simulator.Application.Queries.UnitTests` | Unit | Query handler logic |
 | `Miniclip.Simulator.ReadModels.Projections.UnitTests` | Unit | `ProjectionMessageHandler` idempotency; projection handlers |
 | `Miniclip.Simulator.ReadModels.Projections.IntegrationTests` | Integration | Full projection pipeline against a real read DB |
+| `Miniclip.Simulator.ReadModels.WebJob.UnitTests` | Unit | WebJob infrastructure configuration (health checks, etc.) |
 | `Miniclip.Core.Messaging.Kafka.UnitTests` | Unit | _(empty — tests migrated to messaging projects)_ |
 | `Miniclip.Simulator.Api.UnitTests` | Unit | Controller / result extension behaviour |
 | `Miniclip.Simulator.Common.Tests` | Shared | Test helpers and builders |

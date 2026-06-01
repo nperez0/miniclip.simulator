@@ -24,7 +24,6 @@
 - [ ] Ask about core projects, should some things live in the infrastructure project?
 
 ## In Progress
-- [ ] Outbox pattern for reliable message publishing
 
 ## Completed
 - [x] Add health checks to the API (`/health` and `/alive` endpoints)
@@ -55,6 +54,7 @@
 - [x] Add global usings
 - [x] Can we prevent receiving events that a read model is not interested in? Maybe using a different topic per aggregate?
 - [x] Review configuration, kafka configuration looks a bit messy
+- [x] Outbox pattern for reliable message publishing
 
 ## Notes
 - EventStoreDB was rebranded to **KurrentDB**; client library is `KurrentDB.Client`, Docker image is `kurrentplatform/kurrentdb`.

@@ -60,11 +60,11 @@ All domain events implement `IDomainEvent` and carry an `AggregateId`.
 | `GroupCreated` | `Group` | `group-{id}` | No |
 | `TeamAdded` | `Group` | `group-{id}` | No |
 | `MatchScheduled` | `Group` | `group-{id}` | No |
-| `MatchPlayed` | `Group` | `group-{id}` | **Yes** — drives `GroupStandingsProjection` + `MatchResultProjection` |
+| `MatchPlayed` | `Group` | `group-{id}` | **Yes** — EventRelay maps to `MatchPlayedIntegrationEvent` on `simulator.group`, then drives `GroupStandingsProjection` + `MatchResultProjection` |
 
 Events are **enqueued** inside the aggregate via `AggregateRoot.Enqueue` during `Create`/command processing. `Apply(IDomainEvent)` is called only during stream **replay** from KurrentDB — it is not invoked during normal command processing.
 
-After a command completes, `EventStoreCommandBehavior` commits the session (appends events to KurrentDB) and publishes committed events to Kafka (both in the same behavior).
+After a command completes, `EventStoreCommandBehavior` commits the session (appends events to KurrentDB). `KurrentDbForwarderService` (EventRelay WebJob) then reads committed events, maps them to integration events, and publishes to Kafka.
 
 ---
 

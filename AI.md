@@ -23,34 +23,50 @@ The stack targets **.NET 10**.
 The solution follows **Clean Architecture** combined with **CQRS**, **DDD**, **Event Sourcing**, and an **event-driven projection** model.
 
 ```
-┌──────────────┐  Commands/Queries  ┌───────────────────────────────────────────────┐
-│  REST API    │ ──────────────────▶│  Mediator Pipeline                            │
+┌──────────────┐  Commands/Queries  ┌──────────────────────────────────────────────┐
+│  REST API    │ ──────────────────▶│  Mediator Pipeline                           │
 │  (v1)        │                    │  ├─ LoggingBehavior (timing + OTel tagging)  │
-└──────────────┘                    │  └─ EventStoreCommandBehavior (commit+publish)│
-                                    └────────────┬──────────────────────────────────┘
-                                                 │
-                     ┌───────────────────────────┼──────────────────────┐
-                     ▼                           ▼                      ▼
-           ┌──────────────────┐       ┌─────────────────┐    ┌──────────────────┐
-           │   KurrentDB      │       │     Kafka       │    │   Read DB        │
-           │  (write / source │       │   (event bus)   │    │   (MySQL)        │
-           │   of truth)      │       └────────┬────────┘    └────────┬─────────┘
-           │  · group-{id}    │                │                      │
-           │  · team-{id}     │                ▼                      │
-           └──────────────────┘       ┌────────────────────┐          │
-                                      │ ReadModels WebJob  │          │
-                                      │ ProjectionsConsumer│──────────▶
-                                      │  (per aggregate)   │
-                                      └────────────────────┘
+└──────────────┘                    │  └─ EventStoreCommandBehavior (commit only)  │
+                                    └────────────┬─────────────────────────────────┘
+                                                 ▼
+                                        ┌──────────────────┐
+                                        │    KurrentDB     │
+                                        │ · group-{id}     │
+                                        │ · team-{id}      │
+                                        └────────┬─────────┘
+                                                 │ persistent subscription
+                                                 ▼
+                                      ┌──────────────────────────┐
+                                      │ EventRelay WebJob        │
+                                      │ KurrentDbForwarderService│
+                                      └─────────────┬────────────┘
+                                                    ▼
+                                           ┌─────────────────┐
+                                           │      Kafka      │
+                                           │ simulator.group │
+                                           └────────┬────────┘
+                                                    ▼
+                                      ┌────────────────────┐
+                                      │ ReadModels WebJob  │
+                                      │ KafkaConsumerHost  │
+                                      └────────┬───────────┘
+                                               ▼
+                                     ┌──────────────────────┐
+                                     │ Read DB (MySQL)      │
+                                     └──────────────────────┘
 ```
 
 ### Write-Side Pipeline (Mediator)
 
 Registration order (outermost first):
 1. `LoggingBehavior` — logs request name, elapsed time, and domain errors; tags the active OTel `Activity` on conflicts.
-2. `EventStoreCommandBehavior` — after the handler succeeds: calls `IEventStoreSession.CommitAsync()` then iterates `session.GetCommittedEvents()` and calls `ICommittedEventPublisher.PublishAsync()` for each. `CommittedEventPublisher` maps each committed domain event to an `IIntegrationEvent` via `IIntegrationEventMapperRegistry`, then publishes it to `IEventBus` (Kafka). Events without a registered mapper are silently skipped.
+2. `EventStoreCommandBehavior` — after the handler succeeds: calls `IEventStoreSession.CommitAsync()` to persist pending events to KurrentDB.
 
 > `ReadModelUnitOfWorkBehavior` was removed in Phase 4 — the read side is now updated exclusively by the ReadModels WebJob.
+
+### EventRelay WebJob
+
+`Miniclip.Simulator.EventRelay.WebJob` is a standalone **.NET Worker Service** that bridges KurrentDB to Kafka. `KurrentDbForwarderService` consumes a KurrentDB persistent subscription, deserializes domain events, maps them through `IIntegrationEventMapperRegistry`, and publishes integration events to Kafka via `IEventBus`.
 
 ### ReadModels WebJob
 
@@ -64,7 +80,7 @@ Registration order (outermost first):
 |---|---|---|
 | `Miniclip.Core` | Shared Kernel | `Result<T>`, `ExceptionBase`, string/enumerable extensions |
 | `Miniclip.Core.Domain` | Domain Abstractions | `AggregateRoot`, `IAggregateRepository<T>`, `IDomainEvent` |
-| `Miniclip.Core.Application` | Application Abstractions | `ICommand`, `IQuery`, pipeline behaviour base types (`LoggingBehavior`, `EventStoreCommandBehavior`), `ICommittedEventPublisher`, `CommittedEventPublisher`, `IIntegrationEventMapper<T>`, `IIntegrationEventMapperRegistry` |
+| `Miniclip.Core.Application` | Application Abstractions | `ICommand`, `IQuery`, pipeline behaviour base types (`LoggingBehavior`, `EventStoreCommandBehavior`), `IIntegrationEventMapper<T>`, `IIntegrationEventMapperRegistry` |
 | `Miniclip.Core.ReadModels` | Read Abstractions | `IReadModelUnitOfWork`, projection handler base types |
 | `Miniclip.Core.ReadModels.Projections` | Projection Infrastructure | `[HandlerPriority]` attribute, `IProjectionDispatcher`, ordered projection execution |
 | `Miniclip.Core.EF` | EF Infrastructure | Generic EF Core base context |
@@ -74,6 +90,7 @@ Registration order (outermost first):
 | `Miniclip.Core.Messaging.Pipeline` | Messaging Pipeline | `MessagePipeline` (inbound), `OutboundPipeline`, `TracingMiddleware`, `LoggingMiddleware`, `RetryMiddleware`, `PropagationMiddleware`, `IMessageHandlerRegistry`, `MessageHandlerRegistry`, `CompiledMessageHandler` |
 | `Miniclip.Core.Messaging.Kafka` | Kafka Infrastructure | `KafkaConsumerHost`, `KafkaEventDispatcher`, `KafkaDeadLetterHandler`, `KafkaMessageMapper`, `KafkaConstants`, `KafkaDestinationResolver`, `IOutboundTopicRegistry`, `KafkaConsumerDescriptor` |
 | `Miniclip.Core.OpenTelemetry` | Observability | `OpenTelemetryActivity`, `OpenTelemetryMetrics`, OTel builder extension methods |
+| `Miniclip.Core.Propagation` | Cross-cutting Context | `IPropagationContext`, `IMutablePropagationContext`, propagation context implementation |
 | `Miniclip.Core.ServiceDefaults` | Service Defaults | `SerilogConfiguration.AddStructuredLogging()` — Serilog with OTLP sink |
 | `Miniclip.Simulator.Domain` | Domain | `Group`, `Team` aggregates, domain services, value objects |
 | `Miniclip.Simulator.Application.Commands` | Application – Write | `GenerateGroupCommand`, `SimulateGroupCommand` handlers |
@@ -84,7 +101,8 @@ Registration order (outermost first):
 | `Miniclip.Simulator.Infrastructure.Read` | Infrastructure – Read | `SimulatorReadDbContext`, repository implementations |
 | `Miniclip.Simulator.Api` | API | `GroupsController`, `CorrelationIdMiddleware`, configuration wiring, `TeamDataSeeder` |
 | `Miniclip.Simulator.ReadModels.WebJob` | ReadModels Worker | Worker Service; hosts `KafkaConsumerHost` instances; `ProjectionMessageHandler<TEvent>` handles each message type; runs read DB migrations |
-| `Miniclip.Simulator.AppHost` | Orchestration | .NET Aspire AppHost; provisions MySQL, KurrentDB, Kafka, API, WebJob |
+| `Miniclip.Simulator.EventRelay.WebJob` | Event Relay Worker | Worker Service; `KurrentDbForwarderService` forwards mapped integration events from KurrentDB to Kafka |
+| `Miniclip.Simulator.AppHost` | Orchestration | .NET Aspire AppHost; provisions MySQL, KurrentDB, Kafka, API, ReadModels WebJob, EventRelay WebJob |
 
 ---
 
@@ -96,7 +114,7 @@ Registration order (outermost first):
 - **Match** — An entity owned by `Group`. Has `TeamInfo HomeTeam`, `TeamInfo AwayTeam`, `Round`, and scores. Can only be simulated once (`IsPlayed`).
 - **Fixture Scheduling** — Uses a **Round Robin** algorithm. Odd team counts add a dummy bye slot (internal to the scheduler, not a `Team` aggregate).
 - **Match Simulation** — Uses a **Poisson distribution** based on each team's `Strength`. Home team gets a `1.1×` advantage multiplier.
-- **MatchPlayed** — The domain event that drives all read-model updates. Published to Kafka after being committed to KurrentDB.
+- **MatchPlayed** — The domain event that drives all read-model updates. Committed to KurrentDB by the API, then mapped and forwarded to Kafka as `MatchPlayedIntegrationEvent` by the EventRelay WebJob.
 - **GroupStandings** — A read model tracking Points, Wins, Draws, Losses, GF/GA, GD, and Position per team. Rebuilt from `MatchPlayed` Kafka events.
 
 ---
@@ -109,7 +127,7 @@ Registration order (outermost first):
 | `GroupCreated` | `Group` | `group-{id}` | No |
 | `TeamAdded` | `Group` | `group-{id}` | No |
 | `MatchScheduled` | `Group` | `group-{id}` | No |
-| `MatchPlayed` | `Group` | `group-{id}` | **Yes** → mapped to `MatchPlayedIntegrationEvent` → `simulator.group` topic → WebJob projections |
+| `MatchPlayed` | `Group` | `group-{id}` | **Yes** → EventRelay maps to `MatchPlayedIntegrationEvent` → `simulator.group` topic → WebJob projections |
 
 ---
 
@@ -125,15 +143,16 @@ All operations return `Result` or `Result<T>` — **never throw exceptions for b
 ### Domain Events
 - Aggregates enqueue events via `Enqueue(IDomainEvent)` (from `AggregateRoot`) AND set their state directly in the constructor/factory (so the aggregate is immediately usable after `Create`).
 - `Apply(IDomainEvent)` handles replay from KurrentDB only — it is not called during normal command processing.
-- Events are committed to **KurrentDB** and published to **Kafka** by `EventStoreCommandBehavior` (single behavior handles both steps). Domain events are not published directly to Kafka; instead, `CommittedEventPublisher` maps them to **integration events** via `IIntegrationEventMapperRegistry`. Only domain events that have a registered `IIntegrationEventMapper<T>` are forwarded to Kafka. This decouples the internal domain model from the external contract (`Miniclip.Simulator.IntegrationEvents`).
+- `EventStoreCommandBehavior` commits domain events to **KurrentDB**.
+- `KurrentDbForwarderService` (EventRelay WebJob) reads committed domain events, maps them to **integration events** via `IIntegrationEventMapperRegistry`, and publishes them to **Kafka** via `IEventBus`. Only domain events that have a registered mapper are forwarded. This decouples the internal domain model from the external contract (`Miniclip.Simulator.IntegrationEvents`).
 - `KafkaConsumerHost` (in the **WebJob**) is a `BackgroundService` that subscribes to a Kafka topic and forwards each message through the `IInboundPipeline` (middleware chain: `TracingMiddleware` → `LoggingMiddleware` → `RetryMiddleware`).
 - `ProjectionMessageHandler<TEvent>` (registered as `IMessageHandler<TEvent>`) creates a **fresh DI scope per message**, checks idempotency, then dispatches to ordered `IProjectionHandler<TEvent>` projection handlers via `IProjectionDispatcher`.
 - Idempotency: the `ProcessedEvents` table records each `event-id` + consumer group ID before committing.
 
 ### Kafka Topic & Consumer Group Naming
-- **Topics** follow `simulator.{aggregate-kebab-case}`: `Group` → `simulator.group`.
-- **Consumer groups:** a single group `simulator-readmodels-webjob-group` handles all projections in the WebJob.
-- The topic name is defined in `SimulatorTopics.Group` (`Miniclip.Simulator.IntegrationEvents`).
+- **Topics:** currently `SimulatorTopics.Group = "simulator.group"` (`Miniclip.Simulator.IntegrationEvents`).
+- **ReadModels consumer group:** `simulator-readmodels-webjob-group` handles all projections in the WebJob.
+- **EventRelay persistent subscription group:** `simulator-kurrentdb-to-kafka-forwarder`.
 
 ### Messaging Pipeline & Kafka Consumer Lifecycle
 `KafkaConsumerHost` (`BackgroundService`) subscribes to one or more Kafka topics and processes each message through `IInboundPipeline`. The pipeline is a middleware chain registered outermost-first:
@@ -156,11 +175,11 @@ API is versioned with `Asp.Versioning`. All routes follow `api/v{version}/[contr
 `ResultExtensions.ToActionResult()` maps `Result` failures to HTTP status codes (400 / 404 / 204).
 
 ### EF Core
-Only the **read side** uses EF Core (`SimulatorReadDbContext`). The write `DbContext` (`SimulatorWriteDbContext`) has an empty model — it exists only to carry the migration that dropped all legacy aggregate tables. Read DB migrations are run by the **WebJob** via `host.InitializeDatabases()` on startup.
+Only the **read side** uses EF Core (`SimulatorReadDbContext`) in the current solution. Read DB migrations are run by the **WebJob** via `host.InitializeDatabases()` on startup.
 
 ### Observability
-- **Structured logging** — both the API and WebJob call `builder.AddStructuredLogging()` (`Miniclip.Core.ServiceDefaults`), which configures Serilog with console JSON output and an optional OTLP log sink.
-- **Traces** — `OpenTelemetryActivity.StartActivity(name)` wraps per-message Kafka processing; KurrentDB client, ASP.NET Core, MySQL, and Kafka producer/consumer instrumentation are all wired in.
+- **Structured logging** — API, ReadModels WebJob, and EventRelay WebJob call `builder.AddStructuredLogging()` (`Miniclip.Core.ServiceDefaults`), which configures Serilog with console JSON output and an optional OTLP log sink.
+- **Traces** — `OpenTelemetryActivity.StartActivity(name)` wraps per-message processing; KurrentDB client (API), ASP.NET Core, MySQL, Kafka producer, and Kafka consumer instrumentation are wired in.
 - **Metrics** — the `Miniclip.Simulator.Kafka` meter (registered via `AddSimulator()`) is exported via OTLP.
 
 ### Code Style
@@ -210,4 +229,4 @@ dotnet user-secrets set "Parameters:mysql-password" "<your-password>"
 dotnet run
 ```
 
-Aspire provisions MySQL, KurrentDB, Kafka, the ReadModels WebJob, and the API. Read DB migrations run automatically in the WebJob before the API starts. Team seeding runs in the API on startup.
+Aspire provisions MySQL, KurrentDB, Kafka, the ReadModels WebJob, the EventRelay WebJob, and the API. Read DB migrations run automatically in the WebJob before the API starts. Team seeding runs in the API on startup.

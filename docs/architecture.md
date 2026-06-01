@@ -72,7 +72,7 @@ Split into two projects to enforce CQRS.
 
 **`Miniclip.Simulator.ReadModels`** — POCO read model definitions (`GroupStandingsModel`, `MatchResultModel`) and repository interfaces.
 
-**`Miniclip.Simulator.ReadModels.Projections`** — `ProjectionsConsumerService<TAggregate>` (Kafka consumer) and `INotificationHandler<TEvent>` projection handlers dispatched in priority order via Mediator.
+**`Miniclip.Simulator.ReadModels.Projections`** — `ProjectionMessageHandler<TEvent>` (`IMessageHandler<TEvent>`) plus `IProjectionHandler<TEvent>` projections dispatched in priority order via `IProjectionDispatcher`.
 
 Projections are the **only** writers to the read database. They run in priority order via `[HandlerPriority(n)]`:
 
@@ -81,15 +81,14 @@ Projections are the **only** writers to the read database. They run in priority 
 | 1 | `MatchResultProjection` | Creates a `MatchResultModel` row for the played match. |
 | 2 | `GroupStandingsProjection` | Gets or creates standings rows for both teams, updates all stats, then recalculates positions. |
 
-### Infrastructure — Write & Read
+### Infrastructure — Read
 
-The **write side** is KurrentDB. `SimulatorWriteDbContext` has an empty EF model and exists only to run the migration that dropped all legacy aggregate tables.
+The **write side** is KurrentDB. The current solution keeps EF Core only on the read side.
 
 `SimulatorReadDbContext` holds all read models and exposes both read and write repositories:
 
 | Context | Project | Tracks |
 |---|---|---|
-| `SimulatorWriteDbContext` | `Infrastructure.Write` | Nothing (empty model; migrations only) |
 | `SimulatorReadDbContext` | `Infrastructure.Read` | `GroupStandingsModel`, `MatchResultModel`, `ProcessedEventsModel` |
 
 ### API — `Miniclip.Simulator.Api`
@@ -100,10 +99,10 @@ ASP.NET Core Web API. Versioned using `Asp.Versioning`.
 Controllers/V1/    GroupsController
 Extensions/        ResultExtensions  (Result<T> → IActionResult mapping)
 Infrastructure/
-  Configuration/   EventStoreDbConfiguration, ReadModelsConfiguration,
-                   KafkaConfiguration, MediatorConfiguration,
-                   DomainConfiguration, ApiVersioningConfiguration,
-                   OpenTelemetryConfiguration, WebApplicationConfiguration
+  Configuration/   EventStoreConfiguration, ReadModelsConfiguration,
+                   MediatorConfiguration, DomainConfiguration,
+                   ApiVersioningConfiguration, OpenTelemetryConfiguration,
+                   WebApplicationConfiguration
   Middleware/      CorrelationIdMiddleware  (X-Correlation-Id header; propagates to Kafka messages)
   Seeding/         TeamDataSeeder  (seeds 10 teams to KurrentDB on startup)
 Startup.cs         ConfigureServices + Configure
@@ -112,7 +111,23 @@ Program.cs         Host builder entry point
 
 **Mediator pipeline (write side):**
 1. `LoggingBehavior` (outermost) — logs request timing; tags active OTel span on domain errors.
-2. `EventStoreCommandBehavior` — commits `IEventStoreSession` then calls `ICommittedEventPublisher.PublishAsync()` per committed event. `CommittedEventPublisher` maps each domain event to an integration event via `IIntegrationEventMapperRegistry` and publishes to Kafka. Events without a mapper are silently skipped.
+2. `EventStoreCommandBehavior` — commits `IEventStoreSession` to append pending events to KurrentDB.
+
+### EventRelay WebJob — `Miniclip.Simulator.EventRelay.WebJob`
+
+A **.NET Worker Service** that forwards committed domain events from KurrentDB to Kafka.
+
+```
+Infrastructure/
+  Configuration/   EventRelayConfiguration      (KurrentDB + mapper registry + hosted service)
+                   OpenTelemetryConfiguration
+                   HealthCheckConfiguration
+KurrentDbForwarderService.cs                    (persistent subscription consumer)
+Startup.cs
+Program.cs         Host builder entry point (AddStructuredLogging)
+```
+
+`KurrentDbForwarderService` subscribes to `simulator-kurrentdb-to-kafka-forwarder`, deserializes domain events, maps them via `IIntegrationEventMapperRegistry`, and publishes integration events to Kafka through `IEventBus`.
 
 ### ReadModels WebJob — `Miniclip.Simulator.ReadModels.WebJob`
 
@@ -121,7 +136,7 @@ A **.NET Worker Service** (`Microsoft.NET.Sdk.Worker`) that is the single owner 
 ```
 Infrastructure/
   Configuration/   ReadModelsConfiguration      (DbContext + write repositories + InitializeDatabases)
-                   KafkaMessagingConfiguration  (AddKafkaMessagingInfrastructure + AddKafkaConsumer)
+                   KafkaConfiguration           (AddKafka + consumer descriptor)
                    ProjectionsConfiguration     (IRecalculatePositionService)
                    HealthCheckConfiguration     (HealthCheckHttpServerService)
                    OpenTelemetryConfiguration
@@ -141,8 +156,9 @@ The WebJob starts before the API in Aspire (`WaitFor(webjob)`):
 - A **KurrentDB** container (`kurrentplatform/kurrentdb`) with `$by_category` and standard projections enabled.
 - A **Kafka** container with **Kafka UI**.
 - A **`KafkaTopicsResource`** (`WithTopicCreation()`) that auto-creates the `simulator.group` topic via the Kafka admin client before any service starts.
-- The **WebJob** project as a service (starts before the API).
-- The **API** project as a service (waits for the WebJob and Kafka topics).
+- The **ReadModels WebJob** project as a service (starts before the API).
+- The **EventRelay WebJob** project as a service (waits for KurrentDB and Kafka topics).
+- The **API** project as a service (waits for KurrentDB, read DB, both WebJobs, and Kafka topics).
 
 ---
 
@@ -170,10 +186,12 @@ GenerateGroupCommandHandler
         │
         ▼
 EventStoreCommandBehavior (post-handler)
-  ├── IEventStoreSession.CommitAsync()
-  │     └── appends GroupCreated + TeamAdded(N) + MatchScheduled(N) to KurrentDB stream group-{id}
-  └── IEventBus.PublishAsync() per committed event
-        └── only MatchPlayed is subscribed by projections; Group creation events are KurrentDB-only
+  └── IEventStoreSession.CommitAsync()
+        └── appends GroupCreated + TeamAdded(N) + MatchScheduled(N) to KurrentDB stream group-{id}
+        │
+        ▼
+KurrentDbForwarderService (EventRelay WebJob)
+  └── maps eligible domain events to integration events and publishes to Kafka
         │
         ▼
 LoggingBehavior (log elapsed time)
@@ -199,10 +217,12 @@ SimulateGroupCommandHandler
         │
         ▼
 EventStoreCommandBehavior
-  ├── IEventStoreSession.CommitAsync()
-  │     └── appends MatchPlayed events to KurrentDB stream group-{id}
-  └── IEventBus.PublishAsync() per MatchPlayed
-        └── publishes to simulator.group Kafka topic
+  └── IEventStoreSession.CommitAsync()
+        └── appends MatchPlayed events to KurrentDB stream group-{id}
+        │
+        ▼
+KurrentDbForwarderService (EventRelay WebJob)
+  └── maps MatchPlayed → MatchPlayedIntegrationEvent → publishes to simulator.group
         │
         ▼
 KafkaConsumerHost  (WebJob — BackgroundService)
@@ -211,9 +231,9 @@ KafkaConsumerHost  (WebJob — BackgroundService)
   │     ├── TracingMiddleware   → starts OTel span
   │     ├── LoggingMiddleware   → logs receipt
   │     └── RetryMiddleware     → wraps handler with exponential back-off
-  │           └── ProjectionMessageHandler<MatchPlayed>
+  │           └── ProjectionMessageHandler<MatchPlayedIntegrationEvent>
   │                 ├── idempotency check: ProcessedEvents table
-  │                 ├── IProjectionDispatcher.DispatchAsync(matchPlayed)
+  │                 ├── IProjectionDispatcher.DispatchAsync(matchPlayedIntegrationEvent)
   │                 │     ├── MatchResultProjection      [priority 1] → inserts MatchResultModel row
   │                 │     └── GroupStandingsProjection   [priority 2] → updates stats + recalculates positions
   │                 ├── processedEventsRepository.Add(eventId, consumerGroupId)
@@ -263,6 +283,15 @@ ReadModels.WebJob
  │    └── Core.Messaging
  ├── Core.ServiceDefaults        (Serilog)
  └── Infrastructure.Read
+
+EventRelay.WebJob
+ ├── Core.EventSourcing.EventStoreDB
+ ├── Core.Application             (integration event mappers registry)
+ ├── Core.Messaging.Kafka
+ │    ├── Core.Messaging.Pipeline
+ │    └── Core.Messaging
+ ├── Simulator.IntegrationEvents
+ └── Core.ServiceDefaults         (Serilog)
 ```
 
 ---

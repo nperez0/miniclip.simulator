@@ -1,15 +1,15 @@
 # Observability
 
-Miniclip Simulator uses **OpenTelemetry** for distributed tracing and metrics, and **Serilog** for structured logging. Both the API and the ReadModels WebJob are fully instrumented and export all signals to an OTLP endpoint (e.g. the .NET Aspire Dashboard, Jaeger, or an OTEL Collector).
+Miniclip Simulator uses **OpenTelemetry** for distributed tracing and metrics, and **Serilog** for structured logging. The API, ReadModels WebJob, and EventRelay WebJob are instrumented and export signals to an OTLP endpoint (e.g. the .NET Aspire Dashboard, Jaeger, or an OTEL Collector).
 
 ---
 
 ## Logging — Serilog
 
-Both hosts call `builder.AddStructuredLogging()` from `Miniclip.Core.ServiceDefaults`:
+All three hosts call `builder.AddStructuredLogging()` from `Miniclip.Core.ServiceDefaults`:
 
 ```csharp
-// Program.cs (API and WebJob)
+// Program.cs (API, ReadModels WebJob, EventRelay WebJob)
 builder.AddStructuredLogging();
 ```
 
@@ -61,8 +61,8 @@ Activity.Current.NoticeError(failed.Error.Code);
 | ASP.NET Core | `AddAspNetCoreInstrumentation()` (API only) |
 | HTTP client | `AddHttpClientInstrumentation()` (API only) |
 | KurrentDB client | `AddKurrentDBClientInstrumentation()` (API only) |
-| Kafka producer | `AddKafkaProducerInstrumentation<string, string>()` (API only) |
-| Kafka consumer | `AddKafkaConsumerInstrumentation<string, string>()` (WebJob only) |
+| Kafka producer | `AddKafkaProducerInstrumentation<string, string>()` (ReadModels + EventRelay WebJobs) |
+| Kafka consumer | `AddKafkaConsumerInstrumentation<string, string>()` (ReadModels WebJob only) |
 | MySQL (MySqlData) | `AddMySqlData()` |
 | MySQL (MySqlConnector) | `AddMySqlConnector()` |
 
@@ -81,7 +81,7 @@ All traces are exported via OTLP (`AddOtlpExporter()`).
 | `kafka.retry.attempts` | Counter | Total message processing retry attempts |
 | `kafka.messages.failed` | Counter | Messages that permanently failed after all retries |
 
-> The `Miniclip.Simulator.Kafka` meter name is defined in `OpenTelemetryConstants.Metrics.SimulatorMetricName` and registered via `AddSimulator()` in both the API and WebJob.
+> The `Miniclip.Simulator.Kafka` meter name is defined in `OpenTelemetryConstants.Metrics.SimulatorMetricName` and registered via `AddSimulator()` in the API, ReadModels WebJob, and EventRelay WebJob.
 
 ### Instrumented meters
 
@@ -90,8 +90,8 @@ All traces are exported via OTLP (`AddOtlpExporter()`).
 | `Miniclip.Simulator.Kafka` (custom) | `AddSimulator()` |
 | ASP.NET Core | `AddAspNetCoreInstrumentation()` (API only) |
 | HTTP client | `AddHttpClientInstrumentation()` (API only) |
-| Kafka producer | `AddKafkaProducerInstrumentation<string, string>()` (API only) |
-| Kafka consumer | `AddKafkaConsumerInstrumentation<string, string>()` (WebJob only) |
+| Kafka producer | `AddKafkaProducerInstrumentation<string, string>()` (ReadModels + EventRelay WebJobs) |
+| Kafka consumer | `AddKafkaConsumerInstrumentation<string, string>()` (ReadModels WebJob only) |
 
 All metrics are exported via OTLP (`AddOtlpExporter()`).
 
